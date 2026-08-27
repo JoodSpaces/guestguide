@@ -24,20 +24,29 @@ export default async function StayPage({ params }: Props) {
 
   if (!tokenRow || tokenRow.revoked_at) notFound();
 
-  const { data: booking } = await supabase
-    .from("bookings")
-    .select(`id, property_id, guest_first_name, guest_lang, check_in, check_out,
-             properties (name, name_ar)`)
-    .eq("id", tokenRow.booking_id)
-    .single<{
-      id: string;
-      property_id: string;
-      guest_first_name: string;
-      guest_lang: "en" | "ar";
-      check_in: string;
-      check_out: string;
-      properties: { name: string; name_ar: string } | { name: string; name_ar: string }[];
-    }>();
+  const [{ data: booking }, { data: serviceRequests }] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select(`id, property_id, guest_first_name, guest_lang, check_in, check_out,
+               properties (name, name_ar)`)
+      .eq("id", tokenRow.booking_id)
+      .single<{
+        id: string;
+        property_id: string;
+        guest_first_name: string;
+        guest_lang: "en" | "ar";
+        check_in: string;
+        check_out: string;
+        properties: { name: string; name_ar: string } | { name: string; name_ar: string }[];
+      }>(),
+    supabase
+      .from("service_requests")
+      .select("id, status, paymob_payment_url, services(name_en)")
+      .eq("booking_id", tokenRow.booking_id)
+      .neq("status", "rejected")
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
   if (!booking) notFound();
 
@@ -65,5 +74,29 @@ export default async function StayPage({ params }: Props) {
     isExpired: false,
   };
 
-  return <StayHome payload={payload} token={token} />;
+  const requests = (serviceRequests ?? []) as unknown as Array<{
+    id: string;
+    status: string;
+    paymob_payment_url: string | null;
+    services: { name_en: string } | null;
+  }>;
+
+  const payNowRequest = requests.find(
+    (r) => r.status === "approved" && r.paymob_payment_url
+  );
+
+  const requestSummary =
+    requests.length > 0
+      ? {
+          count: requests.length,
+          payNow: payNowRequest
+            ? {
+                url: payNowRequest.paymob_payment_url!,
+                serviceName: (payNowRequest.services as { name_en: string } | null)?.name_en ?? "Service",
+              }
+            : null,
+        }
+      : null;
+
+  return <StayHome payload={payload} token={token} requestSummary={requestSummary} />;
 }

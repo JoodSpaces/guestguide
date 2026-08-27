@@ -64,12 +64,16 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
 
   const [myRequests, setMyRequests] = useState(initialRequests);
 
-  // Refresh on mount to pick up payment status changes since server render
+  // Poll every 15 s to pick up status changes (approval, payment)
   useEffect(() => {
-    fetch(`/api/guest/services?token=${token}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => { if (data?.myRequests) setMyRequests(data.myRequests); })
-      .catch(() => {});
+    const poll = () =>
+      fetch(`/api/guest/services?token=${token}`)
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => { if (data?.myRequests) setMyRequests(data.myRequests); })
+        .catch(() => {});
+    poll();
+    const id = setInterval(poll, 15_000);
+    return () => clearInterval(id);
   }, [token]);
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [requested, setRequested] = useState<Set<string>>(new Set(initialRequests.map((r) => r.service_id).filter(Boolean) as string[]));

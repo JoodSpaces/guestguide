@@ -20,9 +20,15 @@ function getTimeKicker(h: number, isAr: boolean): { kicker: string; tagline?: st
   return { kicker: isAr ? "مساء الخير" : "GOOD EVENING" };
 }
 
+interface RequestSummary {
+  count: number;
+  payNow: { url: string; serviceName: string } | null;
+}
+
 interface Props {
   payload: TokenPayload;
   token: string;
+  requestSummary?: RequestSummary | null;
 }
 
 /* ─── SVG icons ─────────────────────────────────────────────────────────── */
@@ -82,7 +88,7 @@ const WmDoor = () => (
 
 const MARQUEE_ITEMS = ["North Coast", "Sidi Heneish", "Hacienda Bay", "Mediterranean", "Sahel", "Villa Life"];
 
-export function StayHome({ payload, token }: Props) {
+export function StayHome({ payload, token, requestSummary }: Props) {
   const t = useTranslations();
   const locale = useLocale();
   const isAr = locale === "ar";
@@ -145,6 +151,78 @@ export function StayHome({ payload, token }: Props) {
             </p>
           )}
         </div>
+
+        {/* Pay-now nudge */}
+        {requestSummary?.payNow && (
+          <div
+            className="animate-reveal"
+            style={{
+              animationDelay: "60ms",
+              marginBottom: "16px",
+              padding: "14px 18px",
+              backgroundColor: "rgba(255, 96, 55, 0.08)",
+              border: "1px solid var(--jood-accent)",
+              borderRadius: "var(--radius-lg)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "12px",
+            }}
+          >
+            <div>
+              <p style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--jood-ink)", marginBottom: "2px" }}>
+                {isAr ? "في انتظار الدفع" : "Payment pending"}
+              </p>
+              <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)" }}>
+                {requestSummary.payNow.serviceName}
+              </p>
+            </div>
+            <a
+              href={requestSummary.payNow.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                flexShrink: 0,
+                padding: "8px 16px",
+                backgroundColor: "var(--jood-accent)",
+                color: "white",
+                borderRadius: "var(--radius-pill)",
+                textDecoration: "none",
+                fontSize: "0.8125rem",
+                fontWeight: 500,
+              }}
+            >
+              {isAr ? "ادفع الآن" : "Pay now"} →
+            </a>
+          </div>
+        )}
+
+        {/* Request count chip */}
+        {requestSummary && !requestSummary.payNow && requestSummary.count > 0 && (
+          <div className="animate-reveal" style={{ animationDelay: "60ms", marginBottom: "16px" }}>
+            <a
+              href={`/s/${token}/services`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                border: "1px solid var(--jood-line)",
+                borderRadius: "var(--radius-pill)",
+                textDecoration: "none",
+                color: "var(--jood-ink-muted)",
+                fontSize: "0.75rem",
+                fontFamily: "var(--font-label)",
+                letterSpacing: "0.08em",
+              }}
+            >
+              <span style={{ color: "var(--jood-aqua)" }}>●</span>
+              {isAr
+                ? `${requestSummary.count} ${requestSummary.count === 1 ? "طلب" : "طلبات"}`
+                : `${requestSummary.count} service ${requestSummary.count === 1 ? "request" : "requests"}`}
+            </a>
+          </div>
+        )}
 
         {/* Marquee strip */}
         <div style={{ overflow: "hidden", borderBlock: "1px solid var(--jood-line)", marginBottom: "24px", padding: "9px 0" }}>
