@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { AutoRefresh } from "@/components/admin/AutoRefresh";
 
 const STATUS_COLOR: Record<string, string> = {
   scheduled: "var(--jood-aqua)",
@@ -57,6 +58,7 @@ export default async function OpsPage() {
 
   return (
     <div>
+      <AutoRefresh interval={30_000} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px" }}>
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Operations</h1>
         <div style={{ display: "flex", gap: "10px" }}>

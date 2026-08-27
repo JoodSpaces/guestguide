@@ -3,8 +3,23 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "14px 16px",
+  fontSize: "0.9375rem",
+  backgroundColor: "var(--jood-surface)",
+  border: "1px solid var(--jood-line)",
+  borderRadius: "var(--radius-md)",
+  color: "var(--jood-ink)",
+  outline: "none",
+  marginBottom: "12px",
+  boxSizing: "border-box",
+  fontFamily: "inherit",
+};
+
 export default function AdminLoginPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,11 +32,12 @@ export default function AdminLoginPage() {
     const res = await fetch("/api/admin/auth", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ name, password }),
     });
 
     if (res.ok) {
-      router.replace("/admin");
+      const data = await res.json();
+      router.replace(data.redirect ?? "/admin");
     } else {
       setError(true);
       setLoading(false);
@@ -40,60 +56,42 @@ export default function AdminLoginPage() {
       }}
     >
       <div style={{ width: "100%", maxWidth: "340px" }}>
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "28px", width: "auto" }} />
-          <p
-            style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "9px",
-              letterSpacing: "0.2em",
-              textTransform: "uppercase",
-              color: "var(--jood-ink-muted)",
-              marginTop: "10px",
-            }}
-          >
-            Admin access
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginTop: "10px" }}>
+            Team access
           </p>
         </div>
 
         <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="username"
+            autoFocus
+            required
+            style={{ ...inputStyle, borderColor: error ? "var(--jood-danger)" : "var(--jood-line)" }}
+          />
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
-            autoFocus
             required
-            style={{
-              width: "100%",
-              padding: "14px 16px",
-              fontSize: "0.9375rem",
-              backgroundColor: "var(--jood-surface)",
-              border: `1px solid ${error ? "var(--jood-danger)" : "var(--jood-line)"}`,
-              borderRadius: "var(--radius-md)",
-              color: "var(--jood-ink)",
-              outline: "none",
-              marginBottom: error ? "8px" : "16px",
-              boxSizing: "border-box",
-            }}
+            style={{ ...inputStyle, borderColor: error ? "var(--jood-danger)" : "var(--jood-line)", marginBottom: error ? "8px" : "16px" }}
           />
           {error && (
-            <p
-              style={{
-                color: "var(--jood-danger)",
-                fontSize: "0.8125rem",
-                marginBottom: "16px",
-              }}
-            >
-              Incorrect password
+            <p style={{ color: "var(--jood-danger)", fontSize: "0.8125rem", marginBottom: "16px" }}>
+              Name or password is incorrect
             </p>
           )}
           <button
             type="submit"
-            disabled={loading || !password}
+            disabled={loading || !name || !password}
             style={{
               width: "100%",
               padding: "14px",
@@ -103,7 +101,6 @@ export default function AdminLoginPage() {
               borderRadius: "var(--radius-pill)",
               fontSize: "0.9375rem",
               cursor: loading ? "not-allowed" : "pointer",
-              transition: "background-color 150ms ease",
             }}
           >
             {loading ? "Signing in…" : "Sign in"}

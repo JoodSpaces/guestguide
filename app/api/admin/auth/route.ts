@@ -1,34 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServiceClient } from "@/lib/supabase/server";
+import { verifyPassword, signAdminCookie, ROLE_HOME, type AdminSession } from "@/lib/admin-auth";
 
-const PASSWORD = process.env.ADMIN_PASSWORD ?? "";
-const SECRET = process.env.ADMIN_SECRET ?? "";
-
-async function sign(payload: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(SECRET),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
-  return Buffer.from(sig).toString("base64url");
-}
-
-export async function POST(req: NextRequest) {
-  const body = await req.json().catch(() => ({}));
-
-  if (!body.password || body.password !== PASSWORD || !SECRET) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
-
-  const iat = Date.now();
-  const exp = iat + 7 * 24 * 60 * 60 * 1000;
-  const payload = `${iat}.${exp}`;
-  const sig = await sign(payload);
-  const token = `${payload}.${sig}`;
-
-  const res = NextResponse.json({ ok: true });
+function setCookie(res: NextResponse, token: string) {
   res.cookies.set("jood_admin", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -36,7 +10,44 @@ export async function POST(req: NextRequest) {
     maxAge: 7 * 24 * 60 * 60,
     path: "/",
   });
-  return res;
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json().catch(() => ({}));
+  const { name, password } = body as { name?: string; password?: string };
+  if (!name || !password) return NextResponse.json({ error: "missing_fields" }, { status: 400 });
+
+  const iat = Date.now();
+  const exp = iat + 7 * 24 * 60 * 60 * 1000;
+
+  // ── Try team_members table ──
+  const supabase = createServiceClient();
+  const { data: member } = await supabase
+    .from("team_members")
+    .select("id, name, role, password_hash")
+    .eq("is_active", true)
+    .ilike("name", name.trim())
+    .single<{ id: string; name: string; role: "admin" | "ops" | "concierge"; password_hash: string }>();
+
+  if (member && (await verifyPassword(password, member.password_hash))) {
+    const session: AdminSession = { id: member.id, name: member.name, role: member.role, iat, exp };
+    const token = await signAdminCookie(session);
+    const res = NextResponse.json({ ok: true, role: member.role, redirect: ROLE_HOME[member.role] });
+    setCookie(res, token);
+    return res;
+  }
+
+  // ── Legacy fallback: ADMIN_PASSWORD env var as "admin" ──
+  const legacyPassword = process.env.ADMIN_PASSWORD ?? "";
+  if (legacyPassword && password === legacyPassword && name.toLowerCase() === "admin") {
+    const session: AdminSession = { id: "legacy", name: "Admin", role: "admin", iat, exp };
+    const token = await signAdminCookie(session);
+    const res = NextResponse.json({ ok: true, role: "admin", redirect: "/admin" });
+    setCookie(res, token);
+    return res;
+  }
+
+  return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 }
 
 export async function DELETE() {
