@@ -30,6 +30,7 @@ export default async function OpsPage() {
 
   const [
     { data: turnovers },
+    { data: history },
     { data: tickets },
     { data: properties },
   ] = await Promise.all([
@@ -39,6 +40,12 @@ export default async function OpsPage() {
       .in("status", ["scheduled", "pending", "in_progress", "ready"])
       .order("created_at", { ascending: false })
       .limit(40),
+    supabase
+      .from("turnover_tasks")
+      .select("id, status, assigned_to, approved_at, created_at, properties(id, name), bookings(check_out, guest_first_name, guest_last_name)")
+      .eq("status", "approved")
+      .order("approved_at", { ascending: false })
+      .limit(20),
     supabase
       .from("maintenance_tickets")
       .select("id, title, priority, status, created_at, properties(id, name)")
@@ -71,11 +78,13 @@ export default async function OpsPage() {
             const active = turnovers?.filter((t) => t.status !== "scheduled") ?? [];
             const upcoming = turnovers?.filter((t) => t.status === "scheduled") ?? [];
 
-            function TurnoverCard({ t }: { t: NonNullable<typeof turnovers>[number] }) {
+            type TurnoverRow = NonNullable<typeof turnovers>[number] & { approved_at?: string | null };
+
+            function TurnoverCard({ t, muted }: { t: TurnoverRow; muted?: boolean }) {
               const booking = Array.isArray(t.bookings) ? t.bookings[0] : t.bookings;
               const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;
               return (
-                <a href={`/admin/ops/turnover/${t.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", borderLeft: t.status === "scheduled" ? `3px solid var(--jood-aqua)` : "1px solid var(--jood-line)" }}>
+                <a href={`/admin/ops/turnover/${t.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", opacity: muted ? 0.6 : 1, borderLeft: t.status === "scheduled" ? `3px solid var(--jood-aqua)` : "1px solid var(--jood-line)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
                       <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{(property as { name: string })?.name}</p>
@@ -85,6 +94,11 @@ export default async function OpsPage() {
                         </p>
                       )}
                       {t.assigned_to && <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginTop: "2px" }}>→ {t.assigned_to}</p>}
+                      {t.status === "approved" && (t as TurnoverRow).approved_at && (
+                        <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)", marginTop: "2px" }}>
+                          Approved {fmt((t as TurnoverRow).approved_at!)}
+                        </p>
+                      )}
                     </div>
                     <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: STATUS_COLOR[t.status] }}>
                       {t.status.replace("_", " ")}
@@ -108,16 +122,27 @@ export default async function OpsPage() {
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: upcoming.length ? "20px" : 0 }}>
-                  {active.map((t) => <TurnoverCard key={t.id} t={t} />)}
+                  {active.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} />)}
                 </div>
 
                 {upcoming.length > 0 && (
                   <>
-                    <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
+                    <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px", marginTop: "4px" }}>
                       Upcoming · {upcoming.length}
                     </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: history?.length ? "20px" : 0 }}>
+                      {upcoming.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} />)}
+                    </div>
+                  </>
+                )}
+
+                {(history?.length ?? 0) > 0 && (
+                  <>
+                    <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-ghost)", marginBottom: "10px", marginTop: active.length || upcoming.length ? "20px" : 0 }}>
+                      History · {history!.length}
+                    </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {upcoming.map((t) => <TurnoverCard key={t.id} t={t} />)}
+                      {history!.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} muted />)}
                     </div>
                   </>
                 )}
