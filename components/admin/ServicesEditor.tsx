@@ -63,19 +63,22 @@ function ServiceForm({
   onCancel,
 }: {
   initial: Omit<Service, "id">;
-  onSave: (data: Omit<Service, "id">) => Promise<void>;
+  onSave: (data: Omit<Service, "id">) => Promise<string | null>;
   onCancel: () => void;
 }) {
   const [form, setForm] = useState(initial);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const set = (k: keyof typeof form, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await onSave(form);
+    setError(null);
+    const err = await onSave(form);
     setSaving(false);
+    if (err) setError(err);
   }
 
   return (
@@ -128,6 +131,11 @@ function ServiceForm({
         <label htmlFor="is_active" style={{ fontSize: "0.875rem", cursor: "pointer" }}>Active (visible to guests)</label>
       </div>
 
+      {error && (
+        <p style={{ fontSize: "0.875rem", color: "var(--jood-danger)", padding: "10px 14px", backgroundColor: "rgba(220,50,50,0.07)", borderRadius: "var(--radius-md)" }}>
+          {error}
+        </p>
+      )}
       <div style={{ display: "flex", gap: "10px" }}>
         <button type="submit" disabled={saving} style={{ padding: "9px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.875rem", cursor: "pointer", opacity: saving ? 0.5 : 1 }}>
           {saving ? "Saving…" : "Save"}
@@ -146,7 +154,7 @@ export function ServicesEditor({ initialServices }: { initialServices: Service[]
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  async function handleCreate(data: Omit<Service, "id">) {
+  async function handleCreate(data: Omit<Service, "id">): Promise<string | null> {
     const res = await fetch("/api/admin/services", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -166,10 +174,13 @@ export function ServicesEditor({ initialServices }: { initialServices: Service[]
       const created = await res.json();
       setServices((s) => [...s, created]);
       setAdding(false);
+      return null;
     }
+    const body = await res.json().catch(() => ({}));
+    return body.error ?? `Server error (${res.status})`;
   }
 
-  async function handleUpdate(id: string, data: Omit<Service, "id">) {
+  async function handleUpdate(id: string, data: Omit<Service, "id">): Promise<string | null> {
     const res = await fetch(`/api/admin/services/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -188,7 +199,10 @@ export function ServicesEditor({ initialServices }: { initialServices: Service[]
     if (res.ok) {
       setServices((s) => s.map((svc) => svc.id === id ? { ...svc, ...data } : svc));
       setEditingId(null);
+      return null;
     }
+    const body = await res.json().catch(() => ({}));
+    return body.error ?? `Server error (${res.status})`;
   }
 
   async function handleDelete(id: string) {
