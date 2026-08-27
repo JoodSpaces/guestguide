@@ -3,7 +3,7 @@ import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 
 const patchSchema = z.object({
-  status: z.enum(["pending", "in_progress", "ready", "approved"]).optional(),
+  status: z.enum(["scheduled", "pending", "in_progress", "ready", "approved"]).optional(),
   assigned_to: z.string().max(100).nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
   condition: z.enum(["excellent", "good", "fair", "damaged"]).nullable().optional(),

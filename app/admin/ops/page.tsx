@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 
 const STATUS_COLOR: Record<string, string> = {
+  scheduled: "var(--jood-aqua)",
   pending: "var(--jood-ink-muted)",
   in_progress: "var(--jood-warning)",
   ready: "var(--jood-success)",
@@ -35,9 +36,9 @@ export default async function OpsPage() {
     supabase
       .from("turnover_tasks")
       .select("id, status, assigned_to, created_at, properties(id, name), bookings(check_out, guest_first_name, guest_last_name)")
-      .in("status", ["pending", "in_progress", "ready"])
+      .in("status", ["scheduled", "pending", "in_progress", "ready"])
       .order("created_at", { ascending: false })
-      .limit(20),
+      .limit(40),
     supabase
       .from("maintenance_tickets")
       .select("id, title, priority, status, created_at, properties(id, name)")
@@ -66,29 +67,21 @@ export default async function OpsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
         {/* Turnovers */}
         <section>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
-              Active turnovers · {turnovers?.length ?? 0}
-            </p>
-            <NewTurnoverForm properties={properties ?? []} />
-          </div>
+          {(() => {
+            const active = turnovers?.filter((t) => t.status !== "scheduled") ?? [];
+            const upcoming = turnovers?.filter((t) => t.status === "scheduled") ?? [];
 
-          {!turnovers?.length && (
-            <div style={{ ...card, color: "var(--jood-ink-muted)", textAlign: "center", padding: "32px" }}>No active turnovers</div>
-          )}
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {turnovers?.map((t) => {
+            function TurnoverCard({ t }: { t: NonNullable<typeof turnovers>[number] }) {
               const booking = Array.isArray(t.bookings) ? t.bookings[0] : t.bookings;
               const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;
               return (
-                <a key={t.id} href={`/admin/ops/turnover/${t.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block" }}>
+                <a href={`/admin/ops/turnover/${t.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", borderLeft: t.status === "scheduled" ? `3px solid var(--jood-aqua)` : "1px solid var(--jood-line)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <div>
                       <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{(property as { name: string })?.name}</p>
                       {booking && (
                         <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
-                          {(booking as { guest_first_name: string; guest_last_name: string }).guest_first_name} · checkout {fmt((booking as { check_out: string }).check_out)}
+                          {(booking as { guest_first_name: string }).guest_first_name} · checkout {fmt((booking as { check_out: string }).check_out)}
                         </p>
                       )}
                       {t.assigned_to && <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginTop: "2px" }}>→ {t.assigned_to}</p>}
@@ -99,8 +92,38 @@ export default async function OpsPage() {
                   </div>
                 </a>
               );
-            })}
-          </div>
+            }
+
+            return (
+              <>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+                  <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+                    Active · {active.length}
+                  </p>
+                  <NewTurnoverForm properties={properties ?? []} />
+                </div>
+
+                {!active.length && (
+                  <div style={{ ...card, color: "var(--jood-ink-muted)", textAlign: "center", padding: "24px", marginBottom: "20px" }}>No active turnovers</div>
+                )}
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: upcoming.length ? "20px" : 0 }}>
+                  {active.map((t) => <TurnoverCard key={t.id} t={t} />)}
+                </div>
+
+                {upcoming.length > 0 && (
+                  <>
+                    <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
+                      Upcoming · {upcoming.length}
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {upcoming.map((t) => <TurnoverCard key={t.id} t={t} />)}
+                    </div>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </section>
 
         {/* Maintenance tickets */}

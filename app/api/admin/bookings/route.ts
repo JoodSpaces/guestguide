@@ -3,6 +3,7 @@ import { z } from "zod";
 import { generateToken, hashToken } from "@/lib/token";
 import { encrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
+import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
 
 const schema = z.object({
   propertyId: z.string().uuid(),
@@ -129,6 +130,24 @@ export async function POST(req: NextRequest) {
     entity_id: booking.id,
     meta: { source: d.source },
   });
+
+  // Auto-create a scheduled turnover so ops team can plan ahead
+  const { data: turnoverTask } = await supabase
+    .from("turnover_tasks")
+    .insert({ booking_id: booking.id, property_id: d.propertyId, status: "scheduled" })
+    .select("id")
+    .single<{ id: string }>();
+
+  if (turnoverTask) {
+    await supabase.from("turnover_items").insert(
+      DEFAULT_CHECKLIST.map((item) => ({
+        task_id: turnoverTask.id,
+        room: item.room,
+        label: item.label,
+        sort_order: item.sort_order,
+      }))
+    );
+  }
 
   return NextResponse.json({ bookingId: booking.id, link });
 }

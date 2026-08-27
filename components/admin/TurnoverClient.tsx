@@ -16,7 +16,7 @@ export interface TurnoverItem {
 
 export interface TurnoverTask {
   id: string;
-  status: "pending" | "in_progress" | "ready" | "approved";
+  status: "scheduled" | "pending" | "in_progress" | "ready" | "approved";
   assigned_to: string | null;
   notes: string | null;
   condition: "excellent" | "good" | "fair" | "damaged" | null;
@@ -36,6 +36,7 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
+  scheduled: "var(--jood-aqua)",
   pending: "var(--jood-ink-muted)",
   in_progress: "var(--jood-warning)",
   ready: "var(--jood-success)",
@@ -101,7 +102,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ checked }),
     });
-    if (task.status === "pending") {
+    if (task.status === "pending" || task.status === "scheduled") {
       await updateStatus("in_progress");
     }
   }
@@ -314,6 +315,16 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
 
       {/* Status actions */}
       <div style={{ ...card, display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+        {task.status === "scheduled" && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", flexWrap: "wrap", gap: "10px" }}>
+            <span style={{ fontSize: "0.875rem", color: "var(--jood-aqua)" }}>
+              Scheduled · checkout {task.bookings ? new Date(task.bookings.check_out).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "—"}
+            </span>
+            <button onClick={() => updateStatus("in_progress")} disabled={savingStatus} style={{ padding: "9px 18px", backgroundColor: "transparent", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer" }}>
+              Start early
+            </button>
+          </div>
+        )}
         {task.status === "pending" && (
           <button onClick={() => updateStatus("in_progress")} disabled={savingStatus} style={{ padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.875rem", cursor: "pointer", opacity: savingStatus ? 0.5 : 1 }}>
             Start cleaning

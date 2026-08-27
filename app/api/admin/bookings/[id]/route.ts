@@ -49,23 +49,34 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Auto-create turnover task when booking is marked completed
+  // When booking is completed, activate the scheduled turnover (or create one if missing)
   if (parsed.data.status === "completed" && booking?.property_id) {
-    const { data: task } = await supabase
+    const { data: existing } = await supabase
       .from("turnover_tasks")
-      .insert({ booking_id: id, property_id: booking.property_id, status: "pending" })
       .select("id")
-      .single<{ id: string }>();
+      .eq("booking_id", id)
+      .eq("status", "scheduled")
+      .maybeSingle<{ id: string }>();
 
-    if (task) {
-      await supabase.from("turnover_items").insert(
-        DEFAULT_CHECKLIST.map((item) => ({
-          task_id: task.id,
-          room: item.room,
-          label: item.label,
-          sort_order: item.sort_order,
-        }))
-      );
+    if (existing) {
+      await supabase.from("turnover_tasks").update({ status: "pending" }).eq("id", existing.id);
+    } else {
+      const { data: task } = await supabase
+        .from("turnover_tasks")
+        .insert({ booking_id: id, property_id: booking.property_id, status: "pending" })
+        .select("id")
+        .single<{ id: string }>();
+
+      if (task) {
+        await supabase.from("turnover_items").insert(
+          DEFAULT_CHECKLIST.map((item) => ({
+            task_id: task.id,
+            room: item.room,
+            label: item.label,
+            sort_order: item.sort_order,
+          }))
+        );
+      }
     }
   }
 
