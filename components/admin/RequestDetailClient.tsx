@@ -167,6 +167,11 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
             <button onClick={() => patch("regenerate_link")} disabled={saving} style={{ padding: "10px 20px", backgroundColor: "transparent", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.875rem", cursor: "pointer", color: "var(--jood-ink-muted)" }}>
               Regenerate link
             </button>
+            {totalPrice > 0 && (
+              <button onClick={() => patch("mark_paid")} disabled={saving} style={{ padding: "10px 20px", backgroundColor: "var(--jood-success)", color: "white", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.875rem", cursor: "pointer", opacity: saving ? 0.5 : 1 }}>
+                Mark as paid ✓
+              </button>
+            )}
             {totalPrice === 0 && (
               <button onClick={() => patch("fulfill")} disabled={saving} style={{ padding: "10px 20px", backgroundColor: "var(--jood-success)", color: "white", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.875rem", cursor: "pointer" }}>
                 Mark fulfilled

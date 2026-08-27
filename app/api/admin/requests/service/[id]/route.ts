@@ -4,7 +4,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { createPaymentLink } from "@/lib/paymob";
 
 const patchSchema = z.object({
-  action: z.enum(["approve", "reject", "fulfill", "regenerate_link"]).optional(),
+  action: z.enum(["approve", "reject", "fulfill", "regenerate_link", "mark_paid"]).optional(),
   adminNotes: z.string().max(1000).nullable().optional(),
 });
 
@@ -36,6 +36,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const now = new Date().toISOString();
 
   if (parsed.data.adminNotes !== undefined) updates.admin_notes = parsed.data.adminNotes;
+
+  if (parsed.data.action === "mark_paid") {
+    updates.status = "paid";
+    updates.paid_at = now;
+    updates.updated_at = now;
+  }
 
   if (parsed.data.action === "reject") {
     updates.status = "rejected";

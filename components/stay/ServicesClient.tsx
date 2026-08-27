@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 
 interface Service {
@@ -63,6 +63,14 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   const isAr = locale === "ar";
 
   const [myRequests, setMyRequests] = useState(initialRequests);
+
+  // Refresh on mount to pick up payment status changes since server render
+  useEffect(() => {
+    fetch(`/api/guest/services?token=${token}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.myRequests) setMyRequests(data.myRequests); })
+      .catch(() => {});
+  }, [token]);
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [requested, setRequested] = useState<Set<string>>(new Set(initialRequests.map((r) => r.service_id).filter(Boolean) as string[]));
   const [notes, setNotes] = useState<Record<string, string>>({});
