@@ -50,6 +50,7 @@ export function AdminHeader() {
           {[
             { href: "/admin", label: "Today" },
             { href: "/admin/bookings", label: "Bookings" },
+            { href: "/admin/ops", label: "Ops" },
             { href: "/admin/requests", label: "Requests" },
           ].map((item) => (
             <a
