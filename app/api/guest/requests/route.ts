@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getBookingFromToken } from "@/lib/guest-auth";
+import { notifyAdminGuestRequest, confirmGuestRequest } from "@/lib/email";
 
 const postSchema = z.object({
   token: z.string(),
@@ -36,18 +37,47 @@ export async function POST(req: NextRequest) {
   if (!booking) return NextResponse.json({ error: "invalid_token" }, { status: 401 });
 
   const supabase = createServiceClient();
-  const { data, error } = await supabase
-    .from("guest_requests")
-    .insert({
-      booking_id: booking.id,
-      category: parsed.data.category,
-      body: parsed.data.body,
-      urgency: parsed.data.urgency,
-      status: "received",
-    })
-    .select("id")
-    .single<{ id: string }>();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ id: data.id }, { status: 201 });
+  const [insertResult, { data: property }] = await Promise.all([
+    supabase
+      .from("guest_requests")
+      .insert({
+        booking_id: booking.id,
+        category: parsed.data.category,
+        body: parsed.data.body,
+        urgency: parsed.data.urgency,
+        status: "received",
+      })
+      .select("id")
+      .single<{ id: string }>(),
+    supabase
+      .from("properties")
+      .select("name")
+      .eq("id", booking.property_id)
+      .single<{ name: string }>(),
+  ]);
+
+  if (insertResult.error) return NextResponse.json({ error: insertResult.error.message }, { status: 500 });
+
+  const guestName = `${booking.guest_first_name} ${booking.guest_last_name}`;
+  const propertyName = property?.name ?? "the property";
+
+  notifyAdminGuestRequest({
+    guestName,
+    propertyName,
+    category: parsed.data.category,
+    body: parsed.data.body,
+    urgency: parsed.data.urgency,
+    requestId: insertResult.data.id,
+  });
+
+  if (booking.guest_email) {
+    confirmGuestRequest({
+      guestEmail: booking.guest_email,
+      guestFirstName: booking.guest_first_name,
+      category: parsed.data.category,
+    });
+  }
+
+  return NextResponse.json({ id: insertResult.data.id }, { status: 201 });
 }
