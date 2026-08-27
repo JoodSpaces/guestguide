@@ -1,0 +1,273 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+/* ─── Google Fonts ──────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&family=Archivo:wght@500;600&family=Almarai:wght@300;400;700;800&display=swap");
+
+/* ─── JOOD Design Tokens ────────────────────────────────────────────────── */
+:root {
+  /* ── JOOD Design System v1.0 colour tokens ─────────────────────────────── */
+  /* Dark surfaces */
+  --jood-ink:              #351E1C;   /* Black Kite — primary dark surface & text */
+  --jood-ink-deep:         #2A1715;   /* Kite Deep */
+  --jood-garnet:           #733635;   /* Garnet — muted dark accent */
+  /* Light surfaces */
+  --jood-ground:           #F5F4ED;   /* Morning Snow — page background */
+  --jood-surface:          #ECECDC;   /* Amazon Mist — card/panel surface */
+  --jood-surface-raised:   #F5F4ED;   /* Morning Snow — elevated/modal */
+  --jood-mist2:            #D9D6C3;   /* Mist Deep — tertiary surface */
+  /* Accent */
+  --jood-accent:           #FF6037;   /* Toxic Orange — primary CTA */
+  --jood-accent-ink:       #FFFFFF;
+  --jood-aqua:             #A0C9CB;   /* Aqua Mist — guest path, secondary cues */
+  /* Text & mids */
+  --jood-mid:              #8A6663;   /* Mid Tone — body copy on light */
+  --jood-ink-muted:        rgba(53, 30, 28, 0.60);
+  --jood-ink-faint:        rgba(53, 30, 28, 0.28);
+  --jood-ink-ghost:        rgba(53, 30, 28, 0.20);
+  /* Borders */
+  --jood-line:             rgba(53, 30, 28, 0.12);  /* light surface border */
+  --jood-line-dark:        rgba(245, 244, 237, 0.10); /* dark surface border */
+  /* Semantic */
+  --jood-success:          #2D7A4F;
+  --jood-warning:          #C97020;
+  --jood-danger:           #C93030;
+
+  /* Dark-section inversions */
+  --jood-ink-on-dark:      #F5F4ED;   /* Morning Snow on dark bg */
+  --jood-dim:              #DCCBC4;   /* body copy on dark */
+  --jood-faint:            #A98C84;   /* muted text on dark */
+  --jood-ink-muted-on-dark: rgba(245, 244, 237, 0.40);
+
+  /* Typography */
+  --font-display:  'Instrument Serif';
+  --font-body:     'Geist';
+  --font-label:    'Archivo';
+  --font-arabic:   'Almarai';
+  --font-mono:     'GeistMono', 'Courier New', monospace;
+
+  /* Spacing — fluid, no fixed scale */
+  --space-nav:     22px;
+  --space-sm:      26px;
+  --space-section: clamp(18px, 3vh, 34px);
+  --space-grid:    clamp(28px, 4vw, 60px);
+  --space-ui:      8px 13px;
+  --frame-inset:   12px;
+
+  /* Border radius — semantic scale from DS v1.0 */
+  --radius-sm:     4px;    /* small chips, tags */
+  --radius-md:     12px;   /* cards, panels (--r) */
+  --radius-lg:     20px;   /* large cards (--r-lg) */
+  --radius-xl:     30px;   /* hero containers (--r-xl) */
+  --radius-pill:   40px;   /* buttons, badges (--r-pill) */
+  --radius-icon:   40px;
+
+  /* Shadows */
+  --shadow-card:   0 1px 3px rgba(53, 30, 28, 0.08), 0 1px 1px rgba(53, 30, 28, 0.04);
+  --shadow-raised: 0 4px 16px rgba(53, 30, 28, 0.12), 0 1px 4px rgba(53, 30, 28, 0.06);
+
+  /* Motion — DS v1.0 curves */
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);  /* reveals & entrances */
+  --ease-entrance: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out:      cubic-bezier(0.2, 0.7, 0.2, 1);  /* hover lifts, card transitions */
+  --duration-fast: 200ms;
+  --duration-base: 350ms;
+  --duration-reveal: 850ms;   /* content: translateY(30px) → 0 */
+  --duration-image: 1100ms;   /* images: scale(1.07) → 1 */
+}
+
+/* ─── Leaflet map tile tone ──────────────────────────────────────────────── */
+/* Desaturate OSM tiles to match the JOOD off-white editorial palette */
+.leaflet-tile-pane {
+  filter: grayscale(0.72) brightness(1.06) contrast(0.92);
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+html {
+  background-color: var(--jood-ground);
+  color: var(--jood-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body), system-ui, sans-serif;
+  background-color: var(--jood-ground);
+  color: var(--jood-ink);
+  min-height: 100dvh;
+}
+
+/* Arabic body uses Almarai */
+[lang="ar"] body,
+[dir="rtl"] body {
+  font-family: var(--font-arabic), system-ui, sans-serif;
+}
+
+/* ─── Typography utilities ──────────────────────────────────────────────── */
+.font-display { font-family: var(--font-display), Georgia, serif; }
+.font-body    { font-family: var(--font-body), system-ui, sans-serif; }
+.font-label   { font-family: var(--font-label), system-ui, sans-serif; }
+.font-arabic  { font-family: var(--font-arabic), system-ui, sans-serif; }
+
+/* Label / eyebrow style */
+.label-eyebrow {
+  font-family: var(--font-label), system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Door code / wifi — monospace, large */
+.code-display {
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 10vw, 5rem);
+  font-weight: 400;
+  letter-spacing: 0.15em;
+}
+
+/* ─── Page frame ────────────────────────────────────────────────────────── */
+.page-frame {
+  position: fixed;
+  inset: var(--frame-inset);
+  border: 1px solid var(--jood-line);
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* ─── Grain texture ─────────────────────────────────────────────────────── */
+body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 300px 300px;
+}
+
+/* ─── View Transitions ──────────────────────────────────────────────────── */
+@view-transition { navigation: auto; }
+
+@keyframes vtFadeOut {
+  to { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes vtFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+}
+
+::view-transition-old(root) {
+  animation: 180ms var(--ease-standard) vtFadeOut;
+}
+::view-transition-new(root) {
+  animation: 320ms var(--ease-standard) vtFadeIn;
+}
+
+/* ─── Animations ────────────────────────────────────────────────────────── */
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes revealImage {
+  from { opacity: 0; transform: scale(1.07); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes staggerIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes copyPop {
+  0%   { transform: scale(0.7); opacity: 0; }
+  55%  { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-reveal {
+  animation: revealUp var(--duration-reveal) var(--ease-standard) both;
+}
+
+.animate-reveal-image {
+  animation: revealImage var(--duration-image) var(--ease-standard) both;
+}
+
+.stagger-item {
+  opacity: 0;
+  animation: staggerIn 550ms var(--ease-standard) forwards;
+  animation-delay: calc(var(--si, 0) * 75ms + 60ms);
+}
+
+.copy-pop {
+  display: inline-block;
+  animation: copyPop 380ms var(--ease-standard) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-reveal,
+  .animate-reveal-image,
+  .stagger-item {
+    animation: none;
+    opacity: 1;
+  }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* ─── Marquee ────────────────────────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.jood-marquee-track {
+  animation: marquee 32s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jood-marquee-track { animation: none; }
+}
+
+/* ─── Card interaction — DS v1.0 lift ───────────────────────────────────── */
+.jood-card {
+  transition: transform 350ms var(--ease-out), box-shadow 350ms var(--ease-out);
+}
+.jood-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 60px rgba(53, 30, 28, 0.14);
+}
+.jood-card:active {
+  transform: scale(0.982) translateY(0);
+  transition: transform 120ms var(--ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jood-card { transition: none; }
+  .jood-card:hover { transform: none; box-shadow: none; }
+  .jood-card:active { transform: none; }
+}
+
+/* ─── RTL mirroring ─────────────────────────────────────────────────────── */
+/* Use logical properties throughout — these are just helpers for edge cases */
+[dir="rtl"] .mirror-icon {
+  transform: scaleX(-1);
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--jood-line);
+  border-radius: 2px;
+}
+
+/* ─── Focus ─────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--jood-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}

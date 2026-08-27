@@ -1,0 +1,153 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "error": "Something went wrong",
+    "back": "Back",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "submit": "Submit",
+    "language": "العربية"
+  },
+  "nav": {
+    "home": "Home",
+    "arrival": "Arrival",
+    "manual": "House Manual",
+    "discover": "Discover",
+    "services": "Services",
+    "requests": "Requests",
+    "checkout": "Checkout"
+  },
+  "phases": {
+    "anticipation": "Getting excited for your stay",
+    "preparation": "Getting ready for arrival",
+    "arrival": "Welcome — you're almost here",
+    "settling": "Welcome home",
+    "living": "Make the most of your stay",
+    "departure": "Time to wrap up",
+    "afterglow": "Thank you for staying with us"
+  },
+  "home": {
+    "greeting": "Hello, {name}",
+    "stay_dates": "{checkIn} – {checkOut}",
+    "unit": "{unit}",
+    "checkin_opens_in": "Check-in opens in {count}",
+    "checked_in": "You're checked in",
+    "checkout_in": "Checkout in {count}",
+    "days_one": "1 day",
+    "days_other": "{count} days",
+    "hours_one": "1 hour",
+    "hours_other": "{count} hours"
+  },
+  "arrival": {
+    "title": "Getting in",
+    "door_code_label": "Your door code",
+    "hold_to_reveal": "Hold to reveal",
+    "tap_to_copy": "Tap to copy",
+    "directions_label": "Getting here",
+    "parking_label": "Parking",
+    "trouble": "Trouble getting in?",
+    "whatsapp_help": "WhatsApp us",
+    "locked_title": "Almost time",
+    "locked_body": "Your arrival details, including the door code, unlock 48 hours before check-in.",
+    "copied": "Copied",
+    "second_factor_prompt": "Enter the last 4 digits of your phone number",
+    "second_factor_error": "Incorrect — please try again"
+  },
+  "manual": {
+    "title": "House Manual",
+    "card_body": "Wi-Fi · Appliances · House rules",
+    "search_placeholder": "Search the manual…",
+    "sections": {
+      "wifi": "Wi-Fi",
+      "ac": "AC & Heating",
+      "water_heater": "Water Heater",
+      "kitchen": "Kitchen",
+      "tv": "TV & Streaming",
+      "washer": "Washer",
+      "blinds": "Blinds & Shades",
+      "pool": "Pool & Outdoor",
+      "rubbish": "Rubbish & Recycling",
+      "rules": "House Rules",
+      "emergency": "Emergency Contacts"
+    }
+  },
+  "services": {
+    "title": "Services",
+    "from": "From",
+    "egp": "EGP",
+    "request": "Request",
+    "book": "Book",
+    "lead_time": "Book {hours}h in advance",
+    "instant": "Confirms instantly",
+    "modes": {
+      "instant": "Instant",
+      "request": "On request"
+    }
+  },
+  "requests": {
+    "title": "Requests",
+    "new": "New request",
+    "categories": {
+      "maintenance": "Maintenance",
+      "housekeeping": "Housekeeping",
+      "supplies": "Supplies",
+      "service": "Service booking",
+      "other": "Other"
+    },
+    "urgency": {
+      "normal": "Normal",
+      "urgent": "Urgent"
+    },
+    "status": {
+      "received": "Received",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
+    "placeholder_body": "Tell us what you need…",
+    "submitted": "Request submitted"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "time": "Checkout time",
+    "checklist_label": "Before you leave",
+    "key_handling": "Keys & access",
+    "late_checkout": "Late checkout available",
+    "departed_cta": "We've left",
+    "departed_confirm": "Tap to let us know — we'll get the unit ready."
+  },
+  "discover": {
+    "title": "Discover",
+    "eyebrow": "Local guide",
+    "empty": "Recommendations coming soon — your host is curating the list.",
+    "map_cta": "Open in Maps",
+    "arrange": "JOOD can arrange",
+    "filter_all": "All",
+    "categories": {
+      "restaurants": "Restaurants",
+      "cafes": "Cafes",
+      "beach": "Beach & Clubs",
+      "groceries": "Groceries",
+      "activities": "Activities",
+      "nightlife": "Nightlife",
+      "shopping": "Shopping",
+      "emergency": "Emergency"
+    }
+  },
+  "expired": {
+    "title": "Your stay has ended",
+    "body": "Thank you for staying with JOOD. We'd love to have you back.",
+    "review_cta": "Leave a review",
+    "book_direct": "Book your next stay directly with us"
+  },
+  "errors": {
+    "token_invalid": "This link is no longer valid.",
+    "token_expired": "Your stay has ended.",
+    "token_rate_limited": "Too many attempts. Please try again in a minute.",
+    "arrival_locked": "Arrival details unlock 48 hours before check-in.",
+    "generic": "Something went wrong. Please try again."
+  }
+}

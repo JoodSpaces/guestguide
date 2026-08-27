@@ -1,0 +1,153 @@
+{
+  "common": {
+    "loading": "جارٍ التحميل…",
+    "error": "حدث خطأ ما",
+    "back": "رجوع",
+    "copy": "نسخ",
+    "copied": "تم النسخ",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "submit": "إرسال",
+    "language": "English"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "arrival": "الوصول",
+    "manual": "دليل المنزل",
+    "discover": "استكشاف",
+    "services": "الخدمات",
+    "requests": "الطلبات",
+    "checkout": "المغادرة"
+  },
+  "phases": {
+    "anticipation": "أيام قليلة وتصلنا",
+    "preparation": "الاستعداد للوصول",
+    "arrival": "أهلاً — أنت تقترب",
+    "settling": "أهلاً وسهلاً",
+    "living": "استمتع بإقامتك",
+    "departure": "وقت الوداع",
+    "afterglow": "شكراً لإقامتك معنا"
+  },
+  "home": {
+    "greeting": "أهلاً، {name}",
+    "stay_dates": "{checkIn} – {checkOut}",
+    "unit": "{unit}",
+    "checkin_opens_in": "يفتح تسجيل الدخول خلال {count}",
+    "checked_in": "أنت الآن مسجَّل",
+    "checkout_in": "المغادرة خلال {count}",
+    "days_one": "يوم واحد",
+    "days_other": "{count} أيام",
+    "hours_one": "ساعة واحدة",
+    "hours_other": "{count} ساعات"
+  },
+  "arrival": {
+    "title": "الدخول",
+    "door_code_label": "كود الدخول",
+    "hold_to_reveal": "اضغط مطولاً للكشف",
+    "tap_to_copy": "انقر للنسخ",
+    "directions_label": "كيف تصل",
+    "parking_label": "مواقف السيارات",
+    "trouble": "واجهت مشكلة في الدخول؟",
+    "whatsapp_help": "راسلنا على واتساب",
+    "locked_title": "قريباً",
+    "locked_body": "تفاصيل وصولك، بما فيها كود الباب، ستُتاح قبل ٤٨ ساعة من موعد تسجيل الدخول.",
+    "copied": "تم النسخ",
+    "second_factor_prompt": "أدخل آخر ٤ أرقام من رقم هاتفك",
+    "second_factor_error": "غير صحيح — حاول مرة أخرى"
+  },
+  "manual": {
+    "title": "دليل المنزل",
+    "card_body": "الواي فاي · الأجهزة · قواعد المنزل",
+    "search_placeholder": "ابحث في الدليل…",
+    "sections": {
+      "wifi": "الواي فاي",
+      "ac": "التكييف والتدفئة",
+      "water_heater": "سخان المياه",
+      "kitchen": "المطبخ",
+      "tv": "التلفزيون والبث",
+      "washer": "الغسالة",
+      "blinds": "الستائر",
+      "pool": "المسبح والخارج",
+      "rubbish": "النفايات وإعادة التدوير",
+      "rules": "قواعد المنزل",
+      "emergency": "جهات الطوارئ"
+    }
+  },
+  "services": {
+    "title": "الخدمات",
+    "from": "يبدأ من",
+    "egp": "ج.م",
+    "request": "طلب",
+    "book": "احجز",
+    "lead_time": "يُحجز قبل {hours} ساعة",
+    "instant": "تأكيد فوري",
+    "modes": {
+      "instant": "فوري",
+      "request": "عند الطلب"
+    }
+  },
+  "requests": {
+    "title": "الطلبات",
+    "new": "طلب جديد",
+    "categories": {
+      "maintenance": "صيانة",
+      "housekeeping": "تنظيف",
+      "supplies": "مستلزمات",
+      "service": "حجز خدمة",
+      "other": "أخرى"
+    },
+    "urgency": {
+      "normal": "عادي",
+      "urgent": "عاجل"
+    },
+    "status": {
+      "received": "استُلم",
+      "in_progress": "قيد التنفيذ",
+      "resolved": "تم الحل"
+    },
+    "placeholder_body": "أخبرنا بما تحتاج…",
+    "submitted": "تم إرسال الطلب"
+  },
+  "checkout": {
+    "title": "المغادرة",
+    "time": "موعد تسجيل المغادرة",
+    "checklist_label": "قبل المغادرة",
+    "key_handling": "المفاتيح والدخول",
+    "late_checkout": "المغادرة المتأخرة متاحة",
+    "departed_cta": "غادرنا",
+    "departed_confirm": "انقر لإعلامنا — سنجهّز الوحدة فوراً."
+  },
+  "discover": {
+    "title": "استكشاف",
+    "eyebrow": "دليل محلي",
+    "empty": "توصيات قريباً — يعمل مضيفك على تجميع القائمة.",
+    "map_cta": "افتح في الخرائط",
+    "arrange": "جود تنظّم لك",
+    "filter_all": "الكل",
+    "categories": {
+      "restaurants": "مطاعم",
+      "cafes": "كافيهات",
+      "beach": "شاطئ ونوادي",
+      "groceries": "بقالة",
+      "activities": "أنشطة",
+      "nightlife": "حياة ليلية",
+      "shopping": "تسوق",
+      "emergency": "طوارئ"
+    }
+  },
+  "expired": {
+    "title": "انتهت إقامتك",
+    "body": "شكراً لإقامتك مع جود. نأمل أن نراك مجدداً.",
+    "review_cta": "اترك تقييماً",
+    "book_direct": "احجز إقامتك القادمة مباشرةً معنا"
+  },
+  "errors": {
+    "token_invalid": "هذا الرابط لم يعد صالحاً.",
+    "token_expired": "انتهت إقامتك.",
+    "token_rate_limited": "محاولات كثيرة. حاول مجدداً بعد دقيقة.",
+    "arrival_locked": "تفاصيل الوصول تُتاح قبل ٤٨ ساعة من تسجيل الدخول.",
+    "generic": "حدث خطأ. حاول مجدداً."
+  }
+}
