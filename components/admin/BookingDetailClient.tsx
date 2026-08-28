@@ -93,6 +93,8 @@ export function BookingDetailClient({ booking, property, tokens }: Props) {
 
   const [generatingLink, setGeneratingLink] = useState(false);
   const [newLink, setNewLink] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function saveDoorCode() {
     setSavingCode(true);
@@ -135,6 +137,7 @@ export function BookingDetailClient({ booking, property, tokens }: Props) {
     if (res.ok) {
       const data = await res.json();
       setNewLink(data.link);
+      setQrDataUrl(data.qrDataUrl ?? null);
     }
   }
 
@@ -306,23 +309,48 @@ export function BookingDetailClient({ booking, property, tokens }: Props) {
         )}
 
         {newLink ? (
-          <div style={{ backgroundColor: "var(--jood-ground)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", padding: "14px 16px", marginBottom: "10px" }}>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.8125rem", wordBreak: "break-all", marginBottom: "10px" }}>{newLink}</p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => navigator.clipboard.writeText(newLink)}
-                style={{ padding: "8px 16px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", cursor: "pointer", fontSize: "0.8125rem" }}
-              >
-                Copy
-              </button>
-              <a
-                href={newLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ padding: "8px 16px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.8125rem" }}
-              >
-                Open as guest
-              </a>
+          <div style={{ backgroundColor: "var(--jood-ground)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "20px", marginBottom: "12px", display: "flex", gap: "24px", alignItems: "flex-start", flexWrap: "wrap" }}>
+            {/* QR code */}
+            {qrDataUrl && (
+              <div style={{ flexShrink: 0 }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={qrDataUrl}
+                  alt="Guest link QR code"
+                  width={120}
+                  height={120}
+                  style={{ display: "block", borderRadius: "8px", border: "1px solid var(--jood-line)" }}
+                />
+                <p style={{ fontSize: "0.7rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "6px", textAlign: "center" }}>
+                  Scan to open
+                </p>
+              </div>
+            )}
+            {/* Link + actions */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", wordBreak: "break-all", color: "var(--jood-ink-muted)", marginBottom: "14px", lineHeight: 1.6 }}>
+                {newLink}
+              </p>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(newLink);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  style={{ padding: "9px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: copied ? "var(--jood-surface-raised)" : "none", cursor: "pointer", fontSize: "0.8125rem", color: copied ? "var(--jood-success)" : "var(--jood-ink)", transition: "all 200ms" }}
+                >
+                  {copied ? "Copied ✓" : "Copy link"}
+                </button>
+                <a
+                  href={newLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ padding: "9px 18px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.8125rem" }}
+                >
+                  Preview as guest →
+                </a>
+              </div>
             </div>
           </div>
         ) : null}

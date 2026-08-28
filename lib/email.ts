@@ -1,12 +1,21 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return null;
+  if (!_resend) _resend = new Resend(key);
+  return _resend;
+}
+
 const FROM = process.env.FROM_EMAIL ?? "JOOD <onboarding@resend.dev>";
 const ADMIN = process.env.ADMIN_EMAIL ?? "";
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
-function safe(fn: () => Promise<unknown>) {
-  fn().catch((err) => console.error("[email]", err));
+function safe(fn: (r: Resend) => Promise<unknown>) {
+  const r = getResend();
+  if (!r) return;
+  fn(r).catch((err) => console.error("[email]", err));
 }
 
 export function notifyAdminServiceRequest({
@@ -14,7 +23,7 @@ export function notifyAdminServiceRequest({
 }: {
   guestName: string; propertyName: string; serviceName: string; quantity: number; requestId: string;
 }) {
-  safe(() => resend.emails.send({
+  safe((r) => r.emails.send({
     from: FROM,
     to: ADMIN,
     subject: `New service request — ${serviceName} · ${propertyName}`,
@@ -31,7 +40,7 @@ export function notifyAdminGuestRequest({
 }: {
   guestName: string; propertyName: string; category: string; body: string; urgency: string; requestId: string;
 }) {
-  safe(() => resend.emails.send({
+  safe((r) => r.emails.send({
     from: FROM,
     to: ADMIN,
     subject: `${urgency === "urgent" ? "🚨 Urgent" : "New"} guest request — ${propertyName}`,
@@ -50,7 +59,7 @@ export function confirmGuestServiceRequest({
 }: {
   guestEmail: string; guestFirstName: string; serviceName: string; quantity: number;
 }) {
-  safe(() => resend.emails.send({
+  safe((r) => r.emails.send({
     from: FROM,
     to: guestEmail,
     subject: `We received your request — ${serviceName}`,
@@ -73,7 +82,7 @@ export function confirmGuestRequest({
     maintenance: "maintenance", housekeeping: "housekeeping",
     supplies: "supplies request", service: "service booking", other: "request",
   };
-  safe(() => resend.emails.send({
+  safe((r) => r.emails.send({
     from: FROM,
     to: guestEmail,
     subject: "We received your request",

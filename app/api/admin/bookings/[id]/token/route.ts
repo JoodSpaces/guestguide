@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateToken, hashToken } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
+import QRCode from "qrcode";
+
+function resolveAppUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (configured && !configured.includes("localhost")) return configured.replace(/\/$/, "");
+  // Vercel injects these at runtime — production URL is stable, VERCEL_URL is per-deploy
+  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProd) return `https://${vercelProd}`;
+  const vercelDeploy = process.env.VERCEL_URL;
+  if (vercelDeploy) return `https://${vercelDeploy}`;
+  return configured || "http://localhost:3000";
+}
 
 export async function POST(
   _req: NextRequest,
@@ -38,6 +50,14 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  return NextResponse.json({ link: `${appUrl}/s/${plaintext}` });
+  const appUrl = resolveAppUrl();
+  const link = `${appUrl}/s/${plaintext}`;
+
+  const qrDataUrl = await QRCode.toDataURL(link, {
+    width: 240,
+    margin: 2,
+    color: { dark: "#0f0e0b", light: "#f5f4ed" },
+  }).catch(() => null);
+
+  return NextResponse.json({ link, qrDataUrl });
 }

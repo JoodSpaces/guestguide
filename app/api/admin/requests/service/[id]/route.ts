@@ -74,7 +74,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const booking = Array.isArray(sr.bookings) ? sr.bookings[0] : sr.bookings;
     const priceEgp = (service?.price_egp ?? 0) * sr.quantity;
 
-    if (priceEgp > 0) {
+    if (priceEgp > 0 && process.env.PAYMOB_API_KEY) {
       try {
         const { paymobOrderId, paymentUrl } = await createPaymentLink({
           serviceRequestId: id,
