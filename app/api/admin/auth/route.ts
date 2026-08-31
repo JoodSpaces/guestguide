@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     .select("id, name, role, password_hash")
     .eq("is_active", true)
     .ilike("name", name.trim())
-    .single<{ id: string; name: string; role: "admin" | "ops" | "concierge"; password_hash: string }>();
+    .single<{ id: string; name: string; role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge"; password_hash: string }>();
 
   if (member && (await verifyPassword(password, member.password_hash))) {
     const session: AdminSession = { id: member.id, name: member.name, role: member.role, iat, exp };

@@ -5,15 +5,17 @@ import { useState } from "react";
 interface Member {
   id: string;
   name: string;
-  role: "admin" | "ops" | "concierge";
+  role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
   is_active: boolean;
   created_at: string;
 }
 
 const ROLE_COLOR: Record<string, string> = {
-  admin: "var(--jood-accent)",
-  ops: "var(--jood-aqua)",
-  concierge: "var(--jood-garnet)",
+  admin:        "var(--jood-accent)",
+  ops:          "var(--jood-aqua)",
+  housekeeping: "var(--jood-aqua)",
+  maintenance:  "var(--jood-garnet)",
+  concierge:    "var(--jood-garnet)",
 };
 
 const card: React.CSSProperties = {
@@ -131,7 +133,9 @@ export function TeamClient({ initialMembers }: { initialMembers: Member[] }) {
                 <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px" }}>Role</label>
                 <select value={form.role} onChange={(e) => setForm((f) => ({ ...f, role: e.target.value as Member["role"] }))} style={inputStyle}>
                   <option value="admin">Admin — full access</option>
-                  <option value="ops">Ops — turnovers & maintenance</option>
+                  <option value="ops">Ops — supervisor (all operations)</option>
+                  <option value="housekeeping">Housekeeping — turnovers only</option>
+                  <option value="maintenance">Maintenance — tickets only</option>
                   <option value="concierge">Concierge — requests & bookings</option>
                 </select>
               </div>
@@ -164,7 +168,7 @@ export function TeamClient({ initialMembers }: { initialMembers: Member[] }) {
           {editingId === member.id ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                {(["admin", "ops", "concierge"] as const).map((r) => (
+                {(["admin", "ops", "housekeeping", "maintenance", "concierge"] as const).map((r) => (
                   <button key={r} onClick={() => changeRole(member, r)} style={{ padding: "7px 14px", border: `1px solid ${member.role === r ? ROLE_COLOR[r] : "var(--jood-line)"}`, borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.8125rem", cursor: "pointer", color: member.role === r ? ROLE_COLOR[r] : "var(--jood-ink-muted)", textTransform: "capitalize" }}>
                     {r}
                   </button>
@@ -215,8 +219,10 @@ export function TeamClient({ initialMembers }: { initialMembers: Member[] }) {
       <div style={{ marginTop: "32px", padding: "16px 20px", borderRadius: "var(--radius-md)", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", fontSize: "0.8125rem", color: "var(--jood-ink-muted)", lineHeight: 1.6 }}>
         <strong style={{ color: "var(--jood-ink)" }}>Role access</strong><br />
         <span style={{ color: ROLE_COLOR.admin }}>Admin</span> — everything<br />
-        <span style={{ color: ROLE_COLOR.ops }}>Ops</span> — turnovers, maintenance, inventory<br />
-        <span style={{ color: ROLE_COLOR.concierge }}>Concierge</span> — guest requests, service requests, bookings
+        <span style={{ color: ROLE_COLOR.ops }}>Ops</span> — all operations (supervisor)<br />
+        <span style={{ color: ROLE_COLOR.housekeeping }}>Housekeeping</span> — turnover tasks only<br />
+        <span style={{ color: ROLE_COLOR.maintenance }}>Maintenance</span> — maintenance tickets only<br />
+        <span style={{ color: ROLE_COLOR.concierge }}>Concierge</span> — guest requests & bookings
       </div>
     </div>
   );

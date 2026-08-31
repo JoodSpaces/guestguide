@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
 const createSchema = z.object({
   name: z.string().min(1).max(50),
-  role: z.enum(["admin", "ops", "concierge"]),
+  role: z.enum(["admin", "ops", "housekeeping", "maintenance", "concierge"]),
   password: z.string().min(6).max(200),
 });
 

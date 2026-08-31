@@ -57,7 +57,7 @@ const card: React.CSSProperties = {
 export default async function OpsPage() {
   const h = await headers();
   const myName = h.get("x-admin-name") ?? "";
-  const role   = (h.get("x-admin-role") ?? "admin") as "admin" | "ops" | "concierge";
+  const role   = (h.get("x-admin-role") ?? "admin") as "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
 
   const supabase = createServiceClient();
 
@@ -149,10 +149,12 @@ export default async function OpsPage() {
               + Ticket
             </a>
           )}
-          <CreateTurnoverForm
-            properties={properties ?? []}
-            teamMembers={teamMembers ?? []}
-          />
+          {(role === "admin" || role === "ops") && (
+            <CreateTurnoverForm
+              properties={properties ?? []}
+              teamMembers={teamMembers ?? []}
+            />
+          )}
         </div>
       </div>
 
@@ -214,8 +216,8 @@ export default async function OpsPage() {
           )}
         </section>
 
-        {/* Maintenance tickets — admin/ops only */}
-        {role !== "concierge" && (
+        {/* Maintenance tickets — admin/ops/maintenance only */}
+        {(role === "admin" || role === "ops" || role === "maintenance") && (
           <section>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
               <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>

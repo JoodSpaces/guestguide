@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const h = await headers();
-  const role = (h.get("x-admin-role") ?? "admin") as "admin" | "ops" | "concierge";
+  const role = (h.get("x-admin-role") ?? "admin") as "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
   const name = h.get("x-admin-name") ?? "";
   const authenticated = !!name;
 

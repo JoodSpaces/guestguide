@@ -4,24 +4,30 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 
 const ROLE_HOME: Record<string, string> = {
-  admin: "/admin",
-  ops: "/admin/ops",
-  concierge: "/admin/requests",
+  admin:        "/admin",
+  ops:          "/admin/ops",
+  housekeeping: "/admin/ops",
+  maintenance:  "/admin/ops/maintenance",
+  concierge:    "/admin/requests",
 };
 import { PresenceAvatars } from "@/components/admin/PresenceAvatars";
 
 const ROLE_COLOR: Record<string, string> = {
-  admin: "var(--jood-accent)",
-  ops: "var(--jood-aqua)",
-  concierge: "var(--jood-garnet)",
+  admin:        "var(--jood-accent)",
+  ops:          "var(--jood-aqua)",
+  housekeeping: "var(--jood-aqua)",
+  maintenance:  "var(--jood-garnet)",
+  concierge:    "var(--jood-garnet)",
 };
 
 const PRIMARY_NAV = [
-  { href: "/admin",             label: "Today",     roles: ["admin"] },
-  { href: "/admin/bookings",    label: "Bookings",  roles: ["admin", "concierge"] },
-  { href: "/admin/ops",         label: "Ops",       roles: ["admin", "ops"] },
-  { href: "/admin/services",    label: "Services",  roles: ["admin"] },
-  { href: "/admin/requests",    label: "Requests",  roles: ["admin", "concierge"] },
+  { href: "/admin",                  label: "Today",       roles: ["admin"] },
+  { href: "/admin/bookings",         label: "Bookings",    roles: ["admin", "concierge"] },
+  { href: "/admin/ops",              label: "Ops",         roles: ["admin", "ops"] },
+  { href: "/admin/ops",              label: "Turnovers",   roles: ["housekeeping"] },
+  { href: "/admin/ops/maintenance",  label: "Maintenance", roles: ["maintenance"] },
+  { href: "/admin/services",         label: "Services",    roles: ["admin"] },
+  { href: "/admin/requests",         label: "Requests",    roles: ["admin", "concierge"] },
 ];
 
 const SECONDARY_NAV = [
@@ -30,7 +36,7 @@ const SECONDARY_NAV = [
 ];
 
 interface Props {
-  role: "admin" | "ops" | "concierge";
+  role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
   name: string;
 }
 

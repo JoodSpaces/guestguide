@@ -11,7 +11,7 @@ async function requireAdmin(req: NextRequest) {
 }
 
 const patchSchema = z.object({
-  role: z.enum(["admin", "ops", "concierge"]).optional(),
+  role: z.enum(["admin", "ops", "housekeeping", "maintenance", "concierge"]).optional(),
   password: z.string().min(6).max(200).optional(),
   is_active: z.boolean().optional(),
 });

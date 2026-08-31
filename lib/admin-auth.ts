@@ -1,7 +1,7 @@
 export interface AdminSession {
   id: string;
   name: string;
-  role: "admin" | "ops" | "concierge";
+  role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
   iat: number;
   exp: number;
 }
@@ -88,14 +88,26 @@ export async function verifyAdminCookie(cookie: string): Promise<AdminSession | 
 }
 
 export const ROLE_HOME: Record<string, string> = {
-  admin: "/admin",
-  ops: "/admin/ops",
-  concierge: "/admin/requests",
+  admin:        "/admin",
+  ops:          "/admin/ops",
+  housekeeping: "/admin/ops",
+  maintenance:  "/admin/ops/maintenance",
+  concierge:    "/admin/requests",
 };
 
 export function isPathAllowed(pathname: string, role: string): boolean {
   if (role === "admin") return true;
   if (role === "ops") return pathname.startsWith("/admin/ops");
+  if (role === "housekeeping") {
+    return (
+      pathname === "/admin/ops" ||
+      pathname.startsWith("/admin/ops/turnover") ||
+      pathname.startsWith("/admin/ops/inventory")
+    );
+  }
+  if (role === "maintenance") {
+    return pathname.startsWith("/admin/ops/maintenance");
+  }
   if (role === "concierge") {
     return (
       pathname.startsWith("/admin/requests") ||
