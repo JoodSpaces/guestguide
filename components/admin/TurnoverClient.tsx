@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ROOM_LABELS } from "@/lib/ops-checklist";
 
 export interface TurnoverItem {
@@ -30,6 +30,23 @@ export interface TurnoverTask {
   bookings: { id: string; check_in: string; check_out: string; guest_first_name: string; guest_last_name: string } | null;
 }
 
+interface InventoryItem {
+  id: string;
+  name: string;
+  unit: string;
+  category: string;
+}
+
+interface DamageRecord {
+  id: string;
+  item_id: string;
+  quantity: number;
+  condition: "damaged" | "missing" | "needs_cleaning";
+  notes: string | null;
+  created_at: string;
+  inventory_items: { name: string; unit: string; category: string };
+}
+
 interface Props {
   task: TurnoverTask;
   items: TurnoverItem[];
@@ -48,6 +65,12 @@ const CONDITION_COLORS: Record<string, string> = {
   good: "var(--jood-success)",
   fair: "var(--jood-warning)",
   damaged: "var(--jood-danger)",
+};
+
+const DAMAGE_COLORS: Record<string, string> = {
+  damaged: "var(--jood-danger)",
+  missing: "var(--jood-warning)",
+  needs_cleaning: "var(--jood-aqua)",
 };
 
 const card: React.CSSProperties = {
@@ -85,6 +108,59 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
   const [condition, setCondition] = useState<string>(task.condition ?? "good");
   const [savingAssess, setSavingAssess] = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Inventory damage state
+  const [damageRecords, setDamageRecords] = useState<DamageRecord[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState("");
+  const [damageQty, setDamageQty] = useState(1);
+  const [damageCondition, setDamageCondition] = useState<"damaged" | "missing" | "needs_cleaning">("missing");
+  const [damageItemNote, setDamageItemNote] = useState("");
+  const [addingDamage, setAddingDamage] = useState(false);
+  const [removingDamageId, setRemovingDamageId] = useState<string | null>(null);
+
+  const propertyId = task.properties.id;
+
+  useEffect(() => {
+    fetch(`/api/admin/ops/inventory/${propertyId}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: InventoryItem[]) => setInventoryItems(data))
+      .catch(() => {});
+    fetch(`/api/admin/ops/turnover/${task.id}/damage`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: DamageRecord[]) => setDamageRecords(data))
+      .catch(() => {});
+  }, [propertyId, task.id]);
+
+  async function addDamageItem() {
+    if (!selectedItemId) return;
+    setAddingDamage(true);
+    const res = await fetch(`/api/admin/ops/turnover/${task.id}/damage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        item_id: selectedItemId,
+        quantity: damageQty,
+        condition: damageCondition,
+        notes: damageItemNote || null,
+      }),
+    });
+    setAddingDamage(false);
+    if (res.ok) {
+      const record: DamageRecord = await res.json();
+      setDamageRecords((prev) => [...prev, record]);
+      setSelectedItemId("");
+      setDamageQty(1);
+      setDamageItemNote("");
+    }
+  }
+
+  async function removeDamageItem(id: string) {
+    setRemovingDamageId(id);
+    await fetch(`/api/admin/ops/turnover/${task.id}/damage?damageId=${id}`, { method: "DELETE" });
+    setDamageRecords((prev) => prev.filter((r) => r.id !== id));
+    setRemovingDamageId(null);
+  }
 
   const grouped = items.reduce<Record<string, TurnoverItem[]>>((acc, item) => {
     (acc[item.room] ??= []).push(item);
@@ -256,6 +332,125 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
         );
       })}
 
+      {/* Missing / Damaged Items (inventory) */}
+      <div style={{ ...card, borderColor: damageRecords.length > 0 ? "var(--jood-danger)" : "var(--jood-line)" }}>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "14px" }}>
+          Missing / Damaged Items
+        </p>
+
+        {/* Existing damage records */}
+        {damageRecords.length > 0 && (
+          <div style={{ marginBottom: "14px", display: "flex", flexDirection: "column", gap: "6px" }}>
+            {damageRecords.map((r) => (
+              <div key={r.id} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "8px 12px",
+                borderRadius: "var(--radius-md)",
+                borderLeft: `3px solid ${DAMAGE_COLORS[r.condition] ?? "var(--jood-line)"}`,
+                backgroundColor: "var(--jood-ground)",
+                gap: "10px",
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink)" }}>
+                    {r.inventory_items.name}
+                  </span>
+                  <span style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginLeft: "8px" }}>
+                    ×{r.quantity} {r.inventory_items.unit}
+                  </span>
+                  <span style={{
+                    marginLeft: "8px",
+                    fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.1em",
+                    textTransform: "uppercase", color: DAMAGE_COLORS[r.condition] ?? "var(--jood-ink-muted)",
+                  }}>
+                    {r.condition.replace("_", " ")}
+                  </span>
+                  {r.notes && <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)", marginTop: "2px" }}>{r.notes}</p>}
+                </div>
+                <button
+                  onClick={() => removeDamageItem(r.id)}
+                  disabled={removingDamageId === r.id}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", fontSize: "1rem", padding: "2px 6px", flexShrink: 0 }}
+                  title="Remove"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Add form */}
+        {inventoryItems.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <select
+                value={selectedItemId}
+                onChange={(e) => setSelectedItemId(e.target.value)}
+                style={{ flex: 2, minWidth: "140px", padding: "8px 10px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "var(--jood-ground)", fontSize: "0.875rem", color: selectedItemId ? "var(--jood-ink)" : "var(--jood-ink-ghost)" }}
+              >
+                <option value="">Select item…</option>
+                {inventoryItems.map((i) => (
+                  <option key={i.id} value={i.id}>{i.name} ({i.category})</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={damageQty}
+                onChange={(e) => setDamageQty(Math.max(1, parseInt(e.target.value) || 1))}
+                style={{ width: "60px", padding: "8px 10px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "var(--jood-ground)", fontSize: "0.875rem", color: "var(--jood-ink)", textAlign: "center" }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {(["missing", "damaged", "needs_cleaning"] as const).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setDamageCondition(c)}
+                  style={{
+                    padding: "5px 12px",
+                    borderRadius: "var(--radius-pill)",
+                    border: `1px solid ${damageCondition === c ? DAMAGE_COLORS[c] : "var(--jood-line)"}`,
+                    backgroundColor: "transparent",
+                    color: damageCondition === c ? DAMAGE_COLORS[c] : "var(--jood-ink-muted)",
+                    fontSize: "0.75rem", cursor: "pointer",
+                    fontFamily: "var(--font-label)", letterSpacing: "0.06em", textTransform: "capitalize",
+                  }}
+                >
+                  {c.replace("_", " ")}
+                </button>
+              ))}
+            </div>
+            <input
+              value={damageItemNote}
+              onChange={(e) => setDamageItemNote(e.target.value)}
+              placeholder="Note (optional)"
+              style={{ padding: "8px 10px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "var(--jood-ground)", fontSize: "0.875rem", color: "var(--jood-ink)" }}
+            />
+            <button
+              onClick={addDamageItem}
+              disabled={!selectedItemId || addingDamage}
+              style={{
+                alignSelf: "flex-start",
+                padding: "8px 18px",
+                backgroundColor: selectedItemId ? "var(--jood-danger)" : "var(--jood-line)",
+                color: selectedItemId ? "white" : "var(--jood-ink-muted)",
+                border: "none", borderRadius: "var(--radius-pill)",
+                fontSize: "0.8125rem", cursor: selectedItemId ? "pointer" : "not-allowed",
+                opacity: addingDamage ? 0.5 : 1,
+              }}
+            >
+              {addingDamage ? "Logging…" : "+ Log item"}
+            </button>
+          </div>
+        ) : (
+          <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>
+            No inventory items set up for this property yet.{" "}
+            <a href="/admin/ops" style={{ color: "var(--jood-accent)" }}>Go to Ops → Inventory</a> to add items.
+          </p>
+        )}
+      </div>
+
       {/* Unit Assessment */}
       <div style={{ ...card, backgroundColor: "var(--jood-surface-raised)" }}>
         <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "14px" }}>Unit Assessment</p>
@@ -271,7 +466,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
                   padding: "6px 14px",
                   borderRadius: "var(--radius-pill)",
                   border: `1px solid ${condition === c ? CONDITION_COLORS[c] : "var(--jood-line)"}`,
-                  backgroundColor: condition === c ? "transparent" : "transparent",
+                  backgroundColor: "transparent",
                   color: condition === c ? CONDITION_COLORS[c] : "var(--jood-ink-muted)",
                   fontSize: "0.8125rem",
                   cursor: "pointer",
