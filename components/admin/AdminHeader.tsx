@@ -78,11 +78,11 @@ export function AdminHeader({ role, name }: Props) {
   return (
     <header
       style={{
-        padding: "0 16px",
+        padding: "0 12px",
         height: "56px",
         display: "flex",
         alignItems: "center",
-        gap: "8px",
+        gap: "6px",
         borderBottom: "1px solid var(--jood-line)",
         position: "sticky",
         top: 0,
@@ -99,7 +99,7 @@ export function AdminHeader({ role, name }: Props) {
       <div style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)", flexShrink: 0, margin: "0 4px" }} />
 
       {/* Primary nav */}
-      <nav style={{ display: "flex", gap: "16px", alignItems: "center", flex: 1, minWidth: 0 }}>
+      <nav style={{ display: "flex", gap: "10px", alignItems: "center", flex: 1, minWidth: 0 }}>
         {primaryVisible.map((item) => (
           <a key={item.href} href={item.href} style={linkStyle(isActive(item.href))}>
             {item.label}
@@ -170,7 +170,7 @@ export function AdminHeader({ role, name }: Props) {
       </nav>
 
       {/* Right side: presence + profile avatar */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
         <PresenceAvatars myName={name} myRole={role} />
 
         {/* Profile avatar with dropdown */}
