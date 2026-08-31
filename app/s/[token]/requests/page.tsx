@@ -29,7 +29,7 @@ export default async function RequestsPage({ params }: Props) {
     .from("guest_requests")
     .select("id, category, body, urgency, status, admin_notes, created_at")
     .eq("booking_id", tokenRow.booking_id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   const locale = booking.guest_lang === "ar" ? "ar" : "en";
 

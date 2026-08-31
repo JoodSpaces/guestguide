@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 
 interface ServiceReq {
   id: string;
@@ -58,7 +58,39 @@ export function RequestsListClient({
   initialGuestReqs: GuestReq[];
 }) {
   const [tab, setTab] = useState<Tab>("guest");
+  const [query, setQuery] = useState("");
   const CAT_LABELS: Record<string, string> = { maintenance: "Maintenance", housekeeping: "Housekeeping", supplies: "Supplies", service: "Service booking", other: "Other" };
+
+  const filteredGuest = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return initialGuestReqs;
+    return initialGuestReqs.filter((r) => {
+      const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+      const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
+      return (
+        r.body.toLowerCase().includes(q) ||
+        r.category.toLowerCase().includes(q) ||
+        r.status.toLowerCase().includes(q) ||
+        `${booking?.guest_first_name ?? ""} ${booking?.guest_last_name ?? ""}`.toLowerCase().includes(q) ||
+        ((property as { name: string })?.name ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [query, initialGuestReqs]);
+
+  const filteredService = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return initialServiceReqs;
+    return initialServiceReqs.filter((r) => {
+      const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+      const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
+      return (
+        (r.services?.name_en ?? "").toLowerCase().includes(q) ||
+        r.status.toLowerCase().includes(q) ||
+        `${booking?.guest_first_name ?? ""} ${booking?.guest_last_name ?? ""}`.toLowerCase().includes(q) ||
+        ((property as { name: string })?.name ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [query, initialServiceReqs]);
 
   const tabBtn = (t: Tab, label: string, count: number) => (
     <button
@@ -88,17 +120,44 @@ export function RequestsListClient({
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Requests</h1>
       </div>
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+      <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
         {tabBtn("guest", "Guest requests", pendingGuest)}
         {tabBtn("service", "Service bookings", pendingServices)}
       </div>
 
+      {/* Search */}
+      <div style={{ position: "relative", marginBottom: "16px" }}>
+        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-ghost)", fontSize: "0.85rem", pointerEvents: "none" }}>🔍</span>
+        <input
+          type="text"
+          placeholder="Search by guest, property, status…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          style={{
+            width: "100%", boxSizing: "border-box",
+            padding: "10px 14px 10px 38px",
+            border: "1px solid var(--jood-line)",
+            borderRadius: "var(--radius-pill)",
+            backgroundColor: "var(--jood-surface)",
+            color: "var(--jood-ink)",
+            fontSize: "0.875rem",
+            fontFamily: "inherit",
+            outline: "none",
+          }}
+        />
+        {query && (
+          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", fontSize: "1rem", padding: 0 }}>×</button>
+        )}
+      </div>
+
       {tab === "guest" && (
         <div>
-          {!initialGuestReqs.length && (
-            <div style={{ ...card, textAlign: "center", padding: "40px", color: "var(--jood-ink-muted)" }}>No guest requests yet</div>
+          {!filteredGuest.length && (
+            <div style={{ ...card, textAlign: "center", padding: "40px", color: "var(--jood-ink-muted)" }}>
+              {query ? `No requests matching "${query}"` : "No guest requests yet"}
+            </div>
           )}
-          {initialGuestReqs.map((r) => {
+          {filteredGuest.map((r) => {
             const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
             const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
             return (
@@ -125,10 +184,12 @@ export function RequestsListClient({
 
       {tab === "service" && (
         <div>
-          {!initialServiceReqs.length && (
-            <div style={{ ...card, textAlign: "center", padding: "40px", color: "var(--jood-ink-muted)" }}>No service bookings yet</div>
+          {!filteredService.length && (
+            <div style={{ ...card, textAlign: "center", padding: "40px", color: "var(--jood-ink-muted)" }}>
+              {query ? `No bookings matching "${query}"` : "No service bookings yet"}
+            </div>
           )}
-          {initialServiceReqs.map((r) => {
+          {filteredService.map((r) => {
             const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
             const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
             const totalPrice = (r.services?.price_egp ?? 0) * r.quantity;

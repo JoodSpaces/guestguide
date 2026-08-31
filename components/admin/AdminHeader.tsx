@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { PresenceAvatars } from "@/components/admin/PresenceAvatars";
 
 const ROLE_LABEL: Record<string, string> = {
   admin: "Admin",
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: "/admin/ops", label: "Ops", roles: ["admin", "ops"] },
   { href: "/admin/services", label: "Services", roles: ["admin"] },
   { href: "/admin/requests", label: "Requests", roles: ["admin", "concierge"] },
+  { href: "/admin/properties", label: "Properties", roles: ["admin"] },
   { href: "/admin/team", label: "Team", roles: ["admin"] },
 ];
 
@@ -30,6 +32,12 @@ interface Props {
 
 export function AdminHeader({ role, name }: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+
+  function isActive(href: string) {
+    if (href === "/admin") return pathname === "/admin";
+    return pathname.startsWith(href);
+  }
 
   async function handleLogout() {
     await fetch("/api/admin/auth", { method: "DELETE" });
@@ -66,13 +74,27 @@ export function AdminHeader({ role, name }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
         <nav style={{ display: "flex", gap: "24px" }}>
           {visibleNav.map((item) => (
-            <a key={item.href} href={item.href} style={{ color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.875rem" }}>
+            <a
+              key={item.href}
+              href={item.href}
+              style={{
+                color: isActive(item.href) ? "var(--jood-ink)" : "var(--jood-ink-muted)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                fontWeight: isActive(item.href) ? 600 : 400,
+                borderBottom: isActive(item.href) ? "2px solid var(--jood-ink)" : "2px solid transparent",
+                paddingBottom: "2px",
+                transition: "color 150ms, border-color 150ms",
+              }}
+            >
               {item.label}
             </a>
           ))}
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <PresenceAvatars myName={name} myRole={role} />
+          <div style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)" }} />
           {name && (
             <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
               {name}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import { LiveFeedPanel } from "@/components/admin/LiveFeedPanel";
 
 export const metadata: Metadata = {
   title: "JOOD Admin",
@@ -11,6 +12,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const h = await headers();
   const role = (h.get("x-admin-role") ?? "admin") as "admin" | "ops" | "concierge";
   const name = h.get("x-admin-name") ?? "";
+  const authenticated = !!name;
+
+  if (!authenticated) {
+    return (
+      <div dir="ltr" style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)", color: "var(--jood-ink)" }}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div dir="ltr" style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)", color: "var(--jood-ink)" }}>
@@ -18,6 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <main style={{ padding: "32px 24px", maxWidth: "900px", margin: "0 auto" }}>
         {children}
       </main>
+      <LiveFeedPanel />
     </div>
   );
 }

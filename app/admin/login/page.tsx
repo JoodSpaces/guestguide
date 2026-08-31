@@ -106,6 +106,10 @@ export default function AdminLoginPage() {
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
+
+        <p style={{ marginTop: "32px", textAlign: "center", fontSize: "0.75rem", color: "var(--jood-ink-ghost)", lineHeight: 1.6 }}>
+          Locked out? Ask your property manager<br />to reset your team member account.
+        </p>
       </div>
     </div>
   );

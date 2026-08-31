@@ -6,7 +6,7 @@ export default async function AdminTodayPage() {
   const todayStart = now.slice(0, 10) + "T00:00:00Z";
   const todayEnd = now.slice(0, 10) + "T23:59:59Z";
 
-  const [{ data: arrivals }, { data: departures }, { data: openRequests }] = await Promise.all([
+  const [{ data: arrivals }, { data: departures }, { data: openRequests }, { data: properties }, { data: activeTurnovers }, { data: urgentTickets }, { data: pendingServiceReqs }] = await Promise.all([
     supabase
       .from("bookings")
       .select("id, guest_first_name, guest_last_name, properties(name)")
@@ -28,6 +28,10 @@ export default async function AdminTodayPage() {
       .order("created_at", { ascending: false })
       .limit(10)
       .returns<{ id: string; category: string; urgency: string; created_at: string; bookings: { guest_first_name: string; properties: { name: string } } }[]>(),
+    supabase.from("properties").select("id, name"),
+    supabase.from("turnover_tasks").select("property_id, status").in("status", ["pending", "in_progress"]),
+    supabase.from("maintenance_tickets").select("property_id").eq("priority", "urgent").neq("status", "resolved"),
+    supabase.from("service_requests").select("id, bookings(property_id)").eq("status", "pending"),
   ]);
 
   const Section = ({ title, count }: { title: string; count: number }) => (
@@ -69,6 +73,87 @@ export default async function AdminTodayPage() {
         </a>
       </div>
 
+      {/* Property status rings */}
+      {(properties?.length ?? 0) > 0 && (() => {
+        const turnoversPerProp = new Set(activeTurnovers?.map((t) => t.property_id) ?? []);
+        const urgentPerProp = new Set(urgentTickets?.map((t) => t.property_id) ?? []);
+        const pendingPerProp = new Set(
+          (pendingServiceReqs ?? []).map((r) => {
+            const b = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+            return (b as { property_id: string } | null)?.property_id;
+          }).filter(Boolean)
+        );
+
+        function status(pid: string): "clear" | "amber" | "red" {
+          if (urgentPerProp.has(pid)) return "red";
+          if (turnoversPerProp.has(pid) || pendingPerProp.has(pid)) return "amber";
+          return "clear";
+        }
+
+        const STATUS_COLOR = { clear: "#4ade80", amber: "#f59e0b", red: "#f87171" };
+        const STATUS_BG = { clear: "rgba(74,222,128,0.08)", amber: "rgba(245,158,11,0.08)", red: "rgba(248,113,113,0.08)" };
+        const STATUS_LABEL = { clear: "All clear", amber: "Needs attention", red: "Urgent" };
+
+        return (
+          <div style={{ marginBottom: "32px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "14px", flexWrap: "wrap" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+                Properties
+              </p>
+              <div style={{ display: "flex", gap: "10px" }}>
+                {(["clear", "amber", "red"] as const).map((s) => (
+                  <span key={s} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.65rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", letterSpacing: "0.08em" }}>
+                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: STATUS_COLOR[s], display: "inline-block" }} />
+                    {s === "clear" ? "All clear" : s === "amber" ? "Attention" : "Urgent"}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              {properties!.map((p) => {
+                const s = status(p.id);
+                const col = STATUS_COLOR[s];
+                const r = 18;
+                const circ = 2 * Math.PI * r;
+                const pct = s === "clear" ? 1 : s === "amber" ? 0.6 : 0.85;
+                return (
+                  <a
+                    key={p.id}
+                    href={`/admin/ops/inventory/${p.id}`}
+                    title={STATUS_LABEL[s]}
+                    style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}
+                  >
+                    <div style={{ position: "relative", width: "52px", height: "52px" }}>
+                      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+                        <circle cx="26" cy="26" r={r} stroke="var(--jood-line)" strokeWidth="2.5" fill={STATUS_BG[s]} />
+                        <circle
+                          cx="26" cy="26" r={r}
+                          stroke={col}
+                          strokeWidth="2.5"
+                          fill="none"
+                          strokeDasharray={`${circ * pct} ${circ * (1 - pct)}`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 26 26)"
+                          style={{ transition: "stroke-dasharray 800ms ease" }}
+                        />
+                      </svg>
+                      <span style={{
+                        position: "absolute", inset: 0,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: "0.75rem",
+                      }}>
+                        {s === "clear" ? "✓" : s === "red" ? "!" : "~"}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: "0.6875rem", color: "var(--jood-ink-muted)", textAlign: "center", maxWidth: "64px", lineHeight: 1.3 }}>{p.name}</p>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
         {/* Arrivals */}
         <div
@@ -81,7 +166,12 @@ export default async function AdminTodayPage() {
         >
           <Section title="Arrivals" count={arrivals?.length ?? 0} />
           {arrivals?.length === 0 && (
-            <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>None today</p>
+            <div>
+              <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>None today</p>
+              <a href="/admin/bookings/new" style={{ display: "inline-block", marginTop: "10px", fontSize: "0.8rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                + Add a booking
+              </a>
+            </div>
           )}
           {arrivals?.map((b) => {
             const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
@@ -113,6 +203,7 @@ export default async function AdminTodayPage() {
           {departures?.length === 0 && (
             <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>None today</p>
           )}
+
           {departures?.map((b) => {
             const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
             return (
@@ -134,7 +225,10 @@ export default async function AdminTodayPage() {
       {/* Open requests */}
       <Section title="Open requests" count={openRequests?.length ?? 0} />
       {openRequests?.length === 0 && (
-        <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>All clear</p>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
+          <span style={{ fontSize: "1.1rem" }}>✓</span>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>All clear — no open requests</p>
+        </div>
       )}
       {openRequests?.map((r) => {
         const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;

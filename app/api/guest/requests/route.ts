@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     .from("guest_requests")
     .select("id, category, body, urgency, status, admin_notes, created_at")
     .eq("booking_id", booking.id)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   return NextResponse.json(data ?? []);
 }
