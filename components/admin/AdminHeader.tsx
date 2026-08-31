@@ -93,8 +93,10 @@ export function AdminHeader({ role, name }: Props) {
       }}
     >
       {/* Logo */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block", flexShrink: 0 }} />
+      <a href="/admin" style={{ display: "block", flexShrink: 0, lineHeight: 0 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block" }} />
+      </a>
 
       <div style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)", flexShrink: 0, margin: "0 4px" }} />
 
