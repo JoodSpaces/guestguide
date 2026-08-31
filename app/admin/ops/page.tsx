@@ -6,7 +6,7 @@ import { CreateTurnoverForm } from "@/components/admin/CreateTurnoverForm";
 const STATUS_COLOR: Record<string, string> = {
   scheduled: "var(--jood-aqua)",
   pending: "var(--jood-ink-muted)",
-  in_progress: "var(--jood-warning)",
+  in_progress: "var(--jood-accent)",
   ready: "var(--jood-success)",
   approved: "var(--jood-aqua)",
 };

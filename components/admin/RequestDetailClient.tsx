@@ -30,12 +30,12 @@ interface GuestRequest {
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "var(--jood-ink-muted)",
-  approved: "var(--jood-warning)",
+  approved: "var(--jood-accent)",
   paid: "var(--jood-success)",
   fulfilled: "var(--jood-aqua)",
   rejected: "var(--jood-danger)",
   received: "var(--jood-ink-muted)",
-  in_progress: "var(--jood-warning)",
+  in_progress: "var(--jood-accent)",
   resolved: "var(--jood-success)",
 };
 
@@ -127,8 +127,8 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
 
       {/* Payment link */}
       {req.paymob_payment_url && req.status !== "rejected" && (
-        <div style={{ ...card, borderColor: req.status === "paid" ? "var(--jood-success)" : "var(--jood-warning)" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: req.status === "paid" ? "var(--jood-success)" : "var(--jood-warning)", marginBottom: "10px" }}>
+        <div style={{ ...card, borderColor: req.status === "paid" ? "var(--jood-success)" : "var(--jood-accent)" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: req.status === "paid" ? "var(--jood-success)" : "var(--jood-accent)", marginBottom: "10px" }}>
             {req.status === "paid" ? "Payment received" : "Payment link"}
           </p>
           {req.status !== "paid" && (

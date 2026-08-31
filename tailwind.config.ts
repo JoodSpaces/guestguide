@@ -21,7 +21,6 @@ const config: Config = {
           "accent-ink": "var(--jood-accent-ink)",
           line: "var(--jood-line)",
           success: "var(--jood-success)",
-          warning: "var(--jood-warning)",
           danger: "var(--jood-danger)",
         },
       },

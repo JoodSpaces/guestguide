@@ -170,7 +170,7 @@ export default async function AdminTodayPage() {
         const critical = (invAlerts ?? []).filter((a) => a.severity === "critical");
         const total    = (invAlerts ?? []).length;
         const ALERT_ICON: Record<string, string> = { low_stock: "📦", recurring_damage: "🔁", out_of_service: "🔧" };
-        const SEVERITY_COLOR: Record<string, string> = { critical: "var(--jood-danger)", medium: "var(--jood-warning)", low: "var(--jood-aqua)" };
+        const SEVERITY_COLOR: Record<string, string> = { critical: "var(--jood-danger)", medium: "var(--jood-accent)", low: "var(--jood-aqua)" };
         return (
           <div style={{ marginBottom: "32px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
@@ -180,7 +180,7 @@ export default async function AdminTodayPage() {
                 </p>
                 <span style={{
                   backgroundColor: critical.length > 0 ? "rgba(248,113,113,0.12)" : "rgba(245,158,11,0.12)",
-                  color: critical.length > 0 ? "var(--jood-danger)" : "var(--jood-warning)",
+                  color: critical.length > 0 ? "var(--jood-danger)" : "var(--jood-accent)",
                   borderRadius: "20px",
                   padding: "2px 8px",
                   fontSize: "0.7rem",

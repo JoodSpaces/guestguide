@@ -23,12 +23,12 @@ interface GuestReq {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  pending:     "var(--jood-warning)",
+  pending:     "var(--jood-accent)",
   approved:    "var(--jood-aqua)",
   paid:        "var(--jood-success)",
   fulfilled:   "var(--jood-ink-ghost)",
   rejected:    "var(--jood-danger)",
-  received:    "var(--jood-warning)",
+  received:    "var(--jood-accent)",
   in_progress: "var(--jood-aqua)",
   resolved:    "var(--jood-ink-ghost)",
 };

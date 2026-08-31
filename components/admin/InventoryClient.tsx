@@ -39,7 +39,7 @@ function stockStatus(current: number, par: number): StockStatus {
 
 const STATUS_COLOR: Record<StockStatus, string> = {
   critical: "var(--jood-danger)",
-  low:      "var(--jood-warning)",
+  low:      "var(--jood-accent)",
   ok:       "var(--jood-success)",
   unset:    "var(--jood-line)",
 };
@@ -141,7 +141,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
               {items.length} tracked
             </span>
             {lowStock.length > 0 && (
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-warning)", border: "1px solid var(--jood-warning)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
+              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-accent)", border: "1px solid var(--jood-accent)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
                 {lowStock.length} low
               </span>
             )}

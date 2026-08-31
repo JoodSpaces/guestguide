@@ -33,7 +33,7 @@ interface Props {
 
 const STATUS_COLOR: Record<string, string> = {
   pending: "var(--jood-ink-muted)",
-  approved: "var(--jood-warning)",
+  approved: "var(--jood-accent)",
   paid: "var(--jood-success)",
   fulfilled: "var(--jood-success)",
   rejected: "var(--jood-danger)",
@@ -218,12 +218,12 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
           {myRequests.map((r) => {
             const svcName = isAr ? (initialServices.find((s) => s.id === r.service_id)?.name_ar || r.services?.name_en) : r.services?.name_en;
             return (
-              <div key={r.id} style={{ ...card, borderLeft: r.status === "approved" && r.paymob_payment_url ? "3px solid var(--jood-warning)" : "1px solid var(--jood-line)" }}>
+              <div key={r.id} style={{ ...card, borderLeft: r.status === "approved" && r.paymob_payment_url ? "3px solid var(--jood-accent)" : "1px solid var(--jood-line)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div>
                     <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "3px" }}>{r.quantity > 1 ? `${r.quantity}× ` : ""}{svcName}</p>
                     {r.status === "approved" && r.paymob_payment_url && (
-                      <p style={{ fontSize: "0.8125rem", color: "var(--jood-warning)", marginBottom: "8px" }}>
+                      <p style={{ fontSize: "0.8125rem", color: "var(--jood-accent)", marginBottom: "8px" }}>
                         {isAr ? "في انتظار الدفع" : "Awaiting payment"}
                       </p>
                     )}

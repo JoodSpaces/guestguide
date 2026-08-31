@@ -72,7 +72,7 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   scheduled: "var(--jood-aqua)",
   pending:   "var(--jood-ink-muted)",
-  in_progress: "var(--jood-warning)",
+  in_progress: "var(--jood-accent)",
   ready:     "var(--jood-success)",
   approved:  "var(--jood-aqua)",
 };
@@ -80,13 +80,13 @@ const STATUS_COLORS: Record<string, string> = {
 const CONDITION_COLORS: Record<string, string> = {
   excellent: "var(--jood-success)",
   good:      "var(--jood-success)",
-  fair:      "var(--jood-warning)",
+  fair:      "var(--jood-accent)",
   damaged:   "var(--jood-danger)",
 };
 
 const DAMAGE_COLORS: Record<string, string> = {
   damaged:        "var(--jood-danger)",
-  missing:        "var(--jood-warning)",
+  missing:        "var(--jood-accent)",
   needs_cleaning: "var(--jood-aqua)",
 };
 
@@ -531,7 +531,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
       })}
 
       {/* ── REPORT MISSING / DAMAGED ITEMS ── */}
-      <div style={{ ...card, borderColor: damageRecords.length > 0 ? "var(--jood-warning)" : "var(--jood-line)" }}>
+      <div style={{ ...card, borderColor: damageRecords.length > 0 ? "var(--jood-accent)" : "var(--jood-line)" }}>
         <button
           onClick={() => setReportOpen((v) => !v)}
           style={{
@@ -546,7 +546,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                 Report missing or damaged item
               </p>
               {damageRecords.length > 0 && (
-                <p style={{ fontSize: "0.8125rem", color: "var(--jood-warning)" }}>
+                <p style={{ fontSize: "0.8125rem", color: "var(--jood-accent)" }}>
                   {damageRecords.length} item{damageRecords.length > 1 ? "s" : ""} reported
                 </p>
               )}

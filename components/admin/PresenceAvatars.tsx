@@ -11,7 +11,7 @@ interface PresenceMember {
 const ROLE_HUE: Record<string, string> = {
   admin: "#8b6f47",
   ops: "var(--jood-aqua)",
-  concierge: "var(--jood-warning)",
+  concierge: "var(--jood-garnet)",
 };
 
 function initials(name: string) {

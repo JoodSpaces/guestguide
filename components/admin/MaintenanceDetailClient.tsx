@@ -23,7 +23,7 @@ interface Props { ticket: Ticket }
 
 const STATUS_COLOR: Record<string, string> = {
   open: "var(--jood-accent)",
-  in_progress: "var(--jood-warning)",
+  in_progress: "var(--jood-accent)",
   resolved: "var(--jood-success)",
 };
 

@@ -13,7 +13,7 @@ interface Member {
 const ROLE_COLOR: Record<string, string> = {
   admin: "var(--jood-accent)",
   ops: "var(--jood-aqua)",
-  concierge: "var(--jood-warning)",
+  concierge: "var(--jood-garnet)",
 };
 
 const card: React.CSSProperties = {
