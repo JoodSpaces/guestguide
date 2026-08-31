@@ -124,12 +124,18 @@ ${manualText}
 - For operational issues or special requests, suggest the Requests screen to reach the JOOD team.
 - Never invent information not in the manual above.`;
 
-  const stream = client.messages.stream({
-    model: "claude-haiku-4-5",
-    max_tokens: 512,
-    system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-    messages: parsed.data.messages.map((m) => ({ role: m.role, content: m.content })),
-  });
+  let stream;
+  try {
+    stream = client.messages.stream({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 512,
+      system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+      messages: parsed.data.messages.map((m) => ({ role: m.role, content: m.content })),
+    });
+  } catch (err) {
+    console.error("[concierge] stream init error:", err);
+    return new Response("AI unavailable", { status: 502 });
+  }
 
   const readable = new ReadableStream({
     async start(controller) {
@@ -139,8 +145,10 @@ ${manualText}
             controller.enqueue(new TextEncoder().encode(chunk.delta.text));
           }
         }
-      } finally {
         controller.close();
+      } catch (err) {
+        console.error("[concierge] stream error:", err);
+        controller.error(err);
       }
     },
   });
