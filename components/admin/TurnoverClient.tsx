@@ -58,6 +58,8 @@ interface Props {
   task: TurnoverTask;
   items: TurnoverItem[];
   teamMembers: TeamMember[];
+  myRole?: string;
+  myName?: string;
 }
 
 // Plain-English status for staff
@@ -121,7 +123,7 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-export function TurnoverClient({ task: initialTask, items: initialItems, teamMembers }: Props) {
+export function TurnoverClient({ task: initialTask, items: initialItems, teamMembers, myRole = "ops", myName = "" }: Props) {
   const [task, setTask]         = useState(initialTask);
   const [items, setItems]       = useState(initialItems);
   const [savingStatus, setSavingStatus] = useState(false);
@@ -305,16 +307,13 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                 Guest: {task.bookings.guest_first_name} {task.bookings.guest_last_name} · checkout {fmtDate(task.bookings.check_out)}
               </p>
             )}
-            {/* Assign to */}
-            {teamMembers.length > 0 ? (
+            {/* Assignment UI — manager sees dropdown, ops sees claim/status */}
+            {myRole === "admin" ? (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
                 <span style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", flexShrink: 0 }}>👤 Assigned to:</span>
                 <select
                   value={assignTo}
-                  onChange={(e) => {
-                    setAssignTo(e.target.value);
-                    saveAssign(e.target.value);
-                  }}
+                  onChange={(e) => { setAssignTo(e.target.value); saveAssign(e.target.value); }}
                   disabled={savingAssign}
                   style={{
                     padding: "6px 10px",
@@ -335,8 +334,30 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                 </select>
                 {savingAssign && <span style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)" }}>saving…</span>}
               </div>
+            ) : task.assigned_to === null ? (
+              <div style={{ marginTop: "10px" }}>
+                <button
+                  onClick={() => { setAssignTo(myName); saveAssign(myName); }}
+                  disabled={savingAssign || !myName}
+                  style={{
+                    padding: "10px 20px",
+                    backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
+                    border: "none", borderRadius: "var(--radius-pill)",
+                    fontSize: "0.9375rem", fontWeight: 600, cursor: "pointer",
+                    opacity: savingAssign ? 0.5 : 1,
+                  }}
+                >
+                  {savingAssign ? "Claiming…" : "🙋 Claim this task"}
+                </button>
+              </div>
+            ) : task.assigned_to === myName ? (
+              <p style={{ fontSize: "0.875rem", color: "var(--jood-aqua)", marginTop: "8px", fontWeight: 500 }}>
+                👤 You're on this task
+              </p>
             ) : (
-              task.assigned_to && <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "4px" }}>👤 {task.assigned_to}</p>
+              <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "8px" }}>
+                👤 Assigned to {task.assigned_to}
+              </p>
             )}
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>

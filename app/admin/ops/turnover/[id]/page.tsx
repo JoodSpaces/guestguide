@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 import { TurnoverClient } from "@/components/admin/TurnoverClient";
 import type { TurnoverTask, TurnoverItem } from "@/components/admin/TurnoverClient";
@@ -8,6 +9,10 @@ interface Props { params: Promise<{ id: string }> }
 export default async function TurnoverPage({ params }: Props) {
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
+
+  const h = await headers();
+  const myRole = h.get("x-admin-role") ?? "ops";
+  const myName = h.get("x-admin-name") ?? "";
 
   const supabase = createServiceClient();
   const [{ data: task }, { data: items }, { data: teamMembers }] = await Promise.all([
@@ -31,5 +36,5 @@ export default async function TurnoverPage({ params }: Props) {
 
   if (!task) notFound();
 
-  return <TurnoverClient task={task} items={items ?? []} teamMembers={teamMembers ?? []} />;
+  return <TurnoverClient task={task} items={items ?? []} teamMembers={teamMembers ?? []} myRole={myRole} myName={myName} />;
 }
