@@ -57,6 +57,9 @@ export function LiveFeedPanel() {
 
   function handleOpen() {
     setOpen(true);
+  }
+
+  function handleItemClick() {
     setNewCount(0);
   }
 
@@ -164,7 +167,7 @@ export function LiveFeedPanel() {
             <a
               key={e.id}
               href={e.href ?? "#"}
-              onClick={e.href ? undefined : (ev) => ev.preventDefault()}
+              onClick={(ev) => { handleItemClick(); if (!e.href) ev.preventDefault(); }}
               style={{
                 display: "block",
                 padding: "12px 20px",

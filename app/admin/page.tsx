@@ -38,7 +38,13 @@ export default async function AdminTodayPage() {
     supabase.from("properties").select("id, name"),
     supabase.from("turnover_tasks").select("property_id, status").in("status", ["pending", "in_progress"]),
     supabase.from("maintenance_tickets").select("property_id").eq("priority", "urgent").neq("status", "resolved"),
-    supabase.from("service_requests").select("id, bookings(property_id)").eq("status", "pending"),
+    supabase
+      .from("service_requests")
+      .select("id, quantity, created_at, services(name_en), bookings(guest_first_name, guest_last_name, property_id, properties(name))")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .returns<{ id: string; quantity: number; created_at: string; services: { name_en: string } | null; bookings: { guest_first_name: string; guest_last_name: string; property_id: string; properties: { name: string } } | null }[]>(),
     // Graceful: returns empty if migration 006 hasn't been run
     supabase
       .from("inventory_alerts")
@@ -371,6 +377,51 @@ export default async function AdminTodayPage() {
           </a>
         );
       })}
+
+      {/* Pending service requests */}
+      <div style={{ marginTop: "32px" }}>
+        <Section title="Service requests" count={pendingServiceReqs?.length ?? 0} />
+        {(pendingServiceReqs?.length ?? 0) === 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
+            <span style={{ fontSize: "1.1rem" }}>✓</span>
+            <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>No pending service orders</p>
+          </div>
+        )}
+        {pendingServiceReqs?.map((r) => {
+          const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+          const prop = Array.isArray((booking as { properties?: unknown })?.properties) ? (booking as { properties: { name: string }[] }).properties[0] : (booking as { properties: { name: string } } | null)?.properties;
+          const svc = Array.isArray(r.services) ? r.services[0] : r.services;
+          return (
+            <a
+              key={r.id}
+              href={`/admin/requests/service/${r.id}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                backgroundColor: "var(--jood-surface)",
+                border: "1px solid var(--jood-line)",
+                borderLeft: "3px solid var(--jood-aqua)",
+                borderRadius: "var(--radius-lg)",
+                textDecoration: "none",
+                marginBottom: "8px",
+              }}
+            >
+              <div>
+                <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem" }}>
+                  {booking?.guest_first_name} — {svc?.name_en ?? "Service"}
+                  {r.quantity > 1 && <span style={{ color: "var(--jood-ink-muted)", fontWeight: 400 }}> ×{r.quantity}</span>}
+                </p>
+                <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
+              </div>
+              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-aqua)", flexShrink: 0 }}>
+                🛎 Pending
+              </span>
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }
