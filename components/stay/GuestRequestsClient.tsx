@@ -74,7 +74,7 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
     const res = await fetch("/api/guest/classify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ body: text }),
+      body: JSON.stringify({ token, body: text }),
     }).catch(() => null);
     setAiClassifying(false);
     if (!res?.ok) return;

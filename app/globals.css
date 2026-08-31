@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "leaflet/dist/leaflet.css";
 
 /* ─── Google Fonts ──────────────────────────────────────────────────────── */
 @import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&family=Archivo:wght@500;600&family=Almarai:wght@300;400;700;800&display=swap");

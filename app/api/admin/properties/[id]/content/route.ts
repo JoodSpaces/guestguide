@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z.object({
   section: z.string().min(1).max(40),
@@ -16,6 +17,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });

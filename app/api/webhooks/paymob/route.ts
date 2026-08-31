@@ -23,6 +23,24 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createServiceClient();
+
+  const { data: sr } = await supabase
+    .from("service_requests")
+    .select("id, quantity, status, services(price_egp)")
+    .eq("id", merchantOrderId)
+    .eq("status", "approved")
+    .single<{ id: string; quantity: number; status: string; services: { price_egp: number } | null }>();
+
+  if (!sr) return NextResponse.json({ ok: true });
+
+  const expectedCents = (sr.services?.price_egp ?? 0) * sr.quantity * 100;
+  const receivedCents = Number(obj.amount_cents ?? 0);
+
+  if (expectedCents > 0 && receivedCents !== expectedCents) {
+    console.error(`Paymob amount mismatch for ${merchantOrderId}: expected ${expectedCents}, got ${receivedCents}`);
+    return NextResponse.json({ error: "amount_mismatch" }, { status: 400 });
+  }
+
   await supabase
     .from("service_requests")
     .update({ status: "paid", paid_at: new Date().toISOString(), updated_at: new Date().toISOString() })

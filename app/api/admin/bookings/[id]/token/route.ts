@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateToken, hashToken } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import QRCode from "qrcode";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 function resolveAppUrl(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -15,9 +16,10 @@ function resolveAppUrl(): string {
 }
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
@@ -37,7 +39,7 @@ export async function POST(
 
   const plaintext = generateToken();
   const hash = hashToken(plaintext);
-  const expiresAt = new Date(new Date(booking.check_out).getTime() + 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(new Date(booking.check_out).getTime() + 48 * 60 * 60 * 1000);
 
   const { error } = await supabase.from("stay_tokens").insert({
     booking_id: id,

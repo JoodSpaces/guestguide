@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const patchSchema = z.object({
   status: z.enum(["scheduled", "pending", "in_progress", "ready", "approved"]).optional(),
@@ -12,9 +13,10 @@ const patchSchema = z.object({
 });
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -40,6 +42,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireSession(req, ["admin", "ops", "housekeeping"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -57,5 +61,17 @@ export async function PATCH(
   const supabase = createServiceClient();
   const { error } = await supabase.from("turnover_tasks").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (parsed.data.status) {
+    await supabase.from("audit_log").insert({
+      actor_type: "admin",
+      actor_id: session.id,
+      action: `turnover.${parsed.data.status}`,
+      entity: "turnover_tasks",
+      entity_id: id,
+      meta: { status: parsed.data.status, assigned_to: parsed.data.assigned_to ?? null },
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }

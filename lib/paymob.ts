@@ -70,7 +70,7 @@ export async function createPaymentLink({
       },
       currency: "EGP",
       integration_id: parseInt(process.env.PAYMOB_INTEGRATION_ID ?? "0"),
-      lock_order_when_paid: false,
+      lock_order_when_paid: true,
     }),
   });
   const keyData = await keyRes.json();

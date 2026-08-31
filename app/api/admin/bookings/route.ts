@@ -4,6 +4,7 @@ import { generateToken, hashToken } from "@/lib/token";
 import { encrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z.object({
   propertyId: z.string().uuid(),
@@ -21,7 +22,8 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  // TODO Phase 3: add admin JWT auth check here
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
 
@@ -105,7 +107,7 @@ export async function POST(req: NextRequest) {
   const plaintext = generateToken();
   const hash = hashToken(plaintext);
   const checkOut = new Date(d.checkOut);
-  const expiresAt = new Date(checkOut.getTime() + 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(checkOut.getTime() + 48 * 60 * 60 * 1000);
 
   const { error: tokenErr } = await supabase.from("stay_tokens").insert({
     booking_id: booking.id,
@@ -124,7 +126,7 @@ export async function POST(req: NextRequest) {
 
   await supabase.from("audit_log").insert({
     actor_type: "admin",
-    actor_id: null,
+    actor_id: session.id,
     action: "booking_created",
     entity: "bookings",
     entity_id: booking.id,

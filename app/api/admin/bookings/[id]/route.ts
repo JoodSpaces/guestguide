@@ -3,6 +3,7 @@ import { z } from "zod";
 import { encrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z
   .object({
@@ -17,6 +18,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
@@ -79,6 +82,15 @@ export async function PATCH(
       }
     }
   }
+
+  await supabase.from("audit_log").insert({
+    actor_type: "admin",
+    actor_id: session.id,
+    action: "booking_updated",
+    entity: "bookings",
+    entity_id: id,
+    meta: parsed.data,
+  });
 
   return NextResponse.json({ ok: true });
 }

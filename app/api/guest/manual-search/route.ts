@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const response = await client.messages.create({
-      model: "claude-haiku-4-5",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 512,
       system: `You are a concierge assistant for a short-term rental property. You help guests find answers in the house manual. Always respond in ${lang}. Be concise and friendly.`,
       messages: [

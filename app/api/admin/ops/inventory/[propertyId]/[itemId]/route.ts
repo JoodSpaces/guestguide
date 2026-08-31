@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z.object({
   current_stock: z.number().int().min(0).optional(),
@@ -18,6 +19,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ propertyId: string; itemId: string }> }
 ) {
+  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
   const { propertyId, itemId } = await params;
   if (!validate(propertyId, itemId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -48,9 +50,10 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ propertyId: string; itemId: string }> }
 ) {
+  if (!(await requireSession(req, ["admin", "ops"]))) return forbidden();
   const { propertyId, itemId } = await params;
   if (!validate(propertyId, itemId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 

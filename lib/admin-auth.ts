@@ -1,3 +1,5 @@
+import { type NextRequest } from "next/server";
+
 export interface AdminSession {
   id: string;
   name: string;
@@ -45,7 +47,8 @@ export async function verifyPassword(password: string, stored: string): Promise<
 // ─── Cookie signing (HMAC-SHA-256) ──────────────────────────────────────────
 
 async function getHmacKey() {
-  const secret = process.env.ADMIN_SECRET ?? "";
+  const secret = process.env.ADMIN_SECRET;
+  if (!secret) throw new Error("ADMIN_SECRET environment variable is not set");
   return crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"]);
 }
 
@@ -60,7 +63,7 @@ export async function signAdminCookie(session: AdminSession): Promise<string> {
   return `${payload}.${sig}`;
 }
 
-export function decodeAdminCookie(cookie: string): AdminSession | null {
+function decodeAdminCookie(cookie: string): AdminSession | null {
   try {
     const dot = cookie.lastIndexOf(".");
     const payload = cookie.slice(0, dot);
@@ -115,4 +118,22 @@ export function isPathAllowed(pathname: string, role: string): boolean {
     );
   }
   return false;
+}
+
+// ─── API route auth helper ───────────────────────────────────────────────────
+
+export async function requireSession(
+  req: NextRequest,
+  allowedRoles?: AdminSession["role"][]
+): Promise<AdminSession | null> {
+  const cookie = req.cookies.get("jood_admin")?.value;
+  if (!cookie) return null;
+  const session = await verifyAdminCookie(cookie);
+  if (!session) return null;
+  if (allowedRoles && !allowedRoles.includes(session.role)) return null;
+  return session;
+}
+
+export function forbidden() {
+  return Response.json({ error: "forbidden" }, { status: 403 });
 }

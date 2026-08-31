@@ -143,6 +143,15 @@
     "review_cta": "Leave a review",
     "book_direct": "Book your next stay directly with us"
   },
+  "payment": {
+    "success_title": "Payment received",
+    "success_body": "Thank you — your service request has been confirmed. Our team will take it from here.",
+    "failed_title": "Payment unsuccessful",
+    "insufficient_funds": "Your card had insufficient funds. Please try again with a different card.",
+    "failed_body": "The payment could not be processed. Please return to your stay portal and try again.",
+    "ref": "REF",
+    "return_prompt": "Return to your stay portal using the original link sent to you."
+  },
   "errors": {
     "token_invalid": "This link is no longer valid.",
     "token_expired": "Your stay has ended.",

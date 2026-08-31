@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { verifyPassword, signAdminCookie, ROLE_HOME, type AdminSession } from "@/lib/admin-auth";
 
+function timingSafeEqual(a: string, b: string): boolean {
+  const aBuf = new TextEncoder().encode(a);
+  const bBuf = new TextEncoder().encode(b);
+  let diff = aBuf.length ^ bBuf.length;
+  const len = Math.max(aBuf.length, bBuf.length);
+  for (let i = 0; i < len; i++) diff |= (aBuf[i] ?? 0) ^ (bBuf[i] ?? 0);
+  return diff === 0;
+}
+
 function setCookie(res: NextResponse, token: string) {
   res.cookies.set("jood_admin", token, {
     httpOnly: true,
@@ -39,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   // ── Legacy fallback: ADMIN_PASSWORD env var as "admin" ──
   const legacyPassword = process.env.ADMIN_PASSWORD ?? "";
-  if (legacyPassword && password === legacyPassword && name.toLowerCase() === "admin") {
+  if (legacyPassword && timingSafeEqual(password, legacyPassword) && name.toLowerCase() === "admin") {
     const session: AdminSession = { id: "legacy", name: "Admin", role: "admin", iat, exp };
     const token = await signAdminCookie(session);
     const res = NextResponse.json({ ok: true, role: "admin", redirect: "/admin" });

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
+  if (!(await requireSession(req, ["admin", "ops", "housekeeping", "maintenance"]))) return forbidden();
   const formData = await req.formData().catch(() => null);
   if (!formData) return NextResponse.json({ error: "invalid_body" }, { status: 400 });
 

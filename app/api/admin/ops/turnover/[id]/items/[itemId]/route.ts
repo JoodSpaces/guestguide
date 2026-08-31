@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z.object({
   checked: z.boolean().optional(),
@@ -12,6 +13,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
+  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
   const { id, itemId } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id) || !/^[0-9a-f-]{36}$/.test(itemId)) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });

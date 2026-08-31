@@ -13,7 +13,17 @@ export default async function AdminTodayPage() {
   const todayStart = now.slice(0, 10) + "T00:00:00Z";
   const todayEnd = now.slice(0, 10) + "T23:59:59Z";
 
-  const [{ data: arrivals }, { data: departures }, { data: openRequests }, { data: properties }, { data: activeTurnovers }, { data: urgentTickets }, { data: pendingServiceReqs }, { data: invAlerts }] = await Promise.all([
+  const [
+    { data: arrivals },
+    { data: departures },
+    { data: openRequestItems, error: openRequestsError },
+    { data: properties },
+    { data: activeTurnovers },
+    { data: openTickets },
+    { data: pendingServiceReqs },
+    { data: invAlerts },
+    { count: openRequestsCount },
+  ] = await Promise.all([
     supabase
       .from("bookings")
       .select("id, guest_first_name, guest_last_name, properties(name)")
@@ -29,7 +39,7 @@ export default async function AdminTodayPage() {
       .eq("status", "confirmed")
       .returns<{ id: string; guest_first_name: string; guest_last_name: string; properties: { name: string } }[]>(),
     supabase
-      .from("requests")
+      .from("guest_requests")
       .select("id, category, urgency, created_at, bookings(guest_first_name, properties(name))")
       .in("status", ["received", "in_progress"])
       .order("created_at", { ascending: false })
@@ -37,7 +47,14 @@ export default async function AdminTodayPage() {
       .returns<{ id: string; category: string; urgency: string; created_at: string; bookings: { guest_first_name: string; properties: { name: string } } }[]>(),
     supabase.from("properties").select("id, name"),
     supabase.from("turnover_tasks").select("property_id, status").in("status", ["pending", "in_progress"]),
-    supabase.from("maintenance_tickets").select("property_id").eq("priority", "urgent").neq("status", "resolved"),
+    supabase
+      .from("maintenance_tickets")
+      .select("id, title, priority, status, property_id, properties(name)")
+      .neq("status", "resolved")
+      .order("priority", { ascending: true })
+      .order("created_at", { ascending: false })
+      .limit(10)
+      .returns<{ id: string; title: string; priority: string; status: string; property_id: string; properties: { name: string } }[]>(),
     supabase
       .from("service_requests")
       .select("id, quantity, created_at, services(name_en), bookings(guest_first_name, guest_last_name, property_id, properties(name))")
@@ -52,7 +69,17 @@ export default async function AdminTodayPage() {
       .is("resolved_at", null)
       .order("severity", { ascending: false })
       .order("created_at", { ascending: false }),
+    // Reliable count — no joins, so it can't fail due to FK resolution issues
+    supabase
+      .from("guest_requests")
+      .select("*", { count: "exact", head: true })
+      .in("status", ["received", "in_progress"]),
   ]);
+
+  if (openRequestsError) console.error("[admin/page] open_requests join error:", openRequestsError.message);
+  const openRequests = openRequestItems ?? [];
+  // Prefer the dedicated count (join-free); fall back to array length if count query failed
+  const openCount = openRequestsCount ?? openRequests.length;
 
   const Section = ({ title, count }: { title: string; count: number }) => (
     <p className="label-eyebrow" style={{ color: "var(--jood-ink-muted)", marginBottom: "16px" }}>
@@ -96,7 +123,7 @@ export default async function AdminTodayPage() {
       {/* Property status rings */}
       {(properties?.length ?? 0) > 0 && (() => {
         const turnoversPerProp = new Set(activeTurnovers?.map((t) => t.property_id) ?? []);
-        const urgentPerProp = new Set(urgentTickets?.map((t) => t.property_id) ?? []);
+        const urgentPerProp = new Set((openTickets ?? []).filter((t) => t.priority === "urgent").map((t) => t.property_id));
         const pendingPerProp = new Set(
           (pendingServiceReqs ?? []).map((r) => {
             const b = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
@@ -107,10 +134,11 @@ export default async function AdminTodayPage() {
           (invAlerts ?? []).filter((a) => a.severity === "critical").map((a) => a.property_id)
         );
         const openInvPerProp = new Set((invAlerts ?? []).map((a) => a.property_id));
+        const openTicketPerProp = new Set((openTickets ?? []).filter((t) => t.priority !== "urgent").map((t) => t.property_id));
 
         function status(pid: string): "clear" | "amber" | "red" {
           if (urgentPerProp.has(pid) || criticalInvPerProp.has(pid)) return "red";
-          if (turnoversPerProp.has(pid) || pendingPerProp.has(pid) || openInvPerProp.has(pid)) return "amber";
+          if (turnoversPerProp.has(pid) || pendingPerProp.has(pid) || openInvPerProp.has(pid) || openTicketPerProp.has(pid)) return "amber";
           return "clear";
         }
 
@@ -326,8 +354,8 @@ export default async function AdminTodayPage() {
       </div>
 
       {/* Open requests */}
-      <Section title="Open requests" count={openRequests?.length ?? 0} />
-      {openRequests?.length === 0 && (
+      <Section title="Open requests" count={openCount} />
+      {openCount === 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
           <span style={{ fontSize: "1.1rem" }}>✓</span>
           <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>All clear — no open requests</p>
@@ -339,7 +367,7 @@ export default async function AdminTodayPage() {
         return (
           <a
             key={r.id}
-            href={`/admin/requests/${r.id}`}
+            href={`/admin/requests/guest/${r.id}`}
             style={{
               display: "flex",
               alignItems: "center",
@@ -377,6 +405,49 @@ export default async function AdminTodayPage() {
           </a>
         );
       })}
+
+      {/* Maintenance tickets */}
+      <div style={{ marginTop: "32px" }}>
+        <Section title="Maintenance" count={openTickets?.length ?? 0} />
+        {(openTickets?.length ?? 0) === 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
+            <span style={{ fontSize: "1.1rem" }}>✓</span>
+            <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>No open maintenance tickets</p>
+          </div>
+        )}
+        {openTickets?.map((t) => {
+          const prop = Array.isArray(t.properties) ? t.properties[0] : t.properties;
+          const isUrgent = t.priority === "urgent";
+          return (
+            <a
+              key={t.id}
+              href={`/admin/ops/maintenance/${t.id}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                backgroundColor: "var(--jood-surface)",
+                border: "1px solid var(--jood-line)",
+                borderLeft: isUrgent ? "3px solid var(--jood-danger)" : "3px solid var(--jood-ink-muted)",
+                borderRadius: "var(--radius-lg)",
+                textDecoration: "none",
+                marginBottom: "8px",
+              }}
+            >
+              <div>
+                <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem" }}>{t.title}</p>
+                <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{(prop as { name: string } | null)?.name}</p>
+              </div>
+              {isUrgent && (
+                <span style={{ backgroundColor: "var(--jood-danger)", color: "white", fontSize: "0.6875rem", padding: "3px 8px", borderRadius: "20px", fontFamily: "var(--font-label)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                  Urgent
+                </span>
+              )}
+            </a>
+          );
+        })}
+      </div>
 
       {/* Pending service requests */}
       <div style={{ marginTop: "32px" }}>

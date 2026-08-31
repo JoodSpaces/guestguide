@@ -21,8 +21,7 @@ function getClient() {
 
 export async function classifyGuestRequest(text: string): Promise<RequestClassification> {
   const response = await getClient().messages.create({
-    // claude-haiku-4-5: fast, cheap, sufficient for short-text classification
-    model: "claude-haiku-4-5",
+    model: "claude-haiku-4-5-20251001",
     max_tokens: 64,
     system: `Classify hotel guest requests. Reply ONLY with valid JSON: {"category":"...","urgency":"..."}
 Categories: maintenance (broken/faulty items, AC, plumbing, electrical, leaks), housekeeping (cleaning, linens, towels, trash), supplies (toiletries, water, coffee, amenities), service (food delivery, transport, activities, reservations), other.

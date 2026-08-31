@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 export interface ActivityEvent {
   id: string;
@@ -11,7 +12,8 @@ export interface ActivityEvent {
   href?: string;
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await requireSession(req))) return forbidden();
   const supabase = createServiceClient();
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const todayStart = new Date().toISOString().slice(0, 10) + "T00:00:00Z";
@@ -33,7 +35,7 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(15),
     supabase
-      .from("requests")
+      .from("guest_requests")
       .select("id, category, urgency, status, created_at, bookings(guest_first_name, properties(name))")
       .gte("created_at", since)
       .order("created_at", { ascending: false })

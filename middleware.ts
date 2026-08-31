@@ -1,7 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminCookie, isPathAllowed, ROLE_HOME } from "@/lib/admin-auth";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-// Rate limiting state (edge-compatible: in-memory per isolate)
+// ── Rate limiting ────────────────────────────────────────────────────────────
+// Uses Upstash Redis when UPSTASH_REDIS_REST_URL is configured (cross-isolate,
+// accurate across Vercel edge nodes). Falls back to in-memory per-isolate
+// counting when the env var is absent (dev / preview without Upstash).
+
+let upstashLimiter: Ratelimit | null = null;
+
+function getUpstashLimiter(): Ratelimit | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
+  if (!upstashLimiter) {
+    upstashLimiter = new Ratelimit({
+      redis: new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      }),
+      limiter: Ratelimit.slidingWindow(
+        process.env.NODE_ENV === "development" ? 120 : 10,
+        "60 s"
+      ),
+      prefix: "jood:rl",
+    });
+  }
+  return upstashLimiter;
+}
+
+// In-memory fallback (per-isolate — not shared across Vercel edge instances)
 const tokenRequestMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = process.env.NODE_ENV === "development" ? 120 : 10;
 const RATE_WINDOW_MS = 60_000;
@@ -36,14 +63,23 @@ export async function middleware(req: NextRequest) {
   // ── Rate-limit guest token routes ──────────────────────────────────────
   if (pathname.startsWith("/s/")) {
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const now = Date.now();
-    const entry = tokenRequestMap.get(ip);
-    if (!entry || now > entry.resetAt) {
-      tokenRequestMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    } else {
-      entry.count += 1;
-      if (entry.count > RATE_LIMIT) {
+    const limiter = getUpstashLimiter();
+
+    if (limiter) {
+      const { success } = await limiter.limit(ip);
+      if (!success) {
         return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "60" } });
+      }
+    } else {
+      const now = Date.now();
+      const entry = tokenRequestMap.get(ip);
+      if (!entry || now > entry.resetAt) {
+        tokenRequestMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+      } else {
+        entry.count += 1;
+        if (entry.count > RATE_LIMIT) {
+          return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "60" } });
+        }
       }
     }
   }

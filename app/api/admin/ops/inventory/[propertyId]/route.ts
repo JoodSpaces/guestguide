@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z.object({
   category: z.enum(["linen", "consumables", "kitchen", "amenities", "general"]),
@@ -11,28 +12,38 @@ const schema = z.object({
 });
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ propertyId: string }> }
 ) {
+  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
   const { propertyId } = await params;
   if (!/^[0-9a-f-]{36}$/.test(propertyId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
   const supabase = createServiceClient();
+  // Join property_inventory for trigger-maintained quantity (authoritative after damage/supply ops)
   const { data, error } = await supabase
     .from("inventory_items")
-    .select("*")
+    .select("*, property_inventory(quantity, damaged_quantity, last_restocked_at)")
     .eq("property_id", propertyId)
     .order("category")
     .order("name");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(data ?? []);
+
+  // Prefer property_inventory.quantity when available; fall back to current_stock
+  const rows = (data ?? []).map((item) => {
+    const pi = Array.isArray(item.property_inventory) ? item.property_inventory[0] : item.property_inventory;
+    return { ...item, property_inventory: undefined, current_stock: pi?.quantity ?? item.current_stock, damaged_quantity: pi?.damaged_quantity ?? 0, last_restocked_at: pi?.last_restocked_at ?? null };
+  });
+
+  return NextResponse.json(rows);
 }
 
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ propertyId: string }> }
 ) {
+  if (!(await requireSession(req, ["admin", "ops"]))) return forbidden();
   const { propertyId } = await params;
   if (!/^[0-9a-f-]{36}$/.test(propertyId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 

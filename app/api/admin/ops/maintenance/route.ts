@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z.object({
   propertyId: z.string().uuid(),
@@ -14,6 +15,7 @@ const schema = z.object({
 });
 
 export async function GET(req: NextRequest) {
+  if (!(await requireSession(req, ["admin", "ops", "maintenance"]))) return forbidden();
   const { searchParams } = new URL(req.url);
   const propertyId = searchParams.get("propertyId");
   const status = searchParams.get("status");
@@ -34,6 +36,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await requireSession(req, ["admin", "ops", "maintenance"]))) return forbidden();
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 });

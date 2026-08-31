@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "jood-guest-app",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "cd '/Users/mohamedayman/Desktop/Jood Guest App ' && npm run dev"],
-      "port": 3000
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["/Users/mohamedayman/Desktop/Jood Guest App /start-dev.js"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

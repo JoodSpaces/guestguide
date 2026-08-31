@@ -6,6 +6,13 @@ const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const config = {
   images: {
     formats: ["image/avif", "image/webp"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "prrsktmcbmorimfepehh.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+    ],
   },
 };
 

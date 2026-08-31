@@ -2,13 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createPaymentLink } from "@/lib/paymob";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const patchSchema = z.object({
   action: z.enum(["approve", "reject", "fulfill", "regenerate_link", "mark_paid"]).optional(),
   adminNotes: z.string().max(1000).nullable().optional(),
 });
 
-export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await requireSession(req))) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -24,6 +26,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await requireSession(req, ["admin", "ops"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -99,6 +103,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { error } = await supabase.from("service_requests").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (parsed.data.action) {
+    await supabase.from("audit_log").insert({
+      actor_type: "admin",
+      actor_id: session.id,
+      action: `service_request.${parsed.data.action}`,
+      entity: "service_requests",
+      entity_id: id,
+      meta: { action: parsed.data.action },
+    });
+  }
 
   // Re-fetch to return updated record
   const { data: updated } = await supabase

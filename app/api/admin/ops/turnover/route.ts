@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const createSchema = z.object({
   propertyId: z.string().uuid(),
@@ -9,7 +10,8 @@ const createSchema = z.object({
   assignedTo: z.string().max(100).optional(),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("turnover_tasks")
@@ -26,6 +28,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
   const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 400 });

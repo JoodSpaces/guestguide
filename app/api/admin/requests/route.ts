@@ -1,7 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await requireSession(req))) return forbidden();
   const supabase = createServiceClient();
 
   const [{ data: serviceRequests }, { data: guestRequests }] = await Promise.all([

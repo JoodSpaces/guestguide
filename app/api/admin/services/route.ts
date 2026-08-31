@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const schema = z.object({
   nameEn: z.string().min(1).max(200),
@@ -14,7 +15,8 @@ const schema = z.object({
   sortOrder: z.number().int().default(0),
 });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("services")
@@ -26,6 +28,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 });

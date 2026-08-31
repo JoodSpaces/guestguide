@@ -1,7 +1,10 @@
 import { createHash } from "crypto";
 import { nanoid } from "nanoid";
 
-const PEPPER = process.env.TOKEN_PEPPER ?? "";
+const PEPPER = process.env.TOKEN_PEPPER;
+if (!PEPPER && process.env.NODE_ENV === "production") {
+  throw new Error("TOKEN_PEPPER environment variable is not set");
+}
 
 /**
  * Generate a 22-char URL-safe token (nanoid).
@@ -18,7 +21,7 @@ export function generateToken(): string {
  */
 export function hashToken(plaintext: string): string {
   return createHash("sha256")
-    .update(plaintext + PEPPER)
+    .update(plaintext + (PEPPER ?? ""))
     .digest("hex");
 }
 
