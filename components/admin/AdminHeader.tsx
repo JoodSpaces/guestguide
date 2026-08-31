@@ -90,7 +90,6 @@ export function AdminHeader({ role, name }: Props) {
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
         zIndex: 40,
-        overflow: "hidden",
       }}
     >
       {/* Logo */}
@@ -100,7 +99,7 @@ export function AdminHeader({ role, name }: Props) {
       <div style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)", flexShrink: 0, margin: "0 4px" }} />
 
       {/* Primary nav */}
-      <nav style={{ display: "flex", gap: "16px", alignItems: "center", flex: 1, minWidth: 0, overflow: "hidden" }}>
+      <nav style={{ display: "flex", gap: "16px", alignItems: "center", flex: 1, minWidth: 0 }}>
         {primaryVisible.map((item) => (
           <a key={item.href} href={item.href} style={linkStyle(isActive(item.href))}>
             {item.label}
