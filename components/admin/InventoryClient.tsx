@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { toast } from "@/components/admin/Toaster";
 
 export interface InventoryItem {
   id: string;
@@ -77,7 +78,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [field]: value }),
-      });
+      }).then((r) => { if (r.ok) toast("Stock updated"); else toast("Failed to save", "error"); });
     }, 600);
   }, [propertyId]);
 

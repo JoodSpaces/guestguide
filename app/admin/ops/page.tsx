@@ -15,6 +15,22 @@ const PRIORITY_COLOR: Record<string, string> = {
   low: "var(--jood-ink-ghost)",
 };
 
+function StatusChip({ value, colorMap }: { value: string; colorMap: Record<string, string> }) {
+  const color = colorMap[value] ?? "var(--jood-ink-muted)";
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em",
+      textTransform: "uppercase", color,
+      border: `1px solid ${color}`, borderRadius: "var(--radius-pill)",
+      padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
+    }}>
+      <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
+      {value.replace("_", " ")}
+    </span>
+  );
+}
+
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
@@ -73,7 +89,7 @@ export default async function OpsPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
         {/* Turnovers */}
         <section>
           {(() => {
@@ -102,9 +118,7 @@ export default async function OpsPage() {
                         </p>
                       )}
                     </div>
-                    <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: STATUS_COLOR[t.status] }}>
-                      {t.status.replace("_", " ")}
-                    </span>
+                    <StatusChip value={t.status} colorMap={STATUS_COLOR} />
                   </div>
                 </a>
               );
@@ -120,7 +134,11 @@ export default async function OpsPage() {
                 </div>
 
                 {!active.length && (
-                  <div style={{ ...card, color: "var(--jood-ink-muted)", textAlign: "center", padding: "24px", marginBottom: "20px" }}>No active turnovers</div>
+                  <div style={{ ...card, textAlign: "center", padding: "32px 24px", marginBottom: "20px" }}>
+                    <div style={{ fontSize: "1.5rem", marginBottom: "10px" }}>🧹</div>
+                    <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>All clear</p>
+                    <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>No active turnovers right now</p>
+                  </div>
                 )}
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: upcoming.length ? "20px" : 0 }}>
@@ -163,7 +181,11 @@ export default async function OpsPage() {
           </div>
 
           {!tickets?.length && (
-            <div style={{ ...card, color: "var(--jood-ink-muted)", textAlign: "center", padding: "32px" }}>No open tickets</div>
+            <div style={{ ...card, textAlign: "center", padding: "32px 24px" }}>
+              <div style={{ fontSize: "1.5rem", marginBottom: "10px" }}>🔧</div>
+              <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>No open tickets</p>
+              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>All maintenance issues are resolved</p>
+            </div>
           )}
 
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -176,9 +198,7 @@ export default async function OpsPage() {
                       <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{ticket.title}</p>
                       <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>{(property as { name: string })?.name} · {fmt(ticket.created_at)}</p>
                     </div>
-                    <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: PRIORITY_COLOR[ticket.priority] }}>
-                      {ticket.priority}
-                    </span>
+                    <StatusChip value={ticket.priority} colorMap={PRIORITY_COLOR} />
                   </div>
                 </a>
               );

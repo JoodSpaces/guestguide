@@ -23,30 +23,50 @@ interface GuestReq {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  pending: "var(--jood-warning)",
-  approved: "var(--jood-aqua)",
-  paid: "var(--jood-success)",
-  fulfilled: "var(--jood-ink-ghost)",
-  rejected: "var(--jood-danger)",
-  received: "var(--jood-warning)",
+  pending:     "var(--jood-warning)",
+  approved:    "var(--jood-aqua)",
+  paid:        "var(--jood-success)",
+  fulfilled:   "var(--jood-ink-ghost)",
+  rejected:    "var(--jood-danger)",
+  received:    "var(--jood-warning)",
   in_progress: "var(--jood-aqua)",
-  resolved: "var(--jood-ink-ghost)",
+  resolved:    "var(--jood-ink-ghost)",
+};
+
+const CAT_LABELS: Record<string, string> = {
+  maintenance: "Maintenance", housekeeping: "Housekeeping",
+  supplies: "Supplies", service: "Service booking", other: "Other",
 };
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-const card: React.CSSProperties = {
-  display: "block",
-  backgroundColor: "var(--jood-surface)",
-  border: "1px solid var(--jood-line)",
-  borderRadius: "var(--radius-lg)",
-  padding: "14px 18px",
-  textDecoration: "none",
-  color: "inherit",
-  marginBottom: "8px",
-};
+function StatusChip({ status }: { status: string }) {
+  const color = STATUS_COLOR[status] ?? "var(--jood-ink-muted)";
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em",
+      textTransform: "uppercase", color,
+      border: `1px solid ${color}`, borderRadius: "var(--radius-pill)",
+      padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
+    }}>
+      <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
+      {status.replace("_", " ")}
+    </span>
+  );
+}
+
+function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
+  return (
+    <div style={{ textAlign: "center", padding: "56px 24px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
+      <div style={{ fontSize: "1.75rem", marginBottom: "12px" }}>{icon}</div>
+      <p style={{ fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)", marginBottom: "6px" }}>{title}</p>
+      <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>{subtitle}</p>
+    </div>
+  );
+}
 
 type Tab = "service" | "guest";
 
@@ -59,7 +79,9 @@ export function RequestsListClient({
 }) {
   const [tab, setTab] = useState<Tab>("guest");
   const [query, setQuery] = useState("");
-  const CAT_LABELS: Record<string, string> = { maintenance: "Maintenance", housekeeping: "Housekeeping", supplies: "Supplies", service: "Service booking", other: "Other" };
+
+  const pendingServices = initialServiceReqs.filter((r) => r.status === "pending").length;
+  const pendingGuest    = initialGuestReqs.filter((r) => r.status === "received").length;
 
   const filteredGuest = useMemo(() => {
     const q = query.toLowerCase().trim();
@@ -92,27 +114,49 @@ export function RequestsListClient({
     });
   }, [query, initialServiceReqs]);
 
-  const tabBtn = (t: Tab, label: string, count: number) => (
-    <button
-      onClick={() => setTab(t)}
-      style={{
-        padding: "8px 18px",
-        borderRadius: "var(--radius-pill)",
-        border: "1px solid",
-        borderColor: tab === t ? "var(--jood-ink)" : "var(--jood-line)",
-        backgroundColor: tab === t ? "var(--jood-ink)" : "transparent",
-        color: tab === t ? "var(--jood-ground)" : "var(--jood-ink-muted)",
-        fontSize: "0.875rem",
-        cursor: "pointer",
-        fontFamily: "inherit",
-      }}
-    >
-      {label} {count > 0 && <span style={{ opacity: 0.7, fontSize: "0.75rem" }}>({count})</span>}
-    </button>
-  );
+  function TabBtn({ t, label, pending }: { t: Tab; label: string; pending: number }) {
+    const active = tab === t;
+    return (
+      <button
+        onClick={() => setTab(t)}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: "8px",
+          padding: "8px 16px",
+          borderRadius: "var(--radius-pill)",
+          border: `1px solid ${active ? "var(--jood-ink)" : "var(--jood-line)"}`,
+          backgroundColor: active ? "var(--jood-ink)" : "transparent",
+          color: active ? "var(--jood-ground)" : "var(--jood-ink-muted)",
+          fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit",
+          transition: "all 150ms",
+        }}
+      >
+        {label}
+        {pending > 0 && (
+          <span style={{
+            display: "inline-flex", alignItems: "center", justifyContent: "center",
+            minWidth: "18px", height: "18px", borderRadius: "9px",
+            backgroundColor: active ? "var(--jood-danger)" : "var(--jood-danger)",
+            color: "white",
+            fontSize: "0.6rem", fontFamily: "var(--font-mono)",
+            fontWeight: 600, padding: "0 4px",
+          }}>
+            {pending}
+          </span>
+        )}
+      </button>
+    );
+  }
 
-  const pendingServices = initialServiceReqs.filter((r) => r.status === "pending").length;
-  const pendingGuest = initialGuestReqs.filter((r) => r.status === "received").length;
+  const card: React.CSSProperties = {
+    display: "block",
+    backgroundColor: "var(--jood-surface)",
+    border: "1px solid var(--jood-line)",
+    borderRadius: "var(--radius-lg)",
+    padding: "14px 18px",
+    textDecoration: "none",
+    color: "inherit",
+    transition: "border-color 150ms",
+  };
 
   return (
     <div>
@@ -120,9 +164,10 @@ export function RequestsListClient({
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Requests</h1>
       </div>
 
-      <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
-        {tabBtn("guest", "Guest requests", pendingGuest)}
-        {tabBtn("service", "Service bookings", pendingServices)}
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+        <TabBtn t="guest" label="Guest requests" pending={pendingGuest} />
+        <TabBtn t="service" label="Service bookings" pending={pendingServices} />
       </div>
 
       {/* Search */}
@@ -133,17 +178,7 @@ export function RequestsListClient({
           placeholder="Search by guest, property, status…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{
-            width: "100%", boxSizing: "border-box",
-            padding: "10px 14px 10px 38px",
-            border: "1px solid var(--jood-line)",
-            borderRadius: "var(--radius-pill)",
-            backgroundColor: "var(--jood-surface)",
-            color: "var(--jood-ink)",
-            fontSize: "0.875rem",
-            fontFamily: "inherit",
-            outline: "none",
-          }}
+          style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px 10px 38px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", backgroundColor: "var(--jood-surface)", color: "var(--jood-ink)", fontSize: "0.875rem", fontFamily: "inherit", outline: "none" }}
         />
         {query && (
           <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", fontSize: "1rem", padding: 0 }}>×</button>
@@ -151,30 +186,37 @@ export function RequestsListClient({
       </div>
 
       {tab === "guest" && (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {!filteredGuest.length && (
-            <div style={{ ...card, textAlign: "center", padding: "40px", color: "var(--jood-ink-muted)" }}>
-              {query ? `No requests matching "${query}"` : "No guest requests yet"}
-            </div>
+            <EmptyState
+              icon={query ? "🔍" : "💬"}
+              title={query ? `No results for "${query}"` : "No guest requests yet"}
+              subtitle={query ? "Try different keywords" : "Requests from guests will appear here"}
+            />
           )}
           {filteredGuest.map((r) => {
-            const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+            const booking  = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
             const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
             return (
               <a key={r.id} href={`/admin/requests/guest/${r.id}`} style={{ ...card, borderLeft: r.urgency === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1, marginRight: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" }}>
-                      <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>{CAT_LABELS[r.category] ?? r.category}</span>
+                      <span style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-ghost)", backgroundColor: "var(--jood-surface-raised)", borderRadius: "var(--radius-pill)", padding: "2px 7px" }}>
+                        {CAT_LABELS[r.category] ?? r.category}
+                      </span>
+                      {r.urgency === "urgent" && (
+                        <span style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-danger)" }}>Urgent</span>
+                      )}
                     </div>
-                    <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "4px" }}>{r.body.slice(0, 80)}{r.body.length > 80 ? "…" : ""}</p>
+                    <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {r.body.slice(0, 80)}{r.body.length > 80 ? "…" : ""}
+                    </p>
                     <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
                       {booking?.guest_first_name} {booking?.guest_last_name} · {(property as { name: string })?.name} · {fmt(r.created_at)}
                     </p>
                   </div>
-                  <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: STATUS_COLOR[r.status], flexShrink: 0 }}>
-                    {r.status.replace("_", " ")}
-                  </span>
+                  <StatusChip status={r.status} />
                 </div>
               </a>
             );
@@ -183,21 +225,23 @@ export function RequestsListClient({
       )}
 
       {tab === "service" && (
-        <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {!filteredService.length && (
-            <div style={{ ...card, textAlign: "center", padding: "40px", color: "var(--jood-ink-muted)" }}>
-              {query ? `No bookings matching "${query}"` : "No service bookings yet"}
-            </div>
+            <EmptyState
+              icon={query ? "🔍" : "🛎"}
+              title={query ? `No results for "${query}"` : "No service bookings yet"}
+              subtitle={query ? "Try different keywords" : "Service bookings from guests will appear here"}
+            />
           )}
           {filteredService.map((r) => {
-            const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+            const booking  = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
             const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
             const totalPrice = (r.services?.price_egp ?? 0) * r.quantity;
             return (
               <a key={r.id} href={`/admin/requests/service/${r.id}`} style={card}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div style={{ flex: 1, marginRight: "12px" }}>
-                    <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "4px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {r.quantity > 1 ? `${r.quantity}× ` : ""}{r.services?.name_en ?? "Service"}
                     </p>
                     <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
@@ -205,9 +249,7 @@ export function RequestsListClient({
                       {totalPrice > 0 ? ` · ${totalPrice.toLocaleString()} EGP` : " · Free"}
                     </p>
                   </div>
-                  <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: STATUS_COLOR[r.status], flexShrink: 0 }}>
-                    {r.status}
-                  </span>
+                  <StatusChip status={r.status} />
                 </div>
               </a>
             );

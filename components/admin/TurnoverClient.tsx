@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { toast } from "@/components/admin/Toaster";
 import { ROOM_LABELS } from "@/lib/ops-checklist";
 
 export interface TurnoverItem {
@@ -193,7 +194,13 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
       body: JSON.stringify(body),
     });
     setSavingStatus(false);
-    if (res.ok) setTask((t) => ({ ...t, status: status as TurnoverTask["status"] }));
+    if (res.ok) {
+      setTask((t) => ({ ...t, status: status as TurnoverTask["status"] }));
+      const labels: Record<string, string> = { in_progress: "Started", ready: "Marked ready", approved: "Approved" };
+      toast(labels[status] ?? "Updated");
+    } else {
+      toast("Failed to update", "error");
+    }
   }
 
   async function uploadPhoto(itemId: string, file: File) {
@@ -214,7 +221,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
 
   async function saveAssessment() {
     setSavingAssess(true);
-    await fetch(`/api/admin/ops/turnover/${task.id}`, {
+    const res = await fetch(`/api/admin/ops/turnover/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -224,7 +231,12 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
       }),
     });
     setSavingAssess(false);
-    setTask((t) => ({ ...t, notes: assessNotes, condition: condition as TurnoverTask["condition"], damage_notes: damageNotes }));
+    if (res.ok) {
+      setTask((t) => ({ ...t, notes: assessNotes, condition: condition as TurnoverTask["condition"], damage_notes: damageNotes }));
+      toast("Assessment saved");
+    } else {
+      toast("Failed to save", "error");
+    }
   }
 
   return (
