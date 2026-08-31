@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 
 export interface ActivityEvent {
   id: string;
-  type: "service_request" | "guest_request" | "maintenance" | "guest_arrived" | "checkout" | "arrival";
+  type: "service_request" | "guest_request" | "maintenance" | "guest_arrived" | "checkout" | "arrival" | "inventory_alert";
   title: string;
   subtitle: string;
   timestamp: string;
@@ -24,6 +24,7 @@ export async function GET() {
     { data: arrivals },
     { data: departures },
     { data: recentOpens },
+    { data: inventoryAlerts },
   ] = await Promise.all([
     supabase
       .from("service_requests")
@@ -62,6 +63,14 @@ export async function GET() {
       .not("last_opened_at", "is", null)
       .order("last_opened_at", { ascending: false })
       .limit(10),
+    // Gracefully skip if migration 006 hasn't been run yet
+    supabase
+      .from("inventory_alerts")
+      .select("id, alert_type, severity, message, created_at, properties(name)")
+      .is("resolved_at", null)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(8),
   ]);
 
   const events: ActivityEvent[] = [];
@@ -139,6 +148,21 @@ export async function GET() {
       title: `${b?.guest_first_name ?? "Guest"} opened their guide`,
       subtitle: p?.name ?? "",
       timestamp: t.last_opened_at,
+    });
+  }
+
+  for (const a of inventoryAlerts ?? []) {
+    const p = Array.isArray(a.properties) ? a.properties[0] : a.properties;
+    const typeLabel = a.alert_type === "low_stock" ? "Low stock" :
+                      a.alert_type === "recurring_damage" ? "Recurring damage" : "Out of service";
+    events.push({
+      id: `inv-${a.id}`,
+      type: "inventory_alert",
+      title: a.message ?? typeLabel,
+      subtitle: (p as { name: string } | null)?.name ?? "",
+      timestamp: a.created_at,
+      urgency: a.severity === "critical" ? "urgent" : undefined,
+      href: "/admin/ops",
     });
   }
 

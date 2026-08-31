@@ -6,7 +6,7 @@ export default async function AdminTodayPage() {
   const todayStart = now.slice(0, 10) + "T00:00:00Z";
   const todayEnd = now.slice(0, 10) + "T23:59:59Z";
 
-  const [{ data: arrivals }, { data: departures }, { data: openRequests }, { data: properties }, { data: activeTurnovers }, { data: urgentTickets }, { data: pendingServiceReqs }] = await Promise.all([
+  const [{ data: arrivals }, { data: departures }, { data: openRequests }, { data: properties }, { data: activeTurnovers }, { data: urgentTickets }, { data: pendingServiceReqs }, { data: invAlerts }] = await Promise.all([
     supabase
       .from("bookings")
       .select("id, guest_first_name, guest_last_name, properties(name)")
@@ -32,6 +32,13 @@ export default async function AdminTodayPage() {
     supabase.from("turnover_tasks").select("property_id, status").in("status", ["pending", "in_progress"]),
     supabase.from("maintenance_tickets").select("property_id").eq("priority", "urgent").neq("status", "resolved"),
     supabase.from("service_requests").select("id, bookings(property_id)").eq("status", "pending"),
+    // Graceful: returns empty if migration 006 hasn't been run
+    supabase
+      .from("inventory_alerts")
+      .select("id, alert_type, severity, message, property_id, inventory_items(name, category)")
+      .is("resolved_at", null)
+      .order("severity", { ascending: false })
+      .order("created_at", { ascending: false }),
   ]);
 
   const Section = ({ title, count }: { title: string; count: number }) => (
@@ -83,10 +90,14 @@ export default async function AdminTodayPage() {
             return (b as { property_id: string } | null)?.property_id;
           }).filter(Boolean)
         );
+        const criticalInvPerProp = new Set(
+          (invAlerts ?? []).filter((a) => a.severity === "critical").map((a) => a.property_id)
+        );
+        const openInvPerProp = new Set((invAlerts ?? []).map((a) => a.property_id));
 
         function status(pid: string): "clear" | "amber" | "red" {
-          if (urgentPerProp.has(pid)) return "red";
-          if (turnoversPerProp.has(pid) || pendingPerProp.has(pid)) return "amber";
+          if (urgentPerProp.has(pid) || criticalInvPerProp.has(pid)) return "red";
+          if (turnoversPerProp.has(pid) || pendingPerProp.has(pid) || openInvPerProp.has(pid)) return "amber";
           return "clear";
         }
 
@@ -149,6 +160,85 @@ export default async function AdminTodayPage() {
                   </a>
                 );
               })}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Inventory health — shown only when there are open alerts */}
+      {(invAlerts ?? []).length > 0 && (() => {
+        const critical = (invAlerts ?? []).filter((a) => a.severity === "critical");
+        const total    = (invAlerts ?? []).length;
+        const ALERT_ICON: Record<string, string> = { low_stock: "📦", recurring_damage: "🔁", out_of_service: "🔧" };
+        const SEVERITY_COLOR: Record<string, string> = { critical: "var(--jood-danger)", medium: "var(--jood-warning)", low: "var(--jood-aqua)" };
+        return (
+          <div style={{ marginBottom: "32px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+                  Inventory
+                </p>
+                <span style={{
+                  backgroundColor: critical.length > 0 ? "rgba(248,113,113,0.12)" : "rgba(245,158,11,0.12)",
+                  color: critical.length > 0 ? "var(--jood-danger)" : "var(--jood-warning)",
+                  borderRadius: "20px",
+                  padding: "2px 8px",
+                  fontSize: "0.7rem",
+                  fontFamily: "var(--font-label)",
+                  letterSpacing: "0.06em",
+                }}>
+                  {total} open alert{total !== 1 ? "s" : ""}
+                  {critical.length > 0 ? ` · ${critical.length} critical` : ""}
+                </span>
+              </div>
+              <a href="/admin/ops" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                View all →
+              </a>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {(invAlerts ?? []).slice(0, 5).map((a) => {
+                const item = Array.isArray(a.inventory_items) ? a.inventory_items[0] : a.inventory_items;
+                return (
+                  <a
+                    key={a.id}
+                    href="/admin/ops"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "12px 16px",
+                      backgroundColor: "var(--jood-surface)",
+                      border: "1px solid var(--jood-line)",
+                      borderLeft: `3px solid ${SEVERITY_COLOR[a.severity]}`,
+                      borderRadius: "var(--radius-lg)",
+                      textDecoration: "none",
+                      color: "inherit",
+                    }}
+                  >
+                    <span style={{ fontSize: "1rem", flexShrink: 0 }}>{ALERT_ICON[a.alert_type] ?? "⚠️"}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {a.message ?? (item as { name: string } | null)?.name ?? "Inventory alert"}
+                      </p>
+                    </div>
+                    <span style={{
+                      fontFamily: "var(--font-label)",
+                      fontSize: "9px",
+                      letterSpacing: "0.1em",
+                      textTransform: "uppercase",
+                      color: SEVERITY_COLOR[a.severity],
+                      flexShrink: 0,
+                    }}>
+                      {a.severity}
+                    </span>
+                  </a>
+                );
+              })}
+              {total > 5 && (
+                <a href="/admin/ops" style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--jood-ink-ghost)", padding: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                  +{total - 5} more alert{total - 5 !== 1 ? "s" : ""}
+                </a>
+              )}
             </div>
           </div>
         );

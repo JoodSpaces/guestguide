@@ -3,6 +3,8 @@ import { headers } from "next/headers";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { LiveFeedPanel } from "@/components/admin/LiveFeedPanel";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "JOOD Admin",
   robots: "noindex, nofollow",

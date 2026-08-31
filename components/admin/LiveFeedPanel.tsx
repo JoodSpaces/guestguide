@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { ActivityEvent } from "@/app/api/admin/activity/route";
 
 const TYPE_ICON: Record<string, string> = {
-  service_request: "🛎",
-  guest_request: "💬",
-  maintenance: "🔧",
-  guest_arrived: "👁",
-  checkout: "🚪",
-  arrival: "🏠",
+  service_request:  "🛎",
+  guest_request:    "💬",
+  maintenance:      "🔧",
+  guest_arrived:    "👁",
+  checkout:         "🚪",
+  arrival:          "🏠",
+  inventory_alert:  "📦",
 };
 
 function timeAgo(iso: string) {
