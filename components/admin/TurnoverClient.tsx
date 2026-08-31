@@ -48,9 +48,16 @@ interface DamageRecord {
   inventory_items: { name: string; unit: string; category: string };
 }
 
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+}
+
 interface Props {
   task: TurnoverTask;
   items: TurnoverItem[];
+  teamMembers: TeamMember[];
 }
 
 // Plain-English status for staff
@@ -114,7 +121,7 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-export function TurnoverClient({ task: initialTask, items: initialItems }: Props) {
+export function TurnoverClient({ task: initialTask, items: initialItems, teamMembers }: Props) {
   const [task, setTask]         = useState(initialTask);
   const [items, setItems]       = useState(initialItems);
   const [savingStatus, setSavingStatus] = useState(false);
@@ -136,6 +143,8 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
   const [addingDamage, setAddingDamage]       = useState(false);
   const [removingDamageId, setRemovingDamageId] = useState<string | null>(null);
   const [reportOpen, setReportOpen]           = useState(false);
+  const [assignTo, setAssignTo]               = useState(task.assigned_to ?? "");
+  const [savingAssign, setSavingAssign]       = useState(false);
 
   const propertyId = task.properties.id;
 
@@ -241,6 +250,22 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
     });
   }
 
+  async function saveAssign(name: string) {
+    setSavingAssign(true);
+    const res = await fetch(`/api/admin/ops/turnover/${task.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assigned_to: name || null }),
+    });
+    setSavingAssign(false);
+    if (res.ok) {
+      setTask((t) => ({ ...t, assigned_to: name || null }));
+      toast(name ? `Assigned to ${name}` : "Unassigned");
+    } else {
+      toast("Failed to assign", "error");
+    }
+  }
+
   async function saveAssessment() {
     setSavingAssess(true);
     const res = await fetch(`/api/admin/ops/turnover/${task.id}`, {
@@ -280,8 +305,38 @@ export function TurnoverClient({ task: initialTask, items: initialItems }: Props
                 Guest: {task.bookings.guest_first_name} {task.bookings.guest_last_name} · checkout {fmtDate(task.bookings.check_out)}
               </p>
             )}
-            {task.assigned_to && (
-              <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)" }}>👤 {task.assigned_to}</p>
+            {/* Assign to */}
+            {teamMembers.length > 0 ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", flexShrink: 0 }}>👤 Assigned to:</span>
+                <select
+                  value={assignTo}
+                  onChange={(e) => {
+                    setAssignTo(e.target.value);
+                    saveAssign(e.target.value);
+                  }}
+                  disabled={savingAssign}
+                  style={{
+                    padding: "6px 10px",
+                    border: "1px solid var(--jood-line)",
+                    borderRadius: "var(--radius-pill)",
+                    backgroundColor: "var(--jood-ground)",
+                    fontSize: "0.875rem",
+                    color: assignTo ? "var(--jood-ink)" : "var(--jood-ink-ghost)",
+                    cursor: "pointer",
+                    opacity: savingAssign ? 0.5 : 1,
+                    fontFamily: "inherit",
+                  }}
+                >
+                  <option value="">Unassigned</option>
+                  {teamMembers.map((m) => (
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
+                </select>
+                {savingAssign && <span style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)" }}>saving…</span>}
+              </div>
+            ) : (
+              task.assigned_to && <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "4px" }}>👤 {task.assigned_to}</p>
             )}
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
+import { CreateTurnoverForm } from "@/components/admin/CreateTurnoverForm";
 
 const STATUS_COLOR: Record<string, string> = {
   scheduled: "var(--jood-aqua)",
@@ -65,6 +66,7 @@ export default async function OpsPage() {
     { data: history },
     { data: tickets },
     { data: properties },
+    { data: teamMembers },
   ] = await Promise.all([
     supabase
       .from("turnover_tasks")
@@ -85,6 +87,7 @@ export default async function OpsPage() {
       .order("created_at", { ascending: false })
       .limit(20),
     supabase.from("properties").select("id, name").order("name"),
+    supabase.from("team_members").select("id, name, role").eq("is_active", true).order("name"),
   ]);
 
   type TurnoverRow = NonNullable<typeof turnovers>[number] & { approved_at?: string | null };
@@ -140,13 +143,17 @@ export default async function OpsPage() {
       <AutoRefresh interval={30_000} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Operations</h1>
-        {role === "admin" && (
-          <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px" }}>
+          {role === "admin" && (
             <a href="/admin/ops/maintenance/new" style={{ padding: "9px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem" }}>
               + Ticket
             </a>
-          </div>
-        )}
+          )}
+          <CreateTurnoverForm
+            properties={properties ?? []}
+            teamMembers={teamMembers ?? []}
+          />
+        </div>
       </div>
 
       {/* ── MY TASKS — always shown first ── */}
@@ -166,11 +173,10 @@ export default async function OpsPage() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
         {/* Turnovers */}
         <section>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+          <div style={{ marginBottom: "12px" }}>
             <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
               {myTurnovers.length > 0 ? "All other tasks" : "Active"} · {active.length + upcoming.length}
             </p>
-            <NewTurnoverForm properties={properties ?? []} />
           </div>
 
           {!active.length && !upcoming.length && !myTurnovers.length && (
@@ -263,13 +269,3 @@ export default async function OpsPage() {
   );
 }
 
-// Inline new-turnover form — server page with client island
-function NewTurnoverForm({ properties }: { properties: { id: string; name: string }[] }) {
-  return (
-    <form action="/api/admin/ops/turnover" method="POST" style={{ display: "none" }}>
-      {properties.map((p) => (
-        <input key={p.id} type="hidden" name="propertyId" value={p.id} />
-      ))}
-    </form>
-  );
-}

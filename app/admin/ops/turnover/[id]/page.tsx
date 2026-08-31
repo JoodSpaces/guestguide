@@ -10,7 +10,7 @@ export default async function TurnoverPage({ params }: Props) {
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
 
   const supabase = createServiceClient();
-  const [{ data: task }, { data: items }] = await Promise.all([
+  const [{ data: task }, { data: items }, { data: teamMembers }] = await Promise.all([
     supabase
       .from("turnover_tasks")
       .select("id, status, assigned_to, notes, condition, damage_notes, created_at, started_at, completed_at, approved_at, approved_by, properties(id, name), bookings(id, check_in, check_out, guest_first_name, guest_last_name)")
@@ -22,9 +22,14 @@ export default async function TurnoverPage({ params }: Props) {
       .eq("task_id", id)
       .order("sort_order")
       .returns<TurnoverItem[]>(),
+    supabase
+      .from("team_members")
+      .select("id, name, role")
+      .eq("is_active", true)
+      .order("name"),
   ]);
 
   if (!task) notFound();
 
-  return <TurnoverClient task={task} items={items ?? []} />;
+  return <TurnoverClient task={task} items={items ?? []} teamMembers={teamMembers ?? []} />;
 }
