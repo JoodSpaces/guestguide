@@ -33,6 +33,17 @@ export async function PATCH(
     .eq("property_id", propertyId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Keep property_inventory.quantity in sync when current_stock is updated
+  if (parsed.data.current_stock !== undefined) {
+    await supabase
+      .from("property_inventory")
+      .upsert(
+        { property_id: propertyId, item_id: itemId, quantity: parsed.data.current_stock, updated_at: new Date().toISOString() },
+        { onConflict: "property_id,item_id" }
+      );
+  }
+
   return NextResponse.json({ ok: true });
 }
 

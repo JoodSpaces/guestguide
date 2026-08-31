@@ -48,5 +48,16 @@ export async function POST(
     .single<{ id: string }>();
 
   if (error || !data) return NextResponse.json({ error: error?.message }, { status: 500 });
+
+  // Seed property_inventory so triggers and alerts have a starting quantity
+  if (parsed.data.current_stock > 0) {
+    await supabase
+      .from("property_inventory")
+      .upsert(
+        { property_id: propertyId, item_id: data.id, quantity: parsed.data.current_stock },
+        { onConflict: "property_id,item_id" }
+      );
+  }
+
   return NextResponse.json({ id: data.id }, { status: 201 });
 }
