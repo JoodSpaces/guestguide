@@ -136,9 +136,18 @@ export function LiveFeedPanel() {
           justifyContent: "space-between",
           flexShrink: 0,
         }}>
-          <span style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.16em", textTransform: "uppercase" }}>
-            Activity
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{
+              width: "8px", height: "8px", borderRadius: "50%",
+              backgroundColor: "#4ade80",
+              boxShadow: "0 0 6px #4ade80",
+              display: "inline-block",
+              animation: "pulse-green 2s infinite",
+            }} />
+            <span style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.16em", textTransform: "uppercase" }}>
+              Activity
+            </span>
+          </div>
           <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", fontFamily: "var(--font-mono)" }}>
             {loading ? "…" : `${events.length} events`}
           </span>
@@ -212,6 +221,12 @@ export function LiveFeedPanel() {
         </div>
       </div>
 
+      <style>{`
+        @keyframes pulse-green {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.35; }
+        }
+      `}</style>
     </>
   );
 }

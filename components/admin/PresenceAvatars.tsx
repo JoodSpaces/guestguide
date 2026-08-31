@@ -54,11 +54,12 @@ export function PresenceAvatars({ myName, myRole }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myName]);
 
-  if (members.length === 0) return null;
+  const others = members.filter((m) => m.name.toLowerCase() !== myName.toLowerCase());
+  if (others.length === 0) return null;
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-      {members.map((m) => {
+      {others.map((m) => {
         const active = isActive(m.last_seen_at);
         return (
           <div
