@@ -95,10 +95,9 @@ export const ROLE_HOME: Record<string, string> = {
 
 export function isPathAllowed(pathname: string, role: string): boolean {
   if (role === "admin") return true;
-  if (role === "ops") return pathname === "/admin" || pathname.startsWith("/admin/ops");
+  if (role === "ops") return pathname.startsWith("/admin/ops");
   if (role === "concierge") {
     return (
-      pathname === "/admin" ||
       pathname.startsWith("/admin/requests") ||
       pathname.startsWith("/admin/bookings")
     );

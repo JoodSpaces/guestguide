@@ -2,6 +2,12 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+
+const ROLE_HOME: Record<string, string> = {
+  admin: "/admin",
+  ops: "/admin/ops",
+  concierge: "/admin/requests",
+};
 import { PresenceAvatars } from "@/components/admin/PresenceAvatars";
 
 const ROLE_COLOR: Record<string, string> = {
@@ -11,7 +17,7 @@ const ROLE_COLOR: Record<string, string> = {
 };
 
 const PRIMARY_NAV = [
-  { href: "/admin",             label: "Today",     roles: ["admin", "ops", "concierge"] },
+  { href: "/admin",             label: "Today",     roles: ["admin"] },
   { href: "/admin/bookings",    label: "Bookings",  roles: ["admin", "concierge"] },
   { href: "/admin/ops",         label: "Ops",       roles: ["admin", "ops"] },
   { href: "/admin/services",    label: "Services",  roles: ["admin"] },
@@ -93,7 +99,7 @@ export function AdminHeader({ role, name }: Props) {
       }}
     >
       {/* Logo */}
-      <a href="/admin" style={{ display: "block", flexShrink: 0, lineHeight: 0 }}>
+      <a href={ROLE_HOME[role] ?? "/admin"} style={{ display: "block", flexShrink: 0, lineHeight: 0 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block" }} />
       </a>

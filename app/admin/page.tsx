@@ -1,6 +1,13 @@
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
+import { ROLE_HOME } from "@/lib/admin-auth";
 
 export default async function AdminTodayPage() {
+  const h = await headers();
+  const role = h.get("x-admin-role") ?? "admin";
+  if (role !== "admin") redirect(ROLE_HOME[role] ?? "/admin/login");
+
   const supabase = createServiceClient();
   const now = new Date().toISOString();
   const todayStart = now.slice(0, 10) + "T00:00:00Z";
