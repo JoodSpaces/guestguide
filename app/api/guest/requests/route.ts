@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getBookingFromToken } from "@/lib/guest-auth";
 import { notifyAdminGuestRequest, confirmGuestRequest } from "@/lib/email";
+import { classifyGuestRequest } from "@/lib/classify-request";
 
 const postSchema = z.object({
   token: z.string(),
@@ -38,24 +39,37 @@ export async function POST(req: NextRequest) {
 
   const supabase = createServiceClient();
 
-  const [insertResult, { data: property }] = await Promise.all([
-    supabase
-      .from("guest_requests")
-      .insert({
-        booking_id: booking.id,
-        category: parsed.data.category,
-        body: parsed.data.body,
-        urgency: parsed.data.urgency,
-        status: "received",
-      })
-      .select("id")
-      .single<{ id: string }>(),
+  // Classify and fetch property in parallel; classify may fail gracefully
+  const [classification, { data: property }] = await Promise.all([
+    classifyGuestRequest(parsed.data.body).catch(() => ({
+      category: parsed.data.category,
+      urgency: parsed.data.urgency,
+    })),
     supabase
       .from("properties")
       .select("name")
       .eq("id", booking.property_id)
       .single<{ name: string }>(),
   ]);
+
+  // AI category is authoritative; urgency escalates but never de-escalates
+  const finalCategory = classification.category;
+  const finalUrgency =
+    parsed.data.urgency === "urgent" || classification.urgency === "urgent"
+      ? "urgent"
+      : "normal";
+
+  const insertResult = await supabase
+    .from("guest_requests")
+    .insert({
+      booking_id: booking.id,
+      category: finalCategory,
+      body: parsed.data.body,
+      urgency: finalUrgency,
+      status: "received",
+    })
+    .select("id")
+    .single<{ id: string }>();
 
   if (insertResult.error) return NextResponse.json({ error: insertResult.error.message }, { status: 500 });
 
@@ -65,9 +79,9 @@ export async function POST(req: NextRequest) {
   notifyAdminGuestRequest({
     guestName,
     propertyName,
-    category: parsed.data.category,
+    category: finalCategory,
     body: parsed.data.body,
-    urgency: parsed.data.urgency,
+    urgency: finalUrgency,
     requestId: insertResult.data.id,
   });
 
@@ -75,9 +89,9 @@ export async function POST(req: NextRequest) {
     confirmGuestRequest({
       guestEmail: booking.guest_email,
       guestFirstName: booking.guest_first_name,
-      category: parsed.data.category,
+      category: finalCategory,
     });
   }
 
-  return NextResponse.json({ id: insertResult.data.id }, { status: 201 });
+  return NextResponse.json({ id: insertResult.data.id, category: finalCategory, urgency: finalUrgency }, { status: 201 });
 }

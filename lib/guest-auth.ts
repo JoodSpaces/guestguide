@@ -7,6 +7,7 @@ export interface GuestBooking {
   guest_first_name: string;
   guest_last_name: string;
   guest_email: string | null;
+  check_in: string;
   check_out: string;
 }
 
@@ -17,7 +18,7 @@ export async function getBookingFromToken(token: string): Promise<GuestBooking |
 
   const { data } = await supabase
     .from("stay_tokens")
-    .select("booking_id, revoked_at, bookings(id, property_id, guest_first_name, guest_last_name, guest_email, check_out)")
+    .select("booking_id, revoked_at, bookings(id, property_id, guest_first_name, guest_last_name, guest_email, check_in, check_out)")
     .eq("token_hash", hash)
     .single<{
       booking_id: string;

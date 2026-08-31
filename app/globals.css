@@ -180,6 +180,11 @@ body {
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes jood-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
 .animate-reveal {
   animation: revealUp var(--duration-reveal) var(--ease-standard) both;
 }

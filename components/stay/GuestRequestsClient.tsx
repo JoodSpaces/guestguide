@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocale } from "next-intl";
 
 interface GuestRequest {
@@ -42,11 +42,14 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
 
   const [requests, setRequests] = useState(initialRequests);
   const [category, setCategory] = useState<string>("other");
-  const [body, setBody] = useState("");
   const [urgency, setUrgency] = useState<"normal" | "urgent">("normal");
+  const [body, setBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showCompose, setShowCompose] = useState(false);
   const [justSent, setJustSent] = useState(false);
+  const [aiClassifying, setAiClassifying] = useState(false);
+  const [aiClassified, setAiClassified] = useState(false);
+  const classifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Poll for updates every 20s
   useEffect(() => {
@@ -64,6 +67,36 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [requests.length]);
 
+  // Debounced AI classification as user types
+  const classify = useCallback(async (text: string) => {
+    setAiClassifying(true);
+    setAiClassified(false);
+    const res = await fetch("/api/guest/classify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ body: text }),
+    }).catch(() => null);
+    setAiClassifying(false);
+    if (!res?.ok) return;
+    const data: { category: string; urgency: "normal" | "urgent" } = await res.json();
+    setCategory(data.category);
+    if (data.urgency === "urgent") setUrgency("urgent");
+    setAiClassified(true);
+  }, []);
+
+  useEffect(() => {
+    if (classifyTimer.current) clearTimeout(classifyTimer.current);
+    const trimmed = body.trim();
+    if (trimmed.length < 15) {
+      setAiClassified(false);
+      return;
+    }
+    classifyTimer.current = setTimeout(() => classify(trimmed), 700);
+    return () => {
+      if (classifyTimer.current) clearTimeout(classifyTimer.current);
+    };
+  }, [body, classify]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!body.trim()) return;
@@ -75,21 +108,25 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
     });
     setSubmitting(false);
     if (res.ok) {
-      const { id } = await res.json();
+      const { id, category: serverCategory, urgency: serverUrgency } = await res.json();
       const newReq: GuestRequest = {
-        id, category, body: body.trim(), urgency,
-        status: "received", admin_notes: null,
+        id,
+        category: serverCategory ?? category,
+        body: body.trim(),
+        urgency: serverUrgency ?? urgency,
+        status: "received",
+        admin_notes: null,
         created_at: new Date().toISOString(),
       };
       setRequests((prev) => [...prev, newReq]);
       setBody("");
       setCategory("other");
       setUrgency("normal");
+      setAiClassified(false);
       setShowCompose(false);
       setJustSent(true);
       setTimeout(() => setJustSent(false), 4000);
     }
-    setSubmitting(false);
   }
 
   const catLabel = (cat: string) => isAr ? (CAT_AR[cat] ?? cat) : (CAT_EN[cat] ?? cat);
@@ -259,12 +296,12 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
         {showCompose ? (
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             {/* Category chips */}
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", alignItems: "center" }}>
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   type="button"
-                  onClick={() => setCategory(cat)}
+                  onClick={() => { setCategory(cat); setAiClassified(false); }}
                   style={{
                     display: "flex", alignItems: "center", gap: "4px",
                     padding: "5px 12px",
@@ -275,11 +312,22 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
                     fontSize: "0.8rem",
                     cursor: "pointer",
                     fontFamily: "inherit",
+                    transition: "all 160ms",
                   }}
                 >
                   {CAT_ICON[cat]} {catLabel(cat)}
                 </button>
               ))}
+              {aiClassifying && (
+                <span style={{ fontSize: "0.7rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", letterSpacing: "0.06em" }}>
+                  {isAr ? "جاري التصنيف…" : "Classifying…"}
+                </span>
+              )}
+              {aiClassified && !aiClassifying && (
+                <span style={{ fontSize: "0.7rem", color: "var(--jood-aqua)", fontFamily: "var(--font-label)", letterSpacing: "0.06em" }}>
+                  ✦ {isAr ? "تصنيف تلقائي" : "Auto-classified"}
+                </span>
+              )}
             </div>
 
             <div style={{ display: "flex", gap: "8px", alignItems: "flex-end" }}>

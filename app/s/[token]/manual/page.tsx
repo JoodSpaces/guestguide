@@ -86,6 +86,7 @@ export default async function ManualPage({ params }: Props) {
         wifiSsid={property?.wifi_ssid ?? null}
         wifiPassword={wifiPassword}
         locale={locale}
+        token={token}
       />
     </StayShell>
   );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import type { TokenPayload } from "@/lib/token";
+import type { TokenPayload, Phase } from "@/lib/token";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { PhaseCard } from "@/components/stay/PhaseCard";
 import { QuickHelpFab } from "@/components/stay/QuickHelpFab";
@@ -18,6 +18,53 @@ function getTimeKicker(h: number, isAr: boolean): { kicker: string; tagline?: st
   if (h >= 15 && h < 17) return { kicker: isAr ? "بعد الظهر" : "AFTERNOON" };
   if (h >= 17 && h < 20) return { kicker: isAr ? "الساعة الذهبية" : "GOLDEN HOUR", tagline: isAr ? "أفضل وقت للشاطئ." : "Best time for the water." };
   return { kicker: isAr ? "مساء الخير" : "GOOD EVENING" };
+}
+
+function getContextNudge(
+  phase: Phase,
+  hour: number,
+  checkOut: string,
+  isAr: boolean,
+  token: string,
+): { text: string; cta: string; href: string } | null {
+  const checkOutDate = new Date(checkOut);
+  const hoursUntilCheckout = (checkOutDate.getTime() - Date.now()) / (1000 * 60 * 60);
+  const checkOutTime = checkOutDate.toLocaleTimeString(isAr ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit" });
+
+  if (phase === "living") {
+    if (hour >= 5 && hour < 11)
+      return isAr
+        ? { text: "ابدأ يومك بأفضل وجهات الإفطار القريبة.", cta: "اكتشف الأماكن", href: `/s/${token}/discover` }
+        : { text: "Start your morning right — local breakfast spots nearby.", cta: "Explore", href: `/s/${token}/discover` };
+    if (hour >= 11 && hour < 16)
+      return isAr
+        ? { text: "وقت الظل والمسبح. هل تحتاج شيئاً؟", cta: "طلب خدمة", href: `/s/${token}/services` }
+        : { text: "Pool and shade o'clock. Need anything brought up?", cta: "Order", href: `/s/${token}/services` };
+    if (hour >= 16 && hour < 20)
+      return isAr
+        ? { text: "الساعة الذهبية — وقت مثالي لاستكشاف المنطقة.", cta: "اكتشف", href: `/s/${token}/discover` }
+        : { text: "Golden hour — perfect time to explore the area.", cta: "Discover", href: `/s/${token}/discover` };
+    return isAr
+      ? { text: "هل تحتاج شيئاً لإكمال ليلتك؟", cta: "الخدمات", href: `/s/${token}/services` }
+      : { text: "Need anything to round out your evening?", cta: "Services", href: `/s/${token}/services` };
+  }
+
+  if (phase === "departure") {
+    if (hoursUntilCheckout > 3)
+      return isAr
+        ? { text: `المغادرة اليوم الساعة ${checkOutTime}. تريد الاستمرار أطول؟`, cta: "تمديد الإقامة", href: `/s/${token}/services` }
+        : { text: `Checkout today at ${checkOutTime}. Want to stay a little longer?`, cta: "Late checkout", href: `/s/${token}/services` };
+    return isAr
+      ? { text: "نأمل أن إقامتك كانت رائعة. هنا إذا احتجت شيئاً قبل المغادرة.", cta: "تواصل معنا", href: `/s/${token}/requests` }
+      : { text: "Hope your stay was wonderful. We're here if you need anything before you head out.", cta: "Reach us", href: `/s/${token}/requests` };
+  }
+
+  if (phase === "settling")
+    return isAr
+      ? { text: "اكتشف ما حولك — أفضل الأماكن في المنطقة.", cta: "استكشف", href: `/s/${token}/discover` }
+      : { text: "Get your bearings — best spots in the area.", cta: "Explore", href: `/s/${token}/discover` };
+
+  return null;
 }
 
 interface RequestSummary {
@@ -62,6 +109,11 @@ const IconChat = () => (
     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
   </svg>
 );
+const IconConcierge = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2l1.8 5.4L19.2 9l-4.5 4.2 1.5 5.8L12 16l-4.2 3 1.5-5.8L4.8 9l5.4-1.6L12 2z"/>
+  </svg>
+);
 const IconDoor = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 2H5a1 1 0 00-1 1v18a1 1 0 001 1h14a1 1 0 001-1V7z"/>
@@ -100,6 +152,7 @@ export function StayHome({ payload, token, requestSummary }: Props) {
     return () => clearInterval(id);
   }, []);
   const timeKicker = getTimeKicker(hour, isAr);
+  const nudge = getContextNudge(payload.phase, hour, payload.checkOut, isAr, token);
 
   return (
     <main className="min-h-dvh" style={{ backgroundColor: "var(--jood-ground)", ...ambience }}>
@@ -149,6 +202,38 @@ export function StayHome({ payload, token, requestSummary }: Props) {
             <p style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "8px", fontStyle: "italic" }}>
               {timeKicker.tagline}
             </p>
+          )}
+          {nudge && (
+            <div
+              style={{
+                marginTop: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                padding: "10px 14px",
+                backgroundColor: "var(--jood-surface)",
+                border: "1px solid var(--jood-line)",
+                borderRadius: "var(--radius-lg)",
+              }}
+            >
+              <p style={{ flex: 1, fontSize: "0.8125rem", color: "var(--jood-ink-muted)", fontFamily: "var(--font-body)" }}>
+                {nudge.text}
+              </p>
+              <a
+                href={nudge.href}
+                style={{
+                  flexShrink: 0,
+                  fontSize: "0.75rem",
+                  fontFamily: "var(--font-label)",
+                  letterSpacing: "0.1em",
+                  color: "var(--jood-accent)",
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {nudge.cta} →
+              </a>
+            </div>
           )}
         </div>
 
@@ -241,7 +326,7 @@ export function StayHome({ payload, token, requestSummary }: Props) {
 
         {/* Secondary cards */}
         <div className="grid gap-3">
-          <SecondaryCards payload={payload} token={token} t={t} isAr={isAr} />
+          <SecondaryCards payload={payload} token={token} t={t} isAr={isAr} hour={hour} />
         </div>
 
         {/* Property soul footer */}
@@ -308,15 +393,50 @@ function PrimaryCard({ payload, token, isAr }: { payload: TokenPayload; token: s
 }
 
 /* ─── Secondary cards ────────────────────────────────────────────────────── */
-function SecondaryCards({ payload, token, t, isAr }: { payload: TokenPayload; token: string; t: ReturnType<typeof useTranslations>; isAr: boolean }) {
+function SecondaryCards({ payload, token, t, isAr, hour }: { payload: TokenPayload; token: string; t: ReturnType<typeof useTranslations>; isAr: boolean; hour: number }) {
   const isManualPrimary =
     payload.phase !== "arrival" &&
     payload.phase !== "settling" &&
     payload.phase !== "departure";
 
+  const discover = {
+    key: "discover",
+    href: `/s/${token}/discover`,
+    label: t("nav.discover"),
+    icon: <IconCompass />,
+    description: isAr ? "المطاعم والأماكن المحلية المفضلة" : "Local spots & restaurants",
+  };
+  const services = {
+    key: "services",
+    href: `/s/${token}/services`,
+    label: t("nav.services"),
+    icon: <IconSparkle />,
+    description: isAr ? "إضافات اختيارية لإقامتك" : "Add-ons for your stay",
+  };
+  const concierge = {
+    key: "concierge",
+    href: `/s/${token}/concierge`,
+    label: isAr ? "كونسيرج جود" : "JOOD Concierge",
+    icon: <IconConcierge />,
+    description: isAr ? "اسألني أي شيء عن إقامتك" : "Ask anything about your stay",
+  };
+
+  // Services-first: midday, evening, night, or departure
+  const servicesFirst =
+    payload.phase === "departure" ||
+    (payload.phase === "living" && hour >= 11 && hour < 16) ||
+    (payload.phase === "living" && hour >= 20) ||
+    (payload.phase === "living" && hour < 5);
+
+  // Concierge leads during in-stay phases (living, settling)
+  const conciergeFirst =
+    payload.phase === "living" || payload.phase === "settling";
+
   const links = [
+    ...(conciergeFirst ? [concierge] : []),
     ...(payload.arrivalUnlocked && payload.phase !== "arrival" && payload.phase !== "settling"
       ? [{
+          key: "arrival",
           href: `/s/${token}/arrival`,
           label: t("nav.arrival"),
           icon: <IconKey />,
@@ -325,30 +445,22 @@ function SecondaryCards({ payload, token, t, isAr }: { payload: TokenPayload; to
       : []),
     ...(!isManualPrimary
       ? [{
+          key: "manual",
           href: `/s/${token}/manual`,
           label: t("nav.manual"),
           icon: <IconBook />,
           description: isAr ? "الواي فاي · الأجهزة · القواعد" : "Wi-Fi · Appliances · Rules",
         }]
       : []),
+    ...(servicesFirst ? [services, discover] : [discover, services]),
     {
-      href: `/s/${token}/discover`,
-      label: t("nav.discover"),
-      icon: <IconCompass />,
-      description: isAr ? "المطاعم والأماكن المحلية المفضلة" : "Local spots & restaurants",
-    },
-    {
-      href: `/s/${token}/services`,
-      label: t("nav.services"),
-      icon: <IconSparkle />,
-      description: isAr ? "إضافات اختيارية لإقامتك" : "Add-ons for your stay",
-    },
-    {
+      key: "requests",
       href: `/s/${token}/requests`,
       label: t("nav.requests"),
       icon: <IconChat />,
       description: isAr ? "تحدث مع فريق جود" : "Talk to the JOOD team",
     },
+    ...(!conciergeFirst ? [concierge] : []),
   ];
 
   return (
