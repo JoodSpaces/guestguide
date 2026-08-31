@@ -26,11 +26,11 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Forward role + name to server components via header
-    const res = NextResponse.next();
-    res.headers.set("x-admin-role", session.role);
-    res.headers.set("x-admin-name", session.name);
-    return res;
+    // Forward role + name to server components via request headers
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-admin-role", session.role);
+    requestHeaders.set("x-admin-name", session.name);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
   // ── Rate-limit guest token routes ──────────────────────────────────────
