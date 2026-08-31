@@ -86,7 +86,7 @@ export function LiveFeedPanel() {
           boxShadow: "-2px 0 12px rgba(0,0,0,0.12)",
         }}
       >
-        <span style={{ fontSize: "0.9rem", writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "0.12em", fontFamily: "var(--font-label)", textTransform: "uppercase", fontSize: "0.6rem" }}>
+        <span style={{ writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "0.12em", fontFamily: "var(--font-label)", textTransform: "uppercase", fontSize: "0.6rem" }}>
           {open ? "Close" : "Live"}
         </span>
         {!open && newCount > 0 && (
