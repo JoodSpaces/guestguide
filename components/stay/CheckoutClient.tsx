@@ -70,7 +70,7 @@ function ScrapbookCard({
     <div
       className="animate-reveal"
       style={{
-        backgroundColor: "var(--jood-ink)",
+        backgroundColor: "#351E1C",
         borderRadius: "var(--radius-lg)",
         padding: "clamp(28px, 5vw, 44px)",
         position: "relative",
@@ -113,7 +113,7 @@ function ScrapbookCard({
         style={{
           fontSize: "clamp(1.6rem, 5vw, 2.6rem)",
           fontWeight: 600,
-          color: "var(--jood-ground)",
+          color: "#F5F4ED",
           lineHeight: 1.1,
           marginBottom: "28px",
         }}
@@ -140,7 +140,7 @@ function ScrapbookCard({
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              backgroundColor: "var(--jood-ink)",
+              backgroundColor: "#351E1C",
               padding: "0 8px",
               fontFamily: "var(--font-mono)",
               fontSize: "9px",
