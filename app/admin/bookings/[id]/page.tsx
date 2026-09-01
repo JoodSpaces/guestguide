@@ -40,6 +40,12 @@ export default async function BookingDetailPage({ params }: Props) {
 
   if (!booking) notFound();
 
+  const { data: rating } = await supabase
+    .from("stay_ratings")
+    .select("stars, comment, created_at")
+    .eq("booking_id", id)
+    .single<{ stars: number; comment: string | null; created_at: string }>();
+
   const { data: tokens } = await supabase
     .from("stay_tokens")
     .select("id, open_count, first_opened_at, last_opened_at, revoked_at, expires_at")
@@ -80,6 +86,7 @@ export default async function BookingDetailPage({ params }: Props) {
       }}
       property={property ?? null}
       tokens={tokens ?? []}
+      rating={rating ?? null}
     />
   );
 }

@@ -31,10 +31,17 @@ interface TokenRow {
   expires_at: string;
 }
 
+interface RatingRow {
+  stars: number;
+  comment: string | null;
+  created_at: string;
+}
+
 interface Props {
   booking: BookingData;
   property: { id: string; name: string; name_ar: string } | null;
   tokens: TokenRow[];
+  rating: RatingRow | null;
 }
 
 const field: React.CSSProperties = {
@@ -81,7 +88,7 @@ function fmt(iso: string) {
   });
 }
 
-export function BookingDetailClient({ booking, property, tokens }: Props) {
+export function BookingDetailClient({ booking, property, tokens, rating }: Props) {
   const [doorCode, setDoorCode] = useState(booking.doorCode ?? "");
   const [editingCode, setEditingCode] = useState(false);
   const [savingCode, setSavingCode] = useState(false);
@@ -199,6 +206,28 @@ export function BookingDetailClient({ booking, property, tokens }: Props) {
           {booking.externalRef && <InfoRow label="Ref" value={booking.externalRef} />}
         </div>
       </div>
+
+      {/* Guest rating */}
+      {rating && (
+        <div style={card}>
+          <p style={eyebrow}>Guest rating</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: rating.comment ? "12px" : 0 }}>
+            <div style={{ display: "flex", gap: "3px" }}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <span key={s} style={{ fontSize: "1.25rem", filter: s <= rating.stars ? "none" : "grayscale(1) opacity(0.25)" }}>★</span>
+              ))}
+            </div>
+            <span style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)" }}>
+              {rating.stars}/5 · {new Date(rating.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+            </span>
+          </div>
+          {rating.comment && (
+            <p style={{ fontSize: "0.9375rem", color: "var(--jood-ink)", lineHeight: 1.6, borderTop: "1px solid var(--jood-line)", paddingTop: "12px", fontStyle: "italic" }}>
+              "{rating.comment}"
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Door code */}
       <div style={card}>
