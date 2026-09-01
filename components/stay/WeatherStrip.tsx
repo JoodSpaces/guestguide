@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { WeatherData } from "@/app/api/stay/weather/route";
+import type { WeatherData } from "@/lib/types/weather";
 
 interface Props {
   token: string;

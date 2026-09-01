@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hashToken } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
+import type { WeatherData } from "@/lib/types/weather";
+
+export type { WeatherData };
 
 // In-memory cache: per-property, refreshes every 30 min
 const weatherCache = new Map<string, { data: WeatherData; at: number }>();
 const CACHE_TTL = 30 * 60 * 1000;
-
-export interface WeatherData {
-  tempC: number;
-  uvIndex: number;
-  windKph: number;
-  sunsetLocal: string;   // HH:MM
-  waveM: number | null;  // null if not coastal / unavailable
-}
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get("token");
