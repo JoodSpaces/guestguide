@@ -34,6 +34,7 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
 
       {/* Header */}
       <header
+        className="jood-header-glass"
         style={{
           display: "flex",
           alignItems: "center",
@@ -44,7 +45,6 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
           position: "sticky",
           top: 0,
           zIndex: 40,
-          backgroundColor: "rgba(245, 244, 237, 0.75)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
         }}
@@ -74,7 +74,7 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
           )}
           {/* JOOD logo */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block" }} />
+          <img src="/jood-logo-dark.png" alt="JOOD" className="jood-logo" style={{ height: "22px", width: "auto", display: "block" }} />
           {title && (
             <p
               style={{

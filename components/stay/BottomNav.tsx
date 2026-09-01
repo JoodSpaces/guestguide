@@ -49,6 +49,7 @@ export function BottomNav({ token, active = "home" }: Props) {
   return (
     <nav
       aria-label={isRtl ? "التنقل الرئيسي" : "Main navigation"}
+      className="jood-nav-glass"
       style={{
         position: "fixed",
         bottom: "clamp(16px, 4vw, 28px)",
@@ -60,11 +61,8 @@ export function BottomNav({ token, active = "home" }: Props) {
         gap: "2px",
         padding: "6px 8px",
         borderRadius: "40px",
-        background: "rgba(245, 244, 237, 0.70)",
         backdropFilter: "blur(32px) saturate(1.8)",
         WebkitBackdropFilter: "blur(32px) saturate(1.8)",
-        border: "0.5px solid rgba(53, 30, 28, 0.13)",
-        boxShadow: "0 8px 32px rgba(53,30,28,0.13), 0 2px 8px rgba(53,30,28,0.07), inset 0 1px 0 rgba(255,255,255,0.55)",
       }}
     >
       {ordered.map((tab) => {
@@ -83,7 +81,7 @@ export function BottomNav({ token, active = "home" }: Props) {
               padding: "8px 16px",
               borderRadius: "32px",
               textDecoration: "none",
-              color: isActive ? "var(--jood-accent)" : "rgba(53, 30, 28, 0.38)",
+              color: isActive ? "var(--jood-accent)" : "var(--jood-ink-faint)",
               backgroundColor: isActive ? "rgba(255, 96, 55, 0.09)" : "transparent",
               transition: "color 180ms ease, background-color 180ms ease, transform 100ms ease",
             }}
