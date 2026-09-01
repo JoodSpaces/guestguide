@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useLocale } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { QuickHelpFab } from "@/components/stay/QuickHelpFab";
+import { BottomNav, type NavTab } from "@/components/stay/BottomNav";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 
 interface Props {
@@ -11,9 +11,10 @@ interface Props {
   title?: string;
   children: React.ReactNode;
   back?: boolean;
+  activeTab?: NavTab;
 }
 
-export function StayShell({ token, title, children, back }: Props) {
+export function StayShell({ token, title, children, back, activeTab = "home" }: Props) {
   const locale = useLocale();
   const isRtl = locale === "ar";
 
@@ -95,7 +96,7 @@ export function StayShell({ token, title, children, back }: Props) {
         {children}
       </div>
 
-      <QuickHelpFab />
+      <BottomNav token={token} active={activeTab} />
     </main>
   );
 }

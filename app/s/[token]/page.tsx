@@ -114,7 +114,7 @@ export default async function StayPage({ params }: Props) {
       requestSummary={requestSummary}
       tonightNote={property?.tonight_note ?? null}
       tonightNoteAr={property?.tonight_note_ar ?? null}
-      heroImageUrl={property?.hero_image_url ?? null}
+      heroImageUrl={heroImageUrl}
     />
   );
 }

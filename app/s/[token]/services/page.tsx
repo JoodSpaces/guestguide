@@ -37,7 +37,7 @@ export default async function ServicesPage({ params }: Props) {
   const locale = booking.guest_lang === "ar" ? "ar" : "en";
 
   return (
-    <StayShell token={token} title={locale === "ar" ? "الخدمات" : "Services"} back>
+    <StayShell token={token} title={locale === "ar" ? "الخدمات" : "Services"} back activeTab="services">
       <h2 className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.2rem)", marginBottom: "24px" }}>
         {locale === "ar" ? "الخدمات" : "Services"}
       </h2>

@@ -73,7 +73,7 @@ export default async function DiscoverPage({ params }: Props) {
   const propertyName = locale === "ar" ? property?.name_ar : property?.name;
 
   return (
-    <StayShell token={token} back title={propertyName}>
+    <StayShell token={token} back title={propertyName} activeTab="discover">
       <DiscoverScreen
         recs={recs ?? []}
         locale={locale}

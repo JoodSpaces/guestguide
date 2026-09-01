@@ -34,7 +34,7 @@ export default async function RequestsPage({ params }: Props) {
   const locale = booking.guest_lang === "ar" ? "ar" : "en";
 
   return (
-    <StayShell token={token} title={locale === "ar" ? "الطلبات" : "Requests"} back>
+    <StayShell token={token} title={locale === "ar" ? "الطلبات" : "Requests"} back activeTab="help">
       <h2 className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.2rem)", marginBottom: "24px" }}>
         {locale === "ar" ? "الطلبات" : "Requests"}
       </h2>
