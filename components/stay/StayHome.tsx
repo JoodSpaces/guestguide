@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import type { TokenPayload, Phase } from "@/lib/token";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { PhaseCard, type CardVariant } from "@/components/stay/PhaseCard";
-import { QuickHelpFab } from "@/components/stay/QuickHelpFab";
+import { BottomNav } from "@/components/stay/BottomNav";
 import { CountdownChip } from "@/components/stay/CountdownChip";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { CinematicReveal } from "@/components/stay/CinematicReveal";
@@ -81,6 +81,7 @@ interface Props {
   requestSummary?: RequestSummary | null;
   tonightNote?: string | null;
   tonightNoteAr?: string | null;
+  heroImageUrl?: string | null;
 }
 
 /* ─── SVG icons ─────────────────────────────────────────────────────────── */
@@ -143,7 +144,7 @@ const WmDoor = () => (
   </svg>
 );
 
-export function StayHome({ payload, token, requestSummary, tonightNote = null, tonightNoteAr = null }: Props) {
+export function StayHome({ payload, token, requestSummary, tonightNote = null, tonightNoteAr = null, heroImageUrl = null }: Props) {
   const t = useTranslations();
   const locale = useLocale();
   const isAr = locale === "ar";
@@ -157,6 +158,19 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
   const timeKicker = getTimeKicker(hour, isAr);
   const nudge = getContextNudge(payload.phase, hour, payload.checkOut, isAr, token);
   const [intent, setIntent] = useState<Intent | null>(null);
+
+  // Variable font weight on scroll
+  const greetingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    const onScroll = () => {
+      if (!greetingRef.current) return;
+      const progress = Math.min(1, window.scrollY / 160);
+      const weight = Math.round(300 + progress * 420);
+      greetingRef.current.style.fontVariationSettings = `'wght' ${weight}`;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <main className="min-h-dvh" style={{ backgroundColor: "var(--jood-ground)", ...ambience }}>
@@ -188,18 +202,70 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
       </header>
 
       {/* Content */}
-      <div className="px-6 pb-24" style={{ paddingTop: "clamp(28px, 4vw, 44px)" }}>
+      <div className="px-6 pb-36" style={{ paddingTop: heroImageUrl ? "0" : "clamp(28px, 4vw, 44px)" }}>
+
+        {/* Hero image — full-bleed property photo */}
+        {heroImageUrl && (
+          <div style={{
+            marginLeft: "-24px",
+            marginRight: "-24px",
+            marginBottom: "clamp(24px, 4vw, 36px)",
+            height: "clamp(240px, 55vw, 360px)",
+            position: "relative",
+            overflow: "hidden",
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroImageUrl}
+              alt={propertyName ?? ""}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+            <div style={{
+              position: "absolute",
+              inset: 0,
+              background: "linear-gradient(to bottom, rgba(53,30,28,0.08) 0%, rgba(53,30,28,0.72) 100%)",
+            }} />
+            <div style={{ position: "absolute", bottom: "clamp(18px, 4vw, 28px)", left: "24px", right: "24px" }}>
+              <p style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: "9px",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "rgba(245,244,237,0.55)",
+                marginBottom: "6px",
+              }}>
+                {timeKicker.kicker}
+              </p>
+              <p style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "clamp(1.5rem, 5vw, 2.2rem)",
+                fontWeight: 600,
+                color: "rgba(245,244,237,0.92)",
+                lineHeight: 1.1,
+                letterSpacing: "-0.01em",
+              }}>
+                {propertyName}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Greeting */}
         <div className="animate-reveal mb-8" style={{ animationDelay: "0ms" }}>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "12px", opacity: 0.9 }}>
-            {timeKicker.kicker}
-          </p>
-          <h1 className="font-display" style={{ fontSize: "clamp(2.8rem, 9vw, 4.5rem)", color: "var(--jood-ink)", lineHeight: 1.05, fontStyle: "normal", letterSpacing: "-0.01em" }}>
+          {!heroImageUrl && (
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "12px", opacity: 0.9 }}>
+              {timeKicker.kicker}
+            </p>
+          )}
+          <h1
+            ref={greetingRef}
+            className="font-display"
+            style={{ fontSize: "clamp(2.8rem, 9vw, 4.5rem)", color: "var(--jood-ink)", lineHeight: 1.05, letterSpacing: "-0.01em", fontVariationSettings: "'wght' 300" }}
+          >
             {isAr ? "أهلاً، " : "Hello, "}
-            <em style={{ color: "var(--jood-accent)", fontStyle: isAr ? "normal" : "italic" }}>
+            <span style={{ color: "var(--jood-accent)" }}>
               {payload.guestFirstName}
-            </em>
+            </span>
           </h1>
           <div style={{ marginTop: "10px" }}>
             <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
@@ -362,7 +428,7 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
         </div>
       </div>
 
-      <QuickHelpFab />
+      <BottomNav token={token} active="home" />
     </main>
   );
 }
@@ -559,7 +625,7 @@ function SecondaryCards({ payload, token, t, isAr, hour, intent }: {
 
       {/* 2-col tile grid */}
       {tileCards.length > 0 && (
-        <div className="jood-tile-grid stagger-item" style={{ "--si": 3 } as React.CSSProperties}>
+        <div className="jood-tile-grid bento stagger-item" style={{ "--si": 3 } as React.CSSProperties}>
           {tileCards.map((link, i) => (
             <div key={link.key} className="stagger-item" style={{ "--si": i + 4 } as React.CSSProperties}>
               <PhaseCard href={link.href} eyebrow="" icon={link.icon} description={link.description} variant="tile">

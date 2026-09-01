@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ─── Google Fonts ──────────────────────────────────────────────────────── */
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Outfit:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Syne:wght@500;600;700&family=Almarai:wght@300;400;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Outfit:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Syne:wght@500;600;700&family=Almarai:wght@300;400;700;800&display=swap");
 
 /* ─── JOOD Design Tokens ────────────────────────────────────────────────── */
 :root {
@@ -259,19 +259,23 @@ body {
 .jood-tile-grid > *:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
+/* Asymmetric bento — first child is tall */
+.jood-tile-grid.bento > *:first-child {
+  grid-row: span 2;
+}
 
-/* ─── Card interaction — DS v1.0 lift ───────────────────────────────────── */
+/* ─── Card interaction — haptic spring physics ──────────────────────────── */
 .jood-card {
-  transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+  transition: transform 360ms var(--ease-spring), box-shadow 320ms var(--ease-out);
   will-change: transform;
 }
 .jood-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px) scale(1.005);
   box-shadow: var(--shadow-raised);
 }
 .jood-card:active {
-  transform: scale(0.975) translateY(0);
-  transition: transform 100ms var(--ease-standard);
+  transform: scale(0.96) translateY(2px);
+  transition: transform 80ms var(--ease-standard), box-shadow 80ms var(--ease-standard);
   box-shadow: var(--shadow-card);
 }
 

@@ -28,7 +28,7 @@ export default async function StayPage({ params }: Props) {
     supabase
       .from("bookings")
       .select(`id, property_id, guest_first_name, guest_lang, check_in, check_out,
-               properties (name, name_ar, tonight_note, tonight_note_ar)`)
+               properties (name, name_ar, tonight_note, tonight_note_ar, hero_image_url)`)
       .eq("id", tokenRow.booking_id)
       .single<{
         id: string;
@@ -37,7 +37,7 @@ export default async function StayPage({ params }: Props) {
         guest_lang: "en" | "ar";
         check_in: string;
         check_out: string;
-        properties: { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null } | { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null }[];
+        properties: { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null; hero_image_url: string | null } | { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null; hero_image_url: string | null }[];
       }>(),
     supabase
       .from("service_requests")
@@ -105,6 +105,7 @@ export default async function StayPage({ params }: Props) {
       requestSummary={requestSummary}
       tonightNote={property?.tonight_note ?? null}
       tonightNoteAr={property?.tonight_note_ar ?? null}
+      heroImageUrl={property?.hero_image_url ?? null}
     />
   );
 }
