@@ -33,7 +33,7 @@ export default async function ArrivalPage({ params }: Props) {
       check_in, check_out,
       properties (
         name, name_ar, map_pin_lat, map_pin_lng, on_call_phone,
-        requires_code_second_factor, wifi_network, wifi_password
+        requires_code_second_factor, wifi_ssid, wifi_password_encrypted
       )
     `)
     .eq("id", tokenRow.booking_id)
@@ -47,8 +47,8 @@ export default async function ArrivalPage({ params }: Props) {
         map_pin_lng: number | null;
         on_call_phone: string;
         requires_code_second_factor: boolean;
-        wifi_network: string | null;
-        wifi_password: string | null;
+        wifi_ssid: string | null;
+        wifi_password_encrypted: string | null;
       };
     }>();
 
@@ -61,6 +61,14 @@ export default async function ArrivalPage({ params }: Props) {
 
   const unlocked = isArrivalUnlocked(booking.check_in);
   const propertyName = isAr ? property?.name_ar : property?.name;
+
+  let wifiPassword: string | null = null;
+  if (property?.wifi_password_encrypted) {
+    try {
+      const { decrypt } = await import("@/lib/crypto");
+      wifiPassword = decrypt(property.wifi_password_encrypted);
+    } catch { /* show without password */ }
+  }
 
   const checkInDate = new Date(booking.check_in);
   const checkInFormatted = checkInDate.toLocaleDateString(isAr ? "ar-EG" : "en-GB", {
@@ -219,7 +227,7 @@ export default async function ArrivalPage({ params }: Props) {
         </div>
 
         {/* ── Wi-Fi ── */}
-        {property?.wifi_network && (
+        {property?.wifi_ssid && (
           <div style={{
             background: "var(--jood-surface)",
             border: "1px solid var(--jood-line)",
@@ -243,16 +251,16 @@ export default async function ArrivalPage({ params }: Props) {
                   {isAr ? "الشبكة" : "Network"}
                 </span>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--jood-ink)", letterSpacing: "0.05em" }}>
-                  {property.wifi_network}
+                  {property.wifi_ssid}
                 </span>
               </div>
-              {property.wifi_password && (
+              {wifiPassword && (
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                     {isAr ? "كلمة المرور" : "Password"}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--jood-ink)", letterSpacing: "0.05em" }}>
-                    {property.wifi_password}
+                    {wifiPassword}
                   </span>
                 </div>
               )}
