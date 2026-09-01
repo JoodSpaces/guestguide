@@ -38,7 +38,7 @@ export default async function RequestsPage({ params }: Props) {
       <h2 className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.2rem)", marginBottom: "24px" }}>
         {locale === "ar" ? "الطلبات" : "Requests"}
       </h2>
-      <GuestRequestsClient token={token} initialRequests={guestRequests ?? []} />
+      <GuestRequestsClient token={token} bookingId={tokenRow.booking_id} initialRequests={guestRequests ?? []} />
     </StayShell>
   );
 }

@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireSession, forbidden } from "@/lib/admin-auth";
+import { sendPushToBooking } from "@/lib/push";
+
+const PUSH_MSG: Record<string, { en: string; ar: string }> = {
+  in_progress: { en: "We're on it! 🛎️", ar: "جارٍ المعالجة! 🛎️" },
+  resolved:    { en: "Your request is resolved ✓", ar: "تم حل طلبك ✓" },
+};
 
 const patchSchema = z.object({
   status: z.enum(["received", "in_progress", "resolved"]).optional(),
@@ -38,7 +44,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (parsed.data.adminNotes !== undefined) updates.admin_notes = parsed.data.adminNotes;
 
   const supabase = createServiceClient();
-  const { error } = await supabase.from("guest_requests").update(updates).eq("id", id);
+  const { data: updatedReq, error } = await supabase
+    .from("guest_requests")
+    .update(updates)
+    .eq("id", id)
+    .select("booking_id, status, bookings(guest_lang)")
+    .single<{ booking_id: string; status: string; bookings: { guest_lang: string } | { guest_lang: string }[] }>();
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Fire push notification when status changes to in_progress or resolved
+  if (updatedReq && parsed.data.status && PUSH_MSG[parsed.data.status]) {
+    const guestLang = Array.isArray(updatedReq.bookings) ? updatedReq.bookings[0]?.guest_lang : updatedReq.bookings?.guest_lang;
+    const isAr = guestLang === "ar";
+    const msg = PUSH_MSG[parsed.data.status];
+    sendPushToBooking(updatedReq.booking_id, {
+      title: "JOOD",
+      body: isAr ? msg.ar : msg.en,
+      url: `/s/`,
+      tag: `request-${id}`,
+    }, supabase).catch(() => {});
+  }
+
   return NextResponse.json({ ok: true });
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocale } from "next-intl";
+import { createClient } from "@/lib/supabase/client";
 
 interface GuestRequest {
   id: string;
@@ -15,6 +16,7 @@ interface GuestRequest {
 
 interface Props {
   token: string;
+  bookingId: string;
   initialRequests: GuestRequest[];
 }
 
@@ -26,6 +28,9 @@ const STATUS_LABEL_EN: Record<string, string> = { received: "Received", in_progr
 const STATUS_LABEL_AR: Record<string, string> = { received: "استُلم", in_progress: "قيد التنفيذ", resolved: "تم الحل" };
 const STATUS_DOT: Record<string, string> = { received: "#94a3b8", in_progress: "#f59e0b", resolved: "#4ade80" };
 
+const STATUS_TOAST_EN: Record<string, string> = { in_progress: "We're on it!", resolved: "Request resolved ✓" };
+const STATUS_TOAST_AR: Record<string, string> = { in_progress: "جارٍ المعالجة!", resolved: "تم حل الطلب ✓" };
+
 const CATEGORIES = ["maintenance", "housekeeping", "supplies", "other"] as const;
 
 function fmtTime(iso: string, isAr: boolean) {
@@ -35,7 +40,7 @@ function fmtDate(iso: string, isAr: boolean) {
   return new Date(iso).toLocaleDateString(isAr ? "ar-EG" : "en-GB", { day: "numeric", month: "short" });
 }
 
-export function GuestRequestsClient({ token, initialRequests }: Props) {
+export function GuestRequestsClient({ token, bookingId, initialRequests }: Props) {
   const locale = useLocale();
   const isAr = locale === "ar";
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -49,16 +54,69 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
   const [justSent, setJustSent] = useState(false);
   const [aiClassifying, setAiClassifying] = useState(false);
   const [aiClassified, setAiClassified] = useState(false);
+  const [statusToast, setStatusToast] = useState<string | null>(null);
+  const [isLive, setIsLive] = useState(false);
   const classifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Poll for updates every 20s
+  // Supabase Realtime subscription
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`requests:${bookingId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "guest_requests",
+          filter: `booking_id=eq.${bookingId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "UPDATE") {
+            const updated = payload.new as GuestRequest;
+            setRequests((prev) =>
+              prev.map((r) => {
+                if (r.id !== updated.id) return r;
+                if (updated.status !== r.status) {
+                  const msg = isAr ? STATUS_TOAST_AR[updated.status] : STATUS_TOAST_EN[updated.status];
+                  if (msg) {
+                    setStatusToast(msg);
+                    setTimeout(() => setStatusToast(null), 4000);
+                  }
+                }
+                return { ...r, ...updated };
+              })
+            );
+          } else if (payload.eventType === "INSERT") {
+            const newReq = payload.new as GuestRequest;
+            setRequests((prev) => {
+              if (prev.some((r) => r.id === newReq.id)) return prev;
+              return [...prev, newReq];
+            });
+          }
+        }
+      )
+      .subscribe((status) => {
+        setIsLive(status === "SUBSCRIBED");
+      });
+
+    return () => { supabase.removeChannel(channel); };
+  }, [bookingId, isAr]);
+
+  // Fallback 5s poll (Realtime as primary, poll as safety net)
   useEffect(() => {
     const poll = setInterval(async () => {
       const res = await fetch(`/api/guest/requests?token=${token}`).catch(() => null);
       if (!res?.ok) return;
-      const data = await res.json();
-      setRequests(data);
-    }, 20_000);
+      const data: GuestRequest[] = await res.json();
+      setRequests((prev) => {
+        const hasChange = data.some((r) => {
+          const old = prev.find((p) => p.id === r.id);
+          return !old || old.status !== r.status || old.admin_notes !== r.admin_notes;
+        });
+        return hasChange ? data : prev;
+      });
+    }, 5_000);
     return () => clearInterval(poll);
   }, [token]);
 
@@ -67,7 +125,6 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [requests.length]);
 
-  // Debounced AI classification as user types
   const classify = useCallback(async (text: string) => {
     setAiClassifying(true);
     setAiClassified(false);
@@ -82,19 +139,14 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
     setCategory(data.category);
     if (data.urgency === "urgent") setUrgency("urgent");
     setAiClassified(true);
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     if (classifyTimer.current) clearTimeout(classifyTimer.current);
     const trimmed = body.trim();
-    if (trimmed.length < 15) {
-      setAiClassified(false);
-      return;
-    }
+    if (trimmed.length < 15) { setAiClassified(false); return; }
     classifyTimer.current = setTimeout(() => classify(trimmed), 700);
-    return () => {
-      if (classifyTimer.current) clearTimeout(classifyTimer.current);
-    };
+    return () => { if (classifyTimer.current) clearTimeout(classifyTimer.current); };
   }, [body, classify]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -150,14 +202,21 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
           fontSize: "0.75rem", color: "var(--jood-ground)", fontWeight: 700,
           flexShrink: 0,
         }}>J</div>
-        <div>
+        <div style={{ flex: 1 }}>
           <p style={{ fontWeight: 500, fontSize: "0.9375rem" }}>
             {isAr ? "فريق JOOD" : "JOOD Concierge"}
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "#4ade80", display: "inline-block" }} />
+            <span style={{
+              width: "6px", height: "6px", borderRadius: "50%",
+              backgroundColor: isLive ? "#4ade80" : "#f59e0b",
+              display: "inline-block",
+              transition: "background-color 500ms",
+            }} />
             <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)" }}>
-              {isAr ? "متاح الآن" : "Available now"}
+              {isLive
+                ? (isAr ? "متصل مباشرة" : "Live")
+                : (isAr ? "متاح الآن" : "Available now")}
             </p>
           </div>
         </div>
@@ -215,8 +274,13 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
                   </div>
                   {/* Status + time */}
                   <div style={{ display: "flex", alignItems: "center", gap: "5px", justifyContent: isAr ? "flex-start" : "flex-end", marginTop: "4px", paddingInline: "4px" }}>
-                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: STATUS_DOT[r.status] ?? "#94a3b8", display: "inline-block", flexShrink: 0 }} />
-                    <span style={{ fontSize: "0.7rem", color: "var(--jood-ink-ghost)" }}>
+                    <span style={{
+                      width: "6px", height: "6px", borderRadius: "50%",
+                      backgroundColor: STATUS_DOT[r.status] ?? "#94a3b8",
+                      display: "inline-block", flexShrink: 0,
+                      transition: "background-color 600ms ease",
+                    }} />
+                    <span style={{ fontSize: "0.7rem", color: "var(--jood-ink-ghost)", transition: "color 300ms" }}>
                       {isAr ? STATUS_LABEL_AR[r.status] : STATUS_LABEL_EN[r.status]} · {fmtTime(r.created_at, isAr)}
                     </span>
                   </div>
@@ -259,6 +323,27 @@ export function GuestRequestsClient({ token, initialRequests }: Props) {
         })}
         <div ref={bottomRef} />
       </div>
+
+      {/* Status toast */}
+      {statusToast && (
+        <div style={{
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          padding: "12px 16px",
+          backgroundColor: "var(--jood-surface)",
+          border: "1px solid var(--jood-line)",
+          borderRadius: "var(--radius-lg)",
+          marginBottom: "8px",
+          animation: "fade-in 200ms ease",
+        }}>
+          <span style={{ fontSize: "1rem" }}>🛎️</span>
+          <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink)" }}>
+            {statusToast}
+          </p>
+        </div>
+      )}
 
       {/* Sent confirmation banner */}
       {justSent && (

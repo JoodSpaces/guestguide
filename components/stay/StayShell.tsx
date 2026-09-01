@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 import { useLocale } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { BottomNav, type NavTab } from "@/components/stay/BottomNav";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { PushPrompt } from "@/components/stay/PushPrompt";
 
 interface Props {
   token: string;
@@ -18,6 +20,12 @@ interface Props {
 export function StayShell({ token, title, children, back, activeTab = "home" }: Props) {
   const locale = useLocale();
   const isRtl = locale === "ar";
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
 
   return (
     <main className="min-h-dvh" style={{ backgroundColor: "var(--jood-ground)" }}>
@@ -100,6 +108,7 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
         {children}
       </div>
 
+      <PushPrompt token={token} />
       <BottomNav token={token} active={activeTab} />
     </main>
   );
