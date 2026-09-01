@@ -26,7 +26,7 @@ function Chip({ label, value }: { label: string; value: string }) {
         fontSize: "9px",
         letterSpacing: "0.18em",
         textTransform: "uppercase",
-        color: "var(--jood-ink-ghost)",
+        color: "var(--jood-ink-muted)",
       }}>
         {label}
       </span>
@@ -35,7 +35,7 @@ function Chip({ label, value }: { label: string; value: string }) {
         fontSize: "10px",
         letterSpacing: "0.12em",
         textTransform: "uppercase",
-        color: "var(--jood-ink-muted)",
+        color: "var(--jood-ink)",
         fontWeight: 500,
       }}>
         {value}
