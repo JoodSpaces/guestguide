@@ -6,8 +6,12 @@ import { useTranslations } from "next-intl";
 interface Props {
   bookingId: string;
   token: string;
+  checkInDate: string;
+  checkInMonth: number;
   checkoutDate: string;
   checkoutTime: string;
+  nightsCount: number;
+  propertyName: string;
   onCallPhone: string | null;
   locale: string;
 }
@@ -25,11 +29,167 @@ const CHECKLIST = {
   ],
 };
 
+// Season-keyed pull quotes indexed by month
+const SEASON_QUOTE: Record<string, { en: string; ar: string }> = {
+  summer:  { en: "Where the sea decides the schedule.", ar: "حيث البحر هو من يضع جدول اليوم." },
+  winter:  { en: "Stillness that only the off-season knows.", ar: "هدوء لا يعرفه إلا من زار في غير أوانه." },
+  spring:  { en: "The coast before the crowd arrives.", ar: "الساحل قبل أن يكتشفه الجميع." },
+  autumn:  { en: "Golden hour that lasts all day.", ar: "ساعة ذهبية تمتد طوال اليوم." },
+};
+
+function getSeason(month: number): "summer" | "winter" | "spring" | "autumn" {
+  if (month >= 5 && month <= 7) return "summer";
+  if (month >= 11 || month <= 1) return "winter";
+  if (month >= 2 && month <= 4) return "spring";
+  return "autumn";
+}
+
+/* ── Scrapbook postcard ─────────────────────────────────────────────────── */
+function ScrapbookCard({
+  propertyName,
+  checkInDate,
+  checkoutDate,
+  nightsCount,
+  checkInMonth,
+  isAr,
+}: {
+  propertyName: string;
+  checkInDate: string;
+  checkoutDate: string;
+  nightsCount: number;
+  checkInMonth: number;
+  isAr: boolean;
+}) {
+  const season = getSeason(checkInMonth);
+  const quote = SEASON_QUOTE[season];
+  const nightsLabel = isAr
+    ? `${nightsCount} ${nightsCount === 1 ? "ليلة" : "ليالٍ"}`
+    : `${nightsCount} ${nightsCount === 1 ? "night" : "nights"}`;
+
+  return (
+    <div
+      className="animate-reveal"
+      style={{
+        backgroundColor: "var(--jood-ink)",
+        borderRadius: "var(--radius-lg)",
+        padding: "clamp(28px, 5vw, 44px)",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Watermark night count */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          insetInlineEnd: "-12px",
+          top: "-16px",
+          fontFamily: "var(--font-display)",
+          fontSize: "clamp(7rem, 22vw, 11rem)",
+          fontStyle: "italic",
+          color: "rgba(245,244,237,0.04)",
+          lineHeight: 1,
+          userSelect: "none",
+          pointerEvents: "none",
+        }}
+      >
+        {nightsCount}
+      </div>
+
+      {/* Eyebrow */}
+      <p style={{
+        fontFamily: "var(--font-mono)",
+        fontSize: "9px",
+        letterSpacing: "0.2em",
+        textTransform: "uppercase",
+        color: "rgba(245,244,237,0.35)",
+        marginBottom: "20px",
+      }}>
+        {isAr ? "إقامتك في" : "YOUR STAY AT"}
+      </p>
+
+      {/* Property name — large italic serif */}
+      <p
+        className="font-display"
+        style={{
+          fontSize: "clamp(1.6rem, 5vw, 2.6rem)",
+          fontStyle: "italic",
+          color: "var(--jood-ground)",
+          lineHeight: 1.1,
+          marginBottom: "28px",
+        }}
+      >
+        {propertyName}
+      </p>
+
+      {/* Date timeline */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "24px" }}>
+        <p style={{
+          fontFamily: "var(--font-body)",
+          fontSize: "0.8125rem",
+          color: "rgba(245,244,237,0.5)",
+        }}>
+          {checkInDate}
+        </p>
+
+        {/* Timeline bar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0" }}>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--jood-accent)", flexShrink: 0 }} />
+          <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(245,244,237,0.15)", position: "relative" }}>
+            <span style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              backgroundColor: "var(--jood-ink)",
+              padding: "0 8px",
+              fontFamily: "var(--font-mono)",
+              fontSize: "9px",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              color: "rgba(245,244,237,0.4)",
+              whiteSpace: "nowrap",
+            }}>
+              {nightsLabel}
+            </span>
+          </div>
+          <div style={{ width: "6px", height: "6px", borderRadius: "50%", border: "1px solid rgba(245,244,237,0.3)", flexShrink: 0 }} />
+        </div>
+
+        <p style={{
+          fontFamily: "var(--font-body)",
+          fontSize: "0.8125rem",
+          color: "rgba(245,244,237,0.5)",
+        }}>
+          {checkoutDate}
+        </p>
+      </div>
+
+      {/* Pull quote */}
+      <p style={{
+        fontFamily: "var(--font-display)",
+        fontStyle: "italic",
+        fontSize: "clamp(0.9rem, 2.5vw, 1.1rem)",
+        color: "rgba(245,244,237,0.35)",
+        lineHeight: 1.5,
+        borderTop: "1px solid rgba(245,244,237,0.08)",
+        paddingTop: "16px",
+      }}>
+        "{isAr ? quote.ar : quote.en}"
+      </p>
+    </div>
+  );
+}
+
 export function CheckoutClient({
   bookingId,
   token,
+  checkInDate,
+  checkInMonth,
   checkoutDate,
   checkoutTime,
+  nightsCount,
+  propertyName,
   onCallPhone,
   locale,
 }: Props) {
@@ -49,7 +209,6 @@ export function CheckoutClient({
       });
       setDeparted(true);
     } catch {
-      // non-critical — show confirmation anyway
       setDeparted(true);
     } finally {
       setLoading(false);
@@ -58,12 +217,15 @@ export function CheckoutClient({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      <h1
-        className="font-display animate-reveal"
-        style={{ fontSize: "clamp(1.8rem, 5vw, 2.6rem)", color: "var(--jood-ink)", marginBottom: "4px" }}
-      >
-        {t("title")}
-      </h1>
+      {/* Scrapbook postcard */}
+      <ScrapbookCard
+        propertyName={propertyName}
+        checkInDate={checkInDate}
+        checkoutDate={checkoutDate}
+        nightsCount={nightsCount}
+        checkInMonth={checkInMonth}
+        isAr={isAr}
+      />
 
       {/* Checkout time card */}
       <div
@@ -100,21 +262,19 @@ export function CheckoutClient({
         <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
           {items.map((item, i) => (
             <li key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-              <span
-                style={{
-                  width: "22px",
-                  height: "22px",
-                  borderRadius: "50%",
-                  border: "1px solid var(--jood-line)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "0.6875rem",
-                  color: "var(--jood-ink-muted)",
-                  flexShrink: 0,
-                  marginTop: "1px",
-                }}
-              >
+              <span style={{
+                width: "22px",
+                height: "22px",
+                borderRadius: "50%",
+                border: "1px solid var(--jood-line)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "0.6875rem",
+                color: "var(--jood-ink-muted)",
+                flexShrink: 0,
+                marginTop: "1px",
+              }}>
                 {i + 1}
               </span>
               <span style={{ color: "var(--jood-ink)", fontSize: "0.9375rem", lineHeight: 1.55 }}>
@@ -125,17 +285,15 @@ export function CheckoutClient({
         </ol>
       </div>
 
-      {/* We've left button */}
+      {/* Departed button / confirmation */}
       {departed ? (
-        <div
-          style={{
-            padding: "20px 24px",
-            backgroundColor: "var(--jood-surface)",
-            border: "1px solid var(--jood-line)",
-            borderRadius: "var(--radius-lg)",
-            textAlign: "center",
-          }}
-        >
+        <div style={{
+          padding: "20px 24px",
+          backgroundColor: "var(--jood-surface)",
+          border: "1px solid var(--jood-line)",
+          borderRadius: "var(--radius-lg)",
+          textAlign: "center",
+        }}>
           <p style={{ color: "var(--jood-accent)", fontWeight: 500 }}>
             {isAr ? "شكراً — نراك قريباً!" : "Thank you — see you next time!"}
           </p>
@@ -161,14 +319,12 @@ export function CheckoutClient({
         </button>
       )}
       {!departed && (
-        <p
-          style={{
-            color: "var(--jood-ink-muted)",
-            fontSize: "0.8125rem",
-            textAlign: "center",
-            lineHeight: 1.5,
-          }}
-        >
+        <p style={{
+          color: "var(--jood-ink-muted)",
+          fontSize: "0.8125rem",
+          textAlign: "center",
+          lineHeight: 1.5,
+        }}>
           {t("departed_confirm")}
         </p>
       )}

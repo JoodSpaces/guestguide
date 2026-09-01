@@ -10,6 +10,9 @@ import { CountdownChip } from "@/components/stay/CountdownChip";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { CinematicReveal } from "@/components/stay/CinematicReveal";
 import { useTimeAmbience } from "@/components/ui/TimeAmbience";
+import { IntentSelector, type Intent } from "@/components/stay/IntentSelector";
+import { WeatherStrip } from "@/components/stay/WeatherStrip";
+import { TonightCard } from "@/components/stay/TonightCard";
 
 function getTimeKicker(h: number, isAr: boolean): { kicker: string; tagline?: string } {
   if (h >= 5 && h < 9)   return { kicker: isAr ? "صباح الخير" : "GOOD MORNING", tagline: isAr ? "الساعة الذهبية قبل الحر." : "Golden hour before the heat." };
@@ -76,6 +79,8 @@ interface Props {
   payload: TokenPayload;
   token: string;
   requestSummary?: RequestSummary | null;
+  tonightNote?: string | null;
+  tonightNoteAr?: string | null;
 }
 
 /* ─── SVG icons ─────────────────────────────────────────────────────────── */
@@ -138,9 +143,7 @@ const WmDoor = () => (
   </svg>
 );
 
-const MARQUEE_ITEMS = ["North Coast", "Sidi Heneish", "Hacienda Bay", "Mediterranean", "Sahel", "Villa Life"];
-
-export function StayHome({ payload, token, requestSummary }: Props) {
+export function StayHome({ payload, token, requestSummary, tonightNote = null, tonightNoteAr = null }: Props) {
   const t = useTranslations();
   const locale = useLocale();
   const isAr = locale === "ar";
@@ -153,6 +156,7 @@ export function StayHome({ payload, token, requestSummary }: Props) {
   }, []);
   const timeKicker = getTimeKicker(hour, isAr);
   const nudge = getContextNudge(payload.phase, hour, payload.checkOut, isAr, token);
+  const [intent, setIntent] = useState<Intent | null>(null);
 
   return (
     <main className="min-h-dvh" style={{ backgroundColor: "var(--jood-ground)", ...ambience }}>
@@ -309,24 +313,34 @@ export function StayHome({ payload, token, requestSummary }: Props) {
           </div>
         )}
 
-        {/* Marquee strip */}
-        <div style={{ overflow: "hidden", borderBlock: "1px solid var(--jood-line)", marginBottom: "24px", padding: "9px 0" }}>
-          <div dir="ltr" className="jood-marquee-track" style={{ display: "inline-flex", gap: "18px", alignItems: "center", whiteSpace: "nowrap" }}>
-            {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].flatMap((place, i) => [
-              <span key={`p-${i}`} style={{ fontFamily: "var(--font-label)", fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>{place}</span>,
-              <span key={`d-${i}`} style={{ color: "var(--jood-accent)", fontSize: "8px" }}>●</span>,
-            ])}
+        {/* Intent selector — living/settling phases only */}
+        {(payload.phase === "living" || payload.phase === "settling") && (
+          <div className="animate-reveal" style={{ animationDelay: "80ms" }}>
+            <IntentSelector isAr={isAr} onChange={setIntent} />
           </div>
-        </div>
+        )}
+
+        {/* Live ambient strip */}
+        <WeatherStrip token={token} isAr={isAr} />
 
         {/* Primary card */}
         <div className="stagger-item mb-4" style={{ "--si": 1 } as React.CSSProperties}>
           <PrimaryCard payload={payload} token={token} isAr={isAr} />
         </div>
 
+        {/* Tonight card — living phase, after primary card */}
+        {payload.phase === "living" && (
+          <TonightCard
+            token={token}
+            isAr={isAr}
+            note={tonightNote}
+            noteAr={tonightNoteAr}
+          />
+        )}
+
         {/* Secondary cards */}
         <div className="grid gap-3">
-          <SecondaryCards payload={payload} token={token} t={t} isAr={isAr} hour={hour} />
+          <SecondaryCards payload={payload} token={token} t={t} isAr={isAr} hour={hour} intent={intent} />
         </div>
 
         {/* Property soul footer */}
@@ -393,27 +407,66 @@ function PrimaryCard({ payload, token, isAr }: { payload: TokenPayload; token: s
 }
 
 /* ─── Secondary cards ────────────────────────────────────────────────────── */
-function SecondaryCards({ payload, token, t, isAr, hour }: { payload: TokenPayload; token: string; t: ReturnType<typeof useTranslations>; isAr: boolean; hour: number }) {
+function SecondaryCards({ payload, token, t, isAr, hour, intent }: {
+  payload: TokenPayload;
+  token: string;
+  t: ReturnType<typeof useTranslations>;
+  isAr: boolean;
+  hour: number;
+  intent: Intent | null;
+}) {
   const isManualPrimary =
     payload.phase !== "arrival" &&
     payload.phase !== "settling" &&
     payload.phase !== "departure";
 
-  const discover = {
+  const arrivalCard = payload.arrivalUnlocked && payload.phase !== "arrival" && payload.phase !== "settling"
+    ? {
+        key: "arrival",
+        href: `/s/${token}/arrival`,
+        label: t("nav.arrival"),
+        icon: <IconKey />,
+        description: isAr ? "رمز الباب والتوجيهات" : "Door code & directions",
+      }
+    : null;
+
+  const manualCard = !isManualPrimary
+    ? {
+        key: "manual",
+        href: `/s/${token}/manual`,
+        label: t("nav.manual"),
+        icon: <IconBook />,
+        description: isAr ? "الواي فاي · الأجهزة · القواعد" : "Wi-Fi · Appliances · Rules",
+      }
+    : null;
+
+  const discoverCard = {
     key: "discover",
     href: `/s/${token}/discover`,
     label: t("nav.discover"),
     icon: <IconCompass />,
     description: isAr ? "المطاعم والأماكن المحلية المفضلة" : "Local spots & restaurants",
   };
-  const services = {
+
+  const eatDiscoverCard = {
+    ...discoverCard,
+    description: isAr ? "أفضل مطاعم المنطقة" : "Best restaurants nearby",
+  };
+
+  const servicesCard = {
     key: "services",
     href: `/s/${token}/services`,
     label: t("nav.services"),
     icon: <IconSparkle />,
     description: isAr ? "إضافات اختيارية لإقامتك" : "Add-ons for your stay",
   };
-  const concierge = {
+
+  const relaxServicesCard = {
+    ...servicesCard,
+    description: isAr ? "مناشف · مسبح · خدمة الغرف" : "Towels · Pool · Room service",
+  };
+
+  const conciergeCard = {
     key: "concierge",
     href: `/s/${token}/concierge`,
     label: isAr ? "كونسيرج جود" : "JOOD Concierge",
@@ -421,52 +474,76 @@ function SecondaryCards({ payload, token, t, isAr, hour }: { payload: TokenPaylo
     description: isAr ? "اسألني أي شيء عن إقامتك" : "Ask anything about your stay",
   };
 
-  // Services-first: midday, evening, night, or departure
-  const servicesFirst =
-    payload.phase === "departure" ||
-    (payload.phase === "living" && hour >= 11 && hour < 16) ||
-    (payload.phase === "living" && hour >= 20) ||
-    (payload.phase === "living" && hour < 5);
+  const requestsCard = {
+    key: "requests",
+    href: `/s/${token}/requests`,
+    label: t("nav.requests"),
+    icon: <IconChat />,
+    description: isAr ? "تحدث مع فريق جود" : "Talk to the JOOD team",
+  };
 
-  // Concierge leads during in-stay phases (living, settling)
-  const conciergeFirst =
-    payload.phase === "living" || payload.phase === "settling";
+  // Intent-driven ordering overrides phase/time defaults
+  let links: typeof servicesCard[];
+  if (intent === "relax") {
+    links = [
+      relaxServicesCard,
+      conciergeCard,
+      discoverCard,
+      ...(arrivalCard ? [arrivalCard] : []),
+      ...(manualCard ? [manualCard] : []),
+      requestsCard,
+    ];
+  } else if (intent === "explore") {
+    links = [
+      discoverCard,
+      conciergeCard,
+      servicesCard,
+      ...(arrivalCard ? [arrivalCard] : []),
+      ...(manualCard ? [manualCard] : []),
+      requestsCard,
+    ];
+  } else if (intent === "eat") {
+    links = [
+      eatDiscoverCard,
+      conciergeCard,
+      servicesCard,
+      ...(arrivalCard ? [arrivalCard] : []),
+      ...(manualCard ? [manualCard] : []),
+      requestsCard,
+    ];
+  } else if (intent === "work") {
+    links = [
+      ...(manualCard ? [manualCard] : []),
+      requestsCard,
+      conciergeCard,
+      servicesCard,
+      discoverCard,
+      ...(arrivalCard ? [arrivalCard] : []),
+    ];
+  } else {
+    // Default phase + time-based ordering
+    const servicesFirst =
+      payload.phase === "departure" ||
+      (payload.phase === "living" && hour >= 11 && hour < 16) ||
+      (payload.phase === "living" && hour >= 20) ||
+      (payload.phase === "living" && hour < 5);
 
-  const links = [
-    ...(conciergeFirst ? [concierge] : []),
-    ...(payload.arrivalUnlocked && payload.phase !== "arrival" && payload.phase !== "settling"
-      ? [{
-          key: "arrival",
-          href: `/s/${token}/arrival`,
-          label: t("nav.arrival"),
-          icon: <IconKey />,
-          description: isAr ? "رمز الباب والتوجيهات" : "Door code & directions",
-        }]
-      : []),
-    ...(!isManualPrimary
-      ? [{
-          key: "manual",
-          href: `/s/${token}/manual`,
-          label: t("nav.manual"),
-          icon: <IconBook />,
-          description: isAr ? "الواي فاي · الأجهزة · القواعد" : "Wi-Fi · Appliances · Rules",
-        }]
-      : []),
-    ...(servicesFirst ? [services, discover] : [discover, services]),
-    {
-      key: "requests",
-      href: `/s/${token}/requests`,
-      label: t("nav.requests"),
-      icon: <IconChat />,
-      description: isAr ? "تحدث مع فريق جود" : "Talk to the JOOD team",
-    },
-    ...(!conciergeFirst ? [concierge] : []),
-  ];
+    const conciergeFirst = payload.phase === "living" || payload.phase === "settling";
+
+    links = [
+      ...(conciergeFirst ? [conciergeCard] : []),
+      ...(arrivalCard ? [arrivalCard] : []),
+      ...(manualCard ? [manualCard] : []),
+      ...(servicesFirst ? [servicesCard, discoverCard] : [discoverCard, servicesCard]),
+      requestsCard,
+      ...(!conciergeFirst ? [conciergeCard] : []),
+    ];
+  }
 
   return (
     <>
       {links.map((link, i) => (
-        <div key={link.href} className="stagger-item" style={{ "--si": i + 2 } as React.CSSProperties}>
+        <div key={link.key} className="stagger-item" style={{ "--si": i + 2 } as React.CSSProperties}>
           <PhaseCard href={link.href} eyebrow="" icon={link.icon} description={link.description}>
             <span style={{ color: "var(--jood-ink)", fontWeight: 500 }}>{link.label}</span>
           </PhaseCard>

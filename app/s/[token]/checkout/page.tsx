@@ -27,10 +27,11 @@ export default async function CheckoutPage({ params }: Props) {
 
   const { data: booking } = await supabase
     .from("bookings")
-    .select(`id, check_out, properties(name, name_ar, checkout_time, on_call_phone)`)
+    .select(`id, check_in, check_out, properties(name, name_ar, checkout_time, on_call_phone)`)
     .eq("id", tokenRow.booking_id)
     .single<{
       id: string;
+      check_in: string;
       check_out: string;
       properties: {
         name: string;
@@ -48,13 +49,18 @@ export default async function CheckoutPage({ params }: Props) {
     : booking.properties;
 
   const checkoutTime = property?.checkout_time ?? "11:00";
+  const checkInDate = new Date(booking.check_in);
   const checkoutDate = new Date(booking.check_out);
+  const nightsCount = Math.round(
+    (checkoutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
-  const formatted = new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-GB", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  }).format(checkoutDate);
+  const fmt = (d: Date) =>
+    new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-GB", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(d);
 
   return (
     <StayShell
@@ -65,8 +71,12 @@ export default async function CheckoutPage({ params }: Props) {
       <CheckoutClient
         bookingId={booking.id}
         token={token}
-        checkoutDate={formatted}
+        checkInDate={fmt(checkInDate)}
+        checkInMonth={checkInDate.getMonth()}
+        checkoutDate={fmt(checkoutDate)}
         checkoutTime={checkoutTime}
+        nightsCount={nightsCount}
+        propertyName={isAr ? (property?.name_ar ?? property?.name) : (property?.name ?? "")}
         onCallPhone={property?.on_call_phone ?? null}
         locale={locale}
       />

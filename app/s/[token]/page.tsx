@@ -28,7 +28,7 @@ export default async function StayPage({ params }: Props) {
     supabase
       .from("bookings")
       .select(`id, property_id, guest_first_name, guest_lang, check_in, check_out,
-               properties (name, name_ar)`)
+               properties (name, name_ar, tonight_note, tonight_note_ar)`)
       .eq("id", tokenRow.booking_id)
       .single<{
         id: string;
@@ -37,7 +37,7 @@ export default async function StayPage({ params }: Props) {
         guest_lang: "en" | "ar";
         check_in: string;
         check_out: string;
-        properties: { name: string; name_ar: string } | { name: string; name_ar: string }[];
+        properties: { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null } | { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null }[];
       }>(),
     supabase
       .from("service_requests")
@@ -98,5 +98,13 @@ export default async function StayPage({ params }: Props) {
         }
       : null;
 
-  return <StayHome payload={payload} token={token} requestSummary={requestSummary} />;
+  return (
+    <StayHome
+      payload={payload}
+      token={token}
+      requestSummary={requestSummary}
+      tonightNote={property?.tonight_note ?? null}
+      tonightNoteAr={property?.tonight_note_ar ?? null}
+    />
+  );
 }
