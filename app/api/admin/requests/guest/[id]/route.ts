@@ -53,17 +53,27 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Fire push notification when status changes to in_progress or resolved
-  if (updatedReq && parsed.data.status && PUSH_MSG[parsed.data.status]) {
+  if (updatedReq) {
     const guestLang = Array.isArray(updatedReq.bookings) ? updatedReq.bookings[0]?.guest_lang : updatedReq.bookings?.guest_lang;
     const isAr = guestLang === "ar";
-    const msg = PUSH_MSG[parsed.data.status];
-    sendPushToBooking(updatedReq.booking_id, {
-      title: "JOOD",
-      body: isAr ? msg.ar : msg.en,
-      url: `/s/`,
-      tag: `request-${id}`,
-    }, supabase).catch(() => {});
+
+    // Status change → push
+    if (parsed.data.status && PUSH_MSG[parsed.data.status]) {
+      const msg = PUSH_MSG[parsed.data.status];
+      sendPushToBooking(updatedReq.booking_id, {
+        title: "JOOD",
+        body: isAr ? msg.ar : msg.en,
+        tag: `request-${id}`,
+      }, supabase).catch(() => {});
+    }
+    // New note → push (only when note is non-empty and no status change in same request)
+    else if (parsed.data.adminNotes) {
+      sendPushToBooking(updatedReq.booking_id, {
+        title: isAr ? "رسالة من فريق JOOD" : "Message from JOOD",
+        body: isAr ? "لديك رد جديد على طلبك" : "You have a new reply on your request",
+        tag: `request-${id}`,
+      }, supabase).catch(() => {});
+    }
   }
 
   return NextResponse.json({ ok: true });
