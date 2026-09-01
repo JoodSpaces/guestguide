@@ -14,18 +14,23 @@ export function PushPrompt({ token }: Props) {
   const [dismissed, setDismissed] = useState(true); // start hidden
 
   useEffect(() => {
-    // Only show if push is supported and not already subscribed
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
     if (Notification.permission !== "default") return;
 
-    try {
-      if (localStorage.getItem("jood_push_dismissed")) return;
-    } catch {}
+    // ?notify=1 in URL resets the dismissed flag so prompt reappears
+    const forceShow = new URLSearchParams(window.location.search).get("notify") === "1";
+    if (forceShow) {
+      try { localStorage.removeItem("jood_push_dismissed"); } catch {}
+    } else {
+      try {
+        if (localStorage.getItem("jood_push_dismissed")) return;
+      } catch {}
+    }
 
     const timer = setTimeout(() => {
       setDismissed(false);
-      setTimeout(() => setVisible(true), 50); // trigger CSS transition
-    }, 3500);
+      setTimeout(() => setVisible(true), 50);
+    }, forceShow ? 300 : 3500);
 
     return () => clearTimeout(timer);
   }, []);
