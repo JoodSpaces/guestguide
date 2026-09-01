@@ -20,23 +20,23 @@ function Dot() {
 
 function Chip({ label, value }: { label: string; value: string }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "baseline", gap: "5px", whiteSpace: "nowrap" }}>
+    <span style={{ display: "inline-flex", alignItems: "baseline", gap: "6px", whiteSpace: "nowrap" }}>
       <span style={{
         fontFamily: "var(--font-mono)",
-        fontSize: "9px",
-        letterSpacing: "0.18em",
+        fontSize: "11px",
+        letterSpacing: "0.16em",
         textTransform: "uppercase",
-        color: "var(--jood-ink-muted)",
+        color: "var(--jood-garnet)",
       }}>
         {label}
       </span>
       <span style={{
         fontFamily: "var(--font-mono)",
-        fontSize: "10px",
-        letterSpacing: "0.12em",
+        fontSize: "12px",
+        letterSpacing: "0.10em",
         textTransform: "uppercase",
         color: "var(--jood-ink)",
-        fontWeight: 500,
+        fontWeight: 600,
       }}>
         {value}
       </span>
@@ -72,7 +72,7 @@ export function WeatherStrip({ token, isAr }: Props) {
       <div style={stripStyle}>
         <div dir="ltr" className="jood-marquee-track" style={{ display: "inline-flex", gap: "18px", alignItems: "center", whiteSpace: "nowrap" }}>
           {[...STATIC_PLACES, ...STATIC_PLACES].flatMap((place, i) => [
-            <span key={`p-${i}`} style={{ fontFamily: "var(--font-label)", fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>{place}</span>,
+            <span key={`p-${i}`} style={{ fontFamily: "var(--font-label)", fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-ink)", fontWeight: 500 }}>{place}</span>,
             <span key={`d-${i}`} style={{ color: "var(--jood-accent)", fontSize: "8px" }}>●</span>,
           ])}
         </div>
