@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { BottomNav, type NavTab } from "@/components/stay/BottomNav";
@@ -20,12 +20,39 @@ interface Props {
 export function StayShell({ token, title, children, back, activeTab = "home" }: Props) {
   const locale = useLocale();
   const isRtl = locale === "ar";
+  const [showBell, setShowBell] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
+    if ("PushManager" in window && Notification.permission === "default") {
+      setShowBell(true);
+    }
   }, []);
+
+  async function handleBellSubscribe() {
+    setSubscribing(true);
+    try {
+      const perm = await Notification.requestPermission();
+      if (perm !== "granted") { setSubscribing(false); return; }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_KEY,
+      });
+      const json = sub.toJSON();
+      await fetch("/api/stay/push-subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, endpoint: json.endpoint, p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "" }),
+      });
+      try { localStorage.removeItem("jood_push_dismissed"); } catch {}
+      setShowBell(false);
+    } catch { /* denied or unsupported */ }
+    setSubscribing(false);
+  }
 
   return (
     <main className="min-h-dvh" style={{ backgroundColor: "var(--jood-ground)" }}>
@@ -98,6 +125,31 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
           )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          {showBell && (
+            <button
+              onClick={handleBellSubscribe}
+              disabled={subscribing}
+              aria-label={isRtl ? "تفعيل الإشعارات" : "Enable notifications"}
+              style={{
+                position: "relative",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: "32px", height: "32px",
+                borderRadius: "50%",
+                border: "1px solid var(--jood-line)",
+                backgroundColor: "transparent",
+                cursor: "pointer",
+                fontSize: "0.95rem",
+                opacity: subscribing ? 0.5 : 1,
+              }}
+            >
+              🔔
+              <span style={{
+                position: "absolute", top: "4px", right: "4px",
+                width: "6px", height: "6px", borderRadius: "50%",
+                backgroundColor: "var(--jood-accent)",
+              }} />
+            </button>
+          )}
           <ThemeToggle />
           <LanguageToggle />
         </div>
