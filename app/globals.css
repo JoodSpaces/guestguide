@@ -61,17 +61,19 @@
   --radius-icon:   40px;
 
   /* Shadows */
-  --shadow-card:   0 1px 3px rgba(53, 30, 28, 0.08), 0 1px 1px rgba(53, 30, 28, 0.04);
-  --shadow-raised: 0 4px 16px rgba(53, 30, 28, 0.12), 0 1px 4px rgba(53, 30, 28, 0.06);
+  --shadow-card:     0 2px 8px rgba(53, 30, 28, 0.07), 0 1px 2px rgba(53, 30, 28, 0.04);
+  --shadow-tile:     0 4px 14px rgba(53, 30, 28, 0.09), 0 1px 3px rgba(53, 30, 28, 0.05);
+  --shadow-raised:   0 8px 28px rgba(53, 30, 28, 0.13), 0 2px 6px rgba(53, 30, 28, 0.06);
 
   /* Motion — DS v1.0 curves */
   --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);  /* reveals & entrances */
   --ease-entrance: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out:      cubic-bezier(0.2, 0.7, 0.2, 1);  /* hover lifts, card transitions */
-  --duration-fast: 200ms;
-  --duration-base: 350ms;
-  --duration-reveal: 850ms;   /* content: translateY(30px) → 0 */
-  --duration-image: 1100ms;   /* images: scale(1.07) → 1 */
+  --ease-spring:   cubic-bezier(0.34, 1.56, 0.64, 1); /* bouncy interactive */
+  --duration-fast: 180ms;
+  --duration-base: 300ms;
+  --duration-reveal: 640ms;
+  --duration-image: 1000ms;
 }
 
 /* ─── Leaflet map tile tone ──────────────────────────────────────────────── */
@@ -136,8 +138,8 @@ body {
 
 /* ─── Grain texture ─────────────────────────────────────────────────────── */
 body {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-  background-size: 300px 300px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
 }
 
 /* ─── View Transitions ──────────────────────────────────────────────────── */
@@ -159,18 +161,34 @@ body {
 
 /* ─── Animations ────────────────────────────────────────────────────────── */
 @keyframes revealUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 @keyframes revealImage {
-  from { opacity: 0; transform: scale(1.07); }
+  from { opacity: 0; transform: scale(1.06); }
   to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes staggerIn {
-  from { opacity: 0; transform: translateY(18px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
 }
 
 @keyframes copyPop {
@@ -194,13 +212,13 @@ body {
 
 .stagger-item {
   opacity: 0;
-  animation: staggerIn 550ms var(--ease-standard) forwards;
-  animation-delay: calc(var(--si, 0) * 75ms + 60ms);
+  animation: staggerIn 500ms var(--ease-standard) forwards;
+  animation-delay: calc(var(--si, 0) * 55ms + 50ms);
 }
 
 .copy-pop {
   display: inline-block;
-  animation: copyPop 380ms var(--ease-standard) both;
+  animation: copyPop 360ms var(--ease-standard) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -231,17 +249,30 @@ body {
   .jood-marquee-track { animation: none; }
 }
 
+/* ─── Tile grid ─────────────────────────────────────────────────────────── */
+.jood-tile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+/* Lone tile in an odd group spans both columns */
+.jood-tile-grid > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 /* ─── Card interaction — DS v1.0 lift ───────────────────────────────────── */
 .jood-card {
-  transition: transform 350ms var(--ease-out), box-shadow 350ms var(--ease-out);
+  transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+  will-change: transform;
 }
 .jood-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 24px 60px rgba(53, 30, 28, 0.14);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-raised);
 }
 .jood-card:active {
-  transform: scale(0.982) translateY(0);
-  transition: transform 120ms var(--ease-standard);
+  transform: scale(0.975) translateY(0);
+  transition: transform 100ms var(--ease-standard);
+  box-shadow: var(--shadow-card);
 }
 
 @media (prefers-reduced-motion: reduce) {

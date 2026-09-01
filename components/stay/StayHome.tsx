@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import type { TokenPayload, Phase } from "@/lib/token";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { PhaseCard } from "@/components/stay/PhaseCard";
+import { PhaseCard, type CardVariant } from "@/components/stay/PhaseCard";
 import { QuickHelpFab } from "@/components/stay/QuickHelpFab";
 import { CountdownChip } from "@/components/stay/CountdownChip";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
@@ -191,48 +191,51 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
       <div className="px-6 pb-24" style={{ paddingTop: "clamp(28px, 4vw, 44px)" }}>
 
         {/* Greeting */}
-        <div className="animate-reveal mb-6" style={{ animationDelay: "0ms" }}>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9.5px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "10px" }}>
+        <div className="animate-reveal mb-8" style={{ animationDelay: "0ms" }}>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "12px", opacity: 0.9 }}>
             {timeKicker.kicker}
           </p>
-          <h1 className="font-display" style={{ fontSize: "clamp(2rem, 6vw, 3rem)", color: "var(--jood-ink)", lineHeight: 1.1, fontStyle: "normal" }}>
+          <h1 className="font-display" style={{ fontSize: "clamp(2.8rem, 9vw, 4.5rem)", color: "var(--jood-ink)", lineHeight: 1.05, fontStyle: "normal", letterSpacing: "-0.01em" }}>
             {isAr ? "أهلاً، " : "Hello, "}
             <em style={{ color: "var(--jood-accent)", fontStyle: isAr ? "normal" : "italic" }}>
               {payload.guestFirstName}
             </em>
           </h1>
-          <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
+          <div style={{ marginTop: "10px" }}>
+            <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
+          </div>
           {timeKicker.tagline && (
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "8px", fontStyle: "italic" }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9rem", color: "var(--jood-ink-muted)", marginTop: "10px", fontStyle: "italic", lineHeight: 1.5 }}>
               {timeKicker.tagline}
             </p>
           )}
           {nudge && (
             <div
               style={{
-                marginTop: "14px",
+                marginTop: "16px",
                 display: "flex",
                 alignItems: "center",
-                gap: "10px",
-                padding: "10px 14px",
+                gap: "12px",
+                padding: "12px 16px",
                 backgroundColor: "var(--jood-surface)",
-                border: "1px solid var(--jood-line)",
+                boxShadow: "var(--shadow-card)",
                 borderRadius: "var(--radius-lg)",
               }}
             >
-              <p style={{ flex: 1, fontSize: "0.8125rem", color: "var(--jood-ink-muted)", fontFamily: "var(--font-body)" }}>
+              <p style={{ flex: 1, fontSize: "0.8125rem", color: "var(--jood-ink-muted)", fontFamily: "var(--font-body)", lineHeight: 1.5 }}>
                 {nudge.text}
               </p>
               <a
                 href={nudge.href}
                 style={{
                   flexShrink: 0,
-                  fontSize: "0.75rem",
+                  fontSize: "0.6875rem",
                   fontFamily: "var(--font-label)",
-                  letterSpacing: "0.1em",
+                  letterSpacing: "0.12em",
                   color: "var(--jood-accent)",
                   textDecoration: "none",
                   whiteSpace: "nowrap",
+                  textTransform: "uppercase",
                 }}
               >
                 {nudge.cta} →
@@ -324,7 +327,7 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
         <WeatherStrip token={token} isAr={isAr} />
 
         {/* Primary card */}
-        <div className="stagger-item mb-4" style={{ "--si": 1 } as React.CSSProperties}>
+        <div className="stagger-item" style={{ "--si": 1, marginBottom: "10px" } as React.CSSProperties}>
           <PrimaryCard payload={payload} token={token} isAr={isAr} />
         </div>
 
@@ -339,9 +342,7 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
         )}
 
         {/* Secondary cards */}
-        <div className="grid gap-3">
-          <SecondaryCards payload={payload} token={token} t={t} isAr={isAr} hour={hour} intent={intent} />
-        </div>
+        <SecondaryCards payload={payload} token={token} t={t} isAr={isAr} hour={hour} intent={intent} />
 
         {/* Property soul footer */}
         <div
@@ -377,7 +378,7 @@ function PrimaryCard({ payload, token, isAr }: { payload: TokenPayload; token: s
         eyebrow={t("phases.arrival")}
         locked={!payload.arrivalUnlocked}
         lockedLabel={t("arrival.locked_title")}
-        primary
+        variant="primary"
         watermark={<WmKey />}
       >
         <p className="font-display" style={{ fontSize: "clamp(1.2rem, 3.5vw, 1.6rem)" }}>
@@ -389,7 +390,7 @@ function PrimaryCard({ payload, token, isAr }: { payload: TokenPayload; token: s
 
   if (payload.phase === "departure") {
     return (
-      <PhaseCard href={`/s/${token}/checkout`} eyebrow={t("phases.departure")} primary watermark={<WmDoor />}>
+      <PhaseCard href={`/s/${token}/checkout`} eyebrow={t("phases.departure")} variant="primary" watermark={<WmDoor />}>
         <p className="font-display" style={{ fontSize: "clamp(1.2rem, 3.5vw, 1.6rem)" }}>
           {t("checkout.time")}
         </p>
@@ -398,7 +399,7 @@ function PrimaryCard({ payload, token, isAr }: { payload: TokenPayload; token: s
   }
 
   return (
-    <PhaseCard href={`/s/${token}/manual`} eyebrow={t("nav.manual")} primary watermark={<WmBook />}>
+    <PhaseCard href={`/s/${token}/manual`} eyebrow={t("nav.manual")} variant="primary" watermark={<WmBook />}>
       <p className="font-display" style={{ fontSize: "clamp(1.2rem, 3.5vw, 1.6rem)" }}>
         {t("manual.card_body")}
       </p>
@@ -540,15 +541,43 @@ function SecondaryCards({ payload, token, t, isAr, hour, intent }: {
     ];
   }
 
+  // Assign variants: first = secondary (featured), last = cta, middle = tile
+  const featured = links[0];
+  const ctaCard = links.length > 1 ? links[links.length - 1] : null;
+  const tileCards = links.length > 2 ? links.slice(1, -1) : [];
+
   return (
-    <>
-      {links.map((link, i) => (
-        <div key={link.key} className="stagger-item" style={{ "--si": i + 2 } as React.CSSProperties}>
-          <PhaseCard href={link.href} eyebrow="" icon={link.icon} description={link.description}>
-            <span style={{ color: "var(--jood-ink)", fontWeight: 500 }}>{link.label}</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      {/* Featured full-width card */}
+      {featured && (
+        <div className="stagger-item" style={{ "--si": 2 } as React.CSSProperties}>
+          <PhaseCard href={featured.href} eyebrow="" icon={featured.icon} description={featured.description} variant="secondary">
+            <span>{featured.label}</span>
           </PhaseCard>
         </div>
-      ))}
-    </>
+      )}
+
+      {/* 2-col tile grid */}
+      {tileCards.length > 0 && (
+        <div className="jood-tile-grid stagger-item" style={{ "--si": 3 } as React.CSSProperties}>
+          {tileCards.map((link, i) => (
+            <div key={link.key} className="stagger-item" style={{ "--si": i + 4 } as React.CSSProperties}>
+              <PhaseCard href={link.href} eyebrow="" icon={link.icon} description={link.description} variant="tile">
+                <span>{link.label}</span>
+              </PhaseCard>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* CTA strip */}
+      {ctaCard && (
+        <div className="stagger-item" style={{ "--si": tileCards.length + 4 } as React.CSSProperties}>
+          <PhaseCard href={ctaCard.href} eyebrow="" icon={ctaCard.icon} description={ctaCard.description} variant="cta">
+            <span>{ctaCard.label}</span>
+          </PhaseCard>
+        </div>
+      )}
+    </div>
   );
 }
