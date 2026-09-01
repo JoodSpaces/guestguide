@@ -64,15 +64,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         title: "JOOD",
         body: isAr ? msg.ar : msg.en,
         tag: `request-${id}`,
-      }, supabase).catch(() => {});
+      }, supabase).catch(e => console.error("[push] status push failed", e));
     }
     // New note → push (only when note is non-empty and no status change in same request)
     else if (parsed.data.adminNotes) {
+      console.log("[push] triggering note push for booking", updatedReq.booking_id);
       sendPushToBooking(updatedReq.booking_id, {
         title: isAr ? "رسالة من فريق JOOD" : "Message from JOOD",
         body: isAr ? "لديك رد جديد على طلبك" : "You have a new reply on your request",
         tag: `request-${id}`,
-      }, supabase).catch(() => {});
+      }, supabase).catch(e => console.error("[push] note push failed", e));
     }
   }
 

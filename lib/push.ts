@@ -24,7 +24,14 @@ export async function sendPush(sub: Sub, payload: PushPayload): Promise<"ok" | "
     );
     return "ok";
   } catch (err: unknown) {
-    if ((err as { statusCode?: number }).statusCode === 410) return "expired";
+    const e = err as { statusCode?: number; body?: string; message?: string };
+    console.error("[push] sendNotification failed", {
+      statusCode: e.statusCode,
+      body: e.body,
+      message: e.message,
+      endpoint: sub.endpoint.slice(0, 60),
+    });
+    if (e.statusCode === 410) return "expired";
     return "error";
   }
 }
@@ -40,6 +47,7 @@ export async function sendPushToBooking(
     .select("id, endpoint, p256dh, auth")
     .eq("booking_id", bookingId);
 
+  console.log("[push] subs for booking", bookingId, "→", subs?.length ?? 0);
   if (!subs?.length) return;
 
   const expired: string[] = [];
