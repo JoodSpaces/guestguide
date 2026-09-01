@@ -27,7 +27,7 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
-    if ("PushManager" in window && Notification.permission === "default") {
+    if ("PushManager" in window) {
       setShowBell(true);
     }
   }, []);
