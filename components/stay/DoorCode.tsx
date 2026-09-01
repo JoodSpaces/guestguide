@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 
 type State =
   | { kind: "hidden" }
-  | { kind: "dragging"; x: number; snapping: boolean }
+  | { kind: "dragging"; x: number; progress: number; snapping: boolean }
   | { kind: "second_factor"; input: string; error?: string }
   | { kind: "loading" }
   | { kind: "revealed"; code: string; copied: boolean }
@@ -25,11 +25,9 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
   const isRtl = locale === "ar";
   const [state, setState] = useState<State>({ kind: "hidden" });
   const trackRef = useRef<HTMLDivElement>(null);
-  const knobX = useRef(0);
-  const trackW = useRef(0);
+  const trackW = useRef(280);
   const dragging = useRef(false);
   const startClientX = useRef(0);
-  const startKnobX = useRef(0);
 
   const fetchCode = useCallback(async (secondFactor?: string) => {
     setState({ kind: "loading" });
@@ -55,30 +53,22 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
     }
   }, [token, t]);
 
-  const maxTravel = useCallback(() => {
-    const tw = trackRef.current?.offsetWidth ?? 280;
-    return tw - KNOB_SIZE - 8; // 8px right padding
-  }, []);
+  const travel = () => trackW.current - KNOB_SIZE - 8;
 
-  const progressOf = (x: number) => Math.max(0, Math.min(1, x / maxTravel()));
-
-  // Snap to end then fetch, or snap back to start
-  const settle = useCallback((x: number) => {
-    const progress = progressOf(x);
+  const settle = useCallback((x: number, tw: number) => {
+    const max = tw - KNOB_SIZE - 8;
+    const progress = Math.max(0, Math.min(1, x / max));
     if (progress >= THRESHOLD) {
-      // Snap to end
-      const end = maxTravel();
-      setState({ kind: "dragging", x: end, snapping: true });
+      setState({ kind: "dragging", x: max, progress: 1, snapping: true });
       setTimeout(() => {
         if (requiresSecondFactor) setState({ kind: "second_factor", input: "" });
         else fetchCode();
       }, 320);
     } else {
-      // Snap back
-      setState({ kind: "dragging", x: 0, snapping: true });
+      setState({ kind: "dragging", x: 0, progress: 0, snapping: true });
       setTimeout(() => setState({ kind: "hidden" }), 350);
     }
-  }, [maxTravel, progressOf, requiresSecondFactor, fetchCode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [requiresSecondFactor, fetchCode]);
 
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (state.kind !== "hidden") return;
@@ -86,9 +76,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
     dragging.current = true;
     trackW.current = trackRef.current?.offsetWidth ?? 280;
     startClientX.current = e.clientX;
-    startKnobX.current = 0;
-    knobX.current = 0;
-    setState({ kind: "dragging", x: 0, snapping: false });
+    setState({ kind: "dragging", x: 0, progress: 0, snapping: false });
   }, [state.kind]);
 
   const onPointerMove = useCallback((e: React.PointerEvent) => {
@@ -96,15 +84,20 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
     const delta = isRtl
       ? startClientX.current - e.clientX
       : e.clientX - startClientX.current;
-    const raw = Math.max(0, Math.min(maxTravel(), startKnobX.current + delta));
-    knobX.current = raw;
-    setState({ kind: "dragging", x: raw, snapping: false });
-  }, [isRtl, maxTravel]);
+    const max = trackW.current - KNOB_SIZE - 8;
+    const raw = Math.max(0, Math.min(max, delta));
+    const progress = Math.max(0, Math.min(1, raw / max));
+    setState({ kind: "dragging", x: raw, progress, snapping: false });
+  }, [isRtl]);
 
   const onPointerUp = useCallback(() => {
     if (!dragging.current) return;
     dragging.current = false;
-    settle(knobX.current);
+    setState((prev) => {
+      if (prev.kind !== "dragging") return prev;
+      settle(prev.x, trackW.current);
+      return prev;
+    });
   }, [settle]);
 
   const copyCode = useCallback(async (code: string) => {
@@ -240,8 +233,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
   const isDragging = state.kind === "dragging";
   const knobPos = isDragging ? state.x : 0;
   const isSnapping = isDragging && state.snapping;
-  const travel = isDragging ? maxTravel() : 280 - KNOB_SIZE - 8;
-  const progress = Math.max(0, Math.min(1, knobPos / travel));
+  const progress = isDragging ? state.progress : 0;
 
   return (
     <div
@@ -297,7 +289,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
           borderRadius: "inherit",
         }} />
 
-        {/* Lock dots (hidden as progress grows) */}
+        {/* Lock dots */}
         <div style={{
           position: "absolute",
           inset: 0,
@@ -333,7 +325,6 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
             : "background-color 180ms ease",
           cursor: "grab",
         }}>
-          {/* Arrow chevron */}
           <svg
             width="18" height="18"
             viewBox="0 0 24 24"
@@ -342,10 +333,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            style={{
-              transform: isRtl ? "scaleX(-1)" : "none",
-              transition: "stroke 180ms ease",
-            }}
+            style={{ transform: isRtl ? "scaleX(-1)" : "none", transition: "stroke 180ms ease" }}
           >
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
