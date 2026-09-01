@@ -92,7 +92,7 @@ export function PhaseCard({
           display: "flex",
           alignItems: "center",
           gap: "16px",
-          backgroundColor: "var(--jood-surface)",
+          backgroundColor: "var(--jood-surface-glass)",
           borderRadius: "var(--radius-lg)",
           padding: "18px 20px",
           textDecoration: "none",
@@ -147,7 +147,7 @@ export function PhaseCard({
         style={{
           display: "flex",
           flexDirection: "column",
-          backgroundColor: "var(--jood-surface)",
+          backgroundColor: "var(--jood-surface-glass)",
           borderRadius: "var(--radius-lg)",
           padding: "16px 16px 18px",
           textDecoration: "none",

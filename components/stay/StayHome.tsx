@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import type { TokenPayload, Phase } from "@/lib/token";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { PhaseCard, type CardVariant } from "@/components/stay/PhaseCard";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { HeroColor } from "@/components/ui/HeroColor";
+import { PhaseCard } from "@/components/stay/PhaseCard";
 import { BottomNav } from "@/components/stay/BottomNav";
 import { CountdownChip } from "@/components/stay/CountdownChip";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
@@ -182,132 +184,219 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
 
       {/* Header */}
       <header
-        className="flex items-center justify-between px-6 sticky top-0 z-40"
+        className="flex items-center justify-between px-6 sticky top-0 z-40 jood-header-glass"
         style={{
           height: "56px",
           borderBottom: "1px solid var(--jood-line)",
-          backgroundColor: "rgba(245, 244, 237, 0.85)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "26px", width: "auto" }} />
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <img src="/jood-logo-dark.png" alt="JOOD" className="jood-logo" style={{ height: "26px", width: "auto" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
             {propertyName}
           </span>
+          <ThemeToggle />
           <LanguageToggle />
         </div>
       </header>
 
       {/* Content */}
-      <div className="px-6 pb-36" style={{ paddingTop: heroImageUrl ? "0" : "clamp(28px, 4vw, 44px)" }}>
+      <div className="px-6 pb-36" style={{ paddingTop: "0" }}>
 
-        {/* Hero image — full-bleed property photo */}
+        {/* Hero image — cinematic full-bleed property photo */}
         {heroImageUrl && (
-          <div style={{
-            marginLeft: "-24px",
-            marginRight: "-24px",
-            marginBottom: "clamp(24px, 4vw, 36px)",
-            height: "clamp(240px, 55vw, 360px)",
-            position: "relative",
-            overflow: "hidden",
-          }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroImageUrl}
-              alt={propertyName ?? ""}
-              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            />
+          <>
+            <HeroColor imageUrl={heroImageUrl} />
             <div style={{
-              position: "absolute",
-              inset: 0,
-              background: "linear-gradient(to bottom, rgba(53,30,28,0.08) 0%, rgba(53,30,28,0.72) 100%)",
-            }} />
-            <div style={{ position: "absolute", bottom: "clamp(18px, 4vw, 28px)", left: "24px", right: "24px" }}>
-              <p style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "9px",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "rgba(245,244,237,0.55)",
-                marginBottom: "6px",
-              }}>
-                {timeKicker.kicker}
-              </p>
-              <p style={{
-                fontFamily: "var(--font-display)",
-                fontSize: "clamp(1.5rem, 5vw, 2.2rem)",
-                fontWeight: 600,
-                color: "rgba(245,244,237,0.92)",
-                lineHeight: 1.1,
-                letterSpacing: "-0.01em",
-              }}>
+              marginLeft: "-24px",
+              marginRight: "-24px",
+              marginBottom: "clamp(28px, 5vw, 44px)",
+              height: "clamp(300px, 68vw, 460px)",
+              position: "relative",
+              overflow: "hidden",
+            }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={heroImageUrl}
+                alt={propertyName ?? ""}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              />
+              {/* Property name mega-watermark */}
+              <div aria-hidden style={{ position: "absolute", inset: 0, overflow: "hidden", display: "flex", alignItems: "center" }}>
+                <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(6rem, 26vw, 16rem)", fontWeight: 700, letterSpacing: "-0.04em", color: "rgba(245,244,237,0.04)", whiteSpace: "nowrap", lineHeight: 1, paddingLeft: "16px", userSelect: "none" }}>
+                  {propertyName}
+                </p>
+              </div>
+              {/* Multi-layer cinematic scrim */}
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(160deg, rgba(53,30,28,0.10) 0%, transparent 42%, rgba(53,30,28,0.88) 100%)" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(53,30,28,0.25) 0%, transparent 60%)" }} />
+              {/* Bottom content */}
+              <div style={{ position: "absolute", bottom: "clamp(22px, 5vw, 36px)", left: "24px", right: "24px" }}>
+                <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(245,244,237,0.50)", marginBottom: "8px" }}>
+                  {timeKicker.kicker}
+                </p>
+                <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 6vw, 2.8rem)", fontWeight: 700, color: "#F5F4ED", lineHeight: 1.08, letterSpacing: "-0.02em" }}>
+                  {propertyName}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Greeting — cinematic zone when no hero image */}
+        {!heroImageUrl ? (
+          <div
+            className="animate-reveal"
+            style={{
+              animationDelay: "0ms",
+              marginLeft: "-24px",
+              marginRight: "-24px",
+              marginBottom: "clamp(24px, 4vw, 36px)",
+              paddingTop: "clamp(44px, 11vw, 80px)",
+              paddingBottom: "clamp(36px, 8vw, 60px)",
+              paddingLeft: "24px",
+              paddingRight: "24px",
+              position: "relative",
+              overflow: "hidden",
+            }}
+          >
+            {/* Property name mega-watermark */}
+            <div aria-hidden style={{ position: "absolute", inset: 0, overflow: "hidden", display: "flex", alignItems: "center" }}>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(5rem, 22vw, 14rem)", fontWeight: 700, letterSpacing: "-0.04em", color: "var(--jood-ink-ghost)", whiteSpace: "nowrap", lineHeight: 1, userSelect: "none" }}>
                 {propertyName}
               </p>
             </div>
+            <p style={{ position: "relative", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "14px", opacity: 0.9 }}>
+              {timeKicker.kicker}
+            </p>
+            <h1
+              ref={greetingRef}
+              className="font-display"
+              style={{ position: "relative", fontSize: "clamp(3.4rem, 11vw, 5.2rem)", color: "var(--jood-ink)", lineHeight: 1.02, letterSpacing: "-0.02em", fontVariationSettings: "'wght' 300" }}
+            >
+              {isAr ? "أهلاً،" : "Hello,"}<br />
+              <span style={{ color: "var(--jood-accent)" }}>{payload.guestFirstName}</span>
+            </h1>
+            <div style={{ position: "relative", marginTop: "18px", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
+            </div>
+            {timeKicker.tagline && (
+              <p style={{ position: "relative", fontFamily: "var(--font-body)", fontSize: "0.9rem", color: "var(--jood-ink-muted)", marginTop: "12px", lineHeight: 1.5 }}>
+                {timeKicker.tagline}
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="animate-reveal mb-6" style={{ animationDelay: "0ms" }}>
+            <h1
+              ref={greetingRef}
+              className="font-display"
+              style={{ fontSize: "clamp(2.8rem, 9vw, 4.5rem)", color: "var(--jood-ink)", lineHeight: 1.05, letterSpacing: "-0.01em", fontVariationSettings: "'wght' 300" }}
+            >
+              {isAr ? "أهلاً، " : "Hello, "}
+              <span style={{ color: "var(--jood-accent)" }}>{payload.guestFirstName}</span>
+            </h1>
+            <div style={{ marginTop: "10px" }}>
+              <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
+            </div>
+            {timeKicker.tagline && (
+              <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9rem", color: "var(--jood-ink-muted)", marginTop: "10px", lineHeight: 1.5 }}>
+                {timeKicker.tagline}
+              </p>
+            )}
           </div>
         )}
 
-        {/* Greeting */}
-        <div className="animate-reveal mb-8" style={{ animationDelay: "0ms" }}>
-          {!heroImageUrl && (
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "12px", opacity: 0.9 }}>
-              {timeKicker.kicker}
-            </p>
-          )}
-          <h1
-            ref={greetingRef}
-            className="font-display"
-            style={{ fontSize: "clamp(2.8rem, 9vw, 4.5rem)", color: "var(--jood-ink)", lineHeight: 1.05, letterSpacing: "-0.01em", fontVariationSettings: "'wght' 300" }}
+        {/* Context nudge */}
+        {nudge && (
+          <div
+            className="animate-reveal"
+            style={{
+              animationDelay: "20ms",
+              marginBottom: "16px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              padding: "12px 16px",
+              backgroundColor: "var(--jood-surface-glass)",
+              backdropFilter: "blur(10px) saturate(1.3)",
+              WebkitBackdropFilter: "blur(10px) saturate(1.3)",
+              boxShadow: "var(--shadow-card)",
+              borderRadius: "var(--radius-lg)",
+            }}
           >
-            {isAr ? "أهلاً، " : "Hello, "}
-            <span style={{ color: "var(--jood-accent)" }}>
-              {payload.guestFirstName}
-            </span>
-          </h1>
-          <div style={{ marginTop: "10px" }}>
-            <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
-          </div>
-          {timeKicker.tagline && (
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9rem", color: "var(--jood-ink-muted)", marginTop: "10px", lineHeight: 1.5 }}>
-              {timeKicker.tagline}
+            <p style={{ flex: 1, fontSize: "0.8125rem", color: "var(--jood-ink-muted)", fontFamily: "var(--font-body)", lineHeight: 1.5 }}>
+              {nudge.text}
             </p>
-          )}
-          {nudge && (
-            <div
+            <a
+              href={nudge.href}
               style={{
-                marginTop: "16px",
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                padding: "12px 16px",
-                backgroundColor: "var(--jood-surface)",
-                boxShadow: "var(--shadow-card)",
-                borderRadius: "var(--radius-lg)",
+                flexShrink: 0,
+                fontSize: "0.6875rem",
+                fontFamily: "var(--font-label)",
+                letterSpacing: "0.12em",
+                color: "var(--jood-accent)",
+                textDecoration: "none",
+                whiteSpace: "nowrap",
+                textTransform: "uppercase",
               }}
             >
-              <p style={{ flex: 1, fontSize: "0.8125rem", color: "var(--jood-ink-muted)", fontFamily: "var(--font-body)", lineHeight: 1.5 }}>
-                {nudge.text}
-              </p>
-              <a
-                href={nudge.href}
-                style={{
-                  flexShrink: 0,
-                  fontSize: "0.6875rem",
-                  fontFamily: "var(--font-label)",
-                  letterSpacing: "0.12em",
-                  color: "var(--jood-accent)",
-                  textDecoration: "none",
-                  whiteSpace: "nowrap",
-                  textTransform: "uppercase",
-                }}
-              >
-                {nudge.cta} →
-              </a>
-            </div>
-          )}
+              {nudge.cta} →
+            </a>
+          </div>
+        )}
+
+        {/* Quick access strip */}
+        <div
+          className="animate-reveal"
+          style={{
+            animationDelay: "40ms",
+            marginLeft: "-24px",
+            marginRight: "-24px",
+            paddingLeft: "24px",
+            marginBottom: "24px",
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            display: "flex",
+            gap: "8px",
+          }}
+        >
+          {([
+            { href: `/s/${token}/discover`, label: isAr ? "اكتشف" : "Discover", icon: <IconCompass /> },
+            { href: `/s/${token}/services`, label: isAr ? "الخدمات" : "Services", icon: <IconSparkle /> },
+            { href: `/s/${token}/manual`,   label: isAr ? "الدليل" : "Guide",    icon: <IconBook />    },
+            { href: `/s/${token}/requests`, label: isAr ? "تواصل" : "Help",      icon: <IconChat />    },
+          ] as const).map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              style={{
+                flexShrink: 0,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "6px",
+                padding: "12px 20px 10px",
+                background: "var(--jood-surface-glass)",
+                backdropFilter: "blur(12px) saturate(1.3)",
+                WebkitBackdropFilter: "blur(12px) saturate(1.3)",
+                border: "1px solid var(--jood-line)",
+                borderRadius: "var(--radius-lg)",
+                textDecoration: "none",
+                transition: "transform 200ms var(--ease-spring)",
+                minWidth: "72px",
+              }}
+            >
+              <span style={{ color: "var(--jood-accent)" }}>{link.icon}</span>
+              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--jood-ink-muted)", whiteSpace: "nowrap" as const }}>
+                {link.label}
+              </span>
+            </a>
+          ))}
+          <div style={{ width: "24px", flexShrink: 0 }} />
         </div>
 
         {/* Pay-now nudge */}
