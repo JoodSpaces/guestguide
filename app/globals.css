@@ -76,6 +76,63 @@
   --duration-image: 1000ms;
 }
 
+/* ─── Dark mode ─────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --jood-ink:              #EDE9E0;
+    --jood-ink-deep:         #F5F4ED;
+    --jood-garnet:           #C49898;
+    --jood-ground:           #1A1210;
+    --jood-surface:          #221A18;
+    --jood-surface-raised:   #2C2220;
+    --jood-mist2:            #332826;
+    --jood-mid:              #A08880;
+    --jood-ink-muted:        rgba(237, 233, 224, 0.55);
+    --jood-ink-faint:        rgba(237, 233, 224, 0.25);
+    --jood-ink-ghost:        rgba(237, 233, 224, 0.14);
+    --jood-line:             rgba(237, 233, 224, 0.10);
+    --jood-line-dark:        rgba(237, 233, 224, 0.08);
+    --jood-success:          #3DA366;
+    --jood-danger:           #E05050;
+    --jood-ink-on-dark:      #F5F4ED;
+    --shadow-card:           0 2px 10px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
+    --shadow-tile:           0 4px 18px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.25);
+    --shadow-raised:         0 8px 32px rgba(0, 0, 0, 0.50), 0 2px 8px rgba(0, 0, 0, 0.30);
+  }
+}
+
+:root[data-theme="dark"] {
+  --jood-ink:              #EDE9E0;
+  --jood-ink-deep:         #F5F4ED;
+  --jood-garnet:           #C49898;
+  --jood-ground:           #1A1210;
+  --jood-surface:          #221A18;
+  --jood-surface-raised:   #2C2220;
+  --jood-mist2:            #332826;
+  --jood-mid:              #A08880;
+  --jood-ink-muted:        rgba(237, 233, 224, 0.55);
+  --jood-ink-faint:        rgba(237, 233, 224, 0.25);
+  --jood-ink-ghost:        rgba(237, 233, 224, 0.14);
+  --jood-line:             rgba(237, 233, 224, 0.10);
+  --jood-line-dark:        rgba(237, 233, 224, 0.08);
+  --jood-success:          #3DA366;
+  --jood-danger:           #E05050;
+  --jood-ink-on-dark:      #F5F4ED;
+  --shadow-card:           0 2px 10px rgba(0, 0, 0, 0.30), 0 1px 3px rgba(0, 0, 0, 0.20);
+  --shadow-tile:           0 4px 18px rgba(0, 0, 0, 0.40), 0 1px 4px rgba(0, 0, 0, 0.25);
+  --shadow-raised:         0 8px 32px rgba(0, 0, 0, 0.50), 0 2px 8px rgba(0, 0, 0, 0.30);
+}
+
+/* Dark-mode Leaflet tile adjustment */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .leaflet-tile-pane {
+    filter: grayscale(0.85) brightness(0.55) contrast(1.1) invert(0.92);
+  }
+}
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: grayscale(0.85) brightness(0.55) contrast(1.1) invert(0.92);
+}
+
 /* ─── Leaflet map tile tone ──────────────────────────────────────────────── */
 /* Desaturate OSM tiles to match the JOOD off-white editorial palette */
 .leaflet-tile-pane {

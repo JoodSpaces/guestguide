@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { BottomNav, type NavTab } from "@/components/stay/BottomNav";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 interface Props {
   token: string;
@@ -88,7 +89,10 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
             </p>
           )}
         </div>
-        <LanguageToggle />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <ThemeToggle />
+          <LanguageToggle />
+        </div>
       </header>
 
       {/* Content */}

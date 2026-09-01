@@ -27,6 +27,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} dir={dir}>
+      <head>
+        {/* Prevent flash-of-wrong-theme: apply stored theme before first paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('jood-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}`,
+          }}
+        />
+      </head>
       <body>
         <NextIntlClientProvider messages={messages} locale={locale}>
           {children}
