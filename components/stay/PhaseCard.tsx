@@ -39,7 +39,7 @@ export function PhaseCard({
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "var(--jood-ink)",
+          backgroundColor: "#351E1C",
           borderRadius: "var(--radius-lg)",
           padding: "clamp(24px, 4vw, 40px)",
           textDecoration: "none",
@@ -52,7 +52,7 @@ export function PhaseCard({
         }}
       >
         {watermark && (
-          <div aria-hidden style={{ position: "absolute", right: "-10px", bottom: "-14px", opacity: 0.06, color: "var(--jood-ground)", pointerEvents: "none" }}>
+          <div aria-hidden style={{ position: "absolute", right: "-10px", bottom: "-14px", opacity: 0.06, color: "#F5F4ED", pointerEvents: "none" }}>
             {watermark}
           </div>
         )}
@@ -62,7 +62,7 @@ export function PhaseCard({
               {locked && lockedLabel ? lockedLabel : eyebrow}
             </p>
           )}
-          <div style={{ color: "var(--jood-ground)" }}>{children}</div>
+          <div style={{ color: "#F5F4ED" }}>{children}</div>
         </div>
         <div style={{
           marginTop: "16px",

@@ -183,9 +183,9 @@ export function AdminHeader({ role, name }: Props) {
               alignItems: "center", justifyContent: "center", gap: "5px",
             }}
           >
-            <span style={{ width: "16px", height: "1.5px", backgroundColor: "var(--jood-ink)", borderRadius: "2px", display: "block" }} />
-            <span style={{ width: "16px", height: "1.5px", backgroundColor: "var(--jood-ink)", borderRadius: "2px", display: "block" }} />
-            <span style={{ width: "16px", height: "1.5px", backgroundColor: "var(--jood-ink)", borderRadius: "2px", display: "block" }} />
+            <span style={{ width: "16px", height: "1.5px", backgroundColor: "#351E1C", borderRadius: "2px", display: "block" }} />
+            <span style={{ width: "16px", height: "1.5px", backgroundColor: "#351E1C", borderRadius: "2px", display: "block" }} />
+            <span style={{ width: "16px", height: "1.5px", backgroundColor: "#351E1C", borderRadius: "2px", display: "block" }} />
           </button>
           {menuOpen && (
             <div style={{

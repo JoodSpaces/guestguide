@@ -110,7 +110,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
   // ── Revealed ──────────────────────────────────────────────
   if (state.kind === "revealed") {
     return (
-      <div style={{ backgroundColor: "var(--jood-ink)", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 48px)" }}>
+      <div style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 48px)" }}>
         <p className="label-eyebrow" style={{ color: "rgba(245,244,237,.4)", marginBottom: "16px" }}>
           {t("door_code_label")}
         </p>
@@ -119,7 +119,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
           aria-label={t("tap_to_copy")}
           style={{ background: "none", border: "none", cursor: "pointer", padding: 0, width: "100%", textAlign: "start" }}
         >
-          <p className="code-display animate-reveal" style={{ color: "var(--jood-ground)", display: "block" }}>
+          <p className="code-display animate-reveal" style={{ color: "#F5F4ED", display: "block" }}>
             {state.code}
           </p>
           <p style={{
@@ -177,8 +177,8 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
           style={{
             width: "100%",
             padding: "14px",
-            backgroundColor: state.input.length === 4 ? "var(--jood-ink)" : "var(--jood-line)",
-            color: state.input.length === 4 ? "var(--jood-ground)" : "var(--jood-ink-muted)",
+            backgroundColor: state.input.length === 4 ? "#351E1C" : "var(--jood-line)",
+            color: state.input.length === 4 ? "#F5F4ED" : "var(--jood-ink-muted)",
             border: "none",
             borderRadius: "var(--radius-pill)",
             cursor: state.input.length === 4 ? "pointer" : "not-allowed",
@@ -209,7 +209,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
         {state.message !== "code_not_set" && (
           <button
             onClick={() => setState({ kind: "hidden" })}
-            style={{ padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", cursor: "pointer", fontSize: "0.875rem" }}
+            style={{ padding: "10px 20px", backgroundColor: "#351E1C", color: "#F5F4ED", border: "none", borderRadius: "var(--radius-pill)", cursor: "pointer", fontSize: "0.875rem" }}
           >
             Try again
           </button>
@@ -221,7 +221,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
   // ── Loading ───────────────────────────────────────────────
   if (state.kind === "loading") {
     return (
-      <div style={{ backgroundColor: "var(--jood-ink)", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 48px)", minHeight: "140px", display: "flex", alignItems: "center" }}>
+      <div style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 48px)", minHeight: "140px", display: "flex", alignItems: "center" }}>
         <p style={{ color: "rgba(245,244,237,.4)", fontFamily: "var(--font-label)", letterSpacing: "0.14em", textTransform: "uppercase", fontSize: "0.75rem" }}>
           {t("door_code_label")}…
         </p>
@@ -238,7 +238,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
   return (
     <div
       style={{
-        backgroundColor: "var(--jood-ink)",
+        backgroundColor: "#351E1C",
         borderRadius: "var(--radius-lg)",
         padding: "clamp(22px, 4vw, 36px)",
         userSelect: "none",
@@ -313,7 +313,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
           width: `${KNOB_SIZE - 8}px`,
           [isRtl ? "right" : "left"]: `${knobPos + 4}px`,
           borderRadius: `${(KNOB_SIZE - 8) / 2}px`,
-          backgroundColor: progress >= THRESHOLD ? "var(--jood-accent)" : "var(--jood-ground)",
+          backgroundColor: progress >= THRESHOLD ? "var(--jood-accent)" : "#F5F4ED",
           boxShadow: progress >= THRESHOLD
             ? "0 0 0 4px rgba(255,96,55,0.25)"
             : "0 2px 12px rgba(0,0,0,0.35)",
@@ -329,7 +329,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
             width="18" height="18"
             viewBox="0 0 24 24"
             fill="none"
-            stroke={progress >= THRESHOLD ? "white" : "var(--jood-ink)"}
+            stroke={progress >= THRESHOLD ? "white" : "#351E1C"}
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
