@@ -34,7 +34,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .from("properties")
     .update(parsed.data)
     .eq("id", id)
-    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid")
+    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid, hero_image_url")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

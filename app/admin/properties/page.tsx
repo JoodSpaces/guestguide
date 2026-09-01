@@ -5,7 +5,7 @@ export default async function PropertiesPage() {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("properties")
-    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid")
+    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid, hero_image_url")
     .order("name")
     .returns<Property[]>();
 
