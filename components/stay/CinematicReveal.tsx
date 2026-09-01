@@ -92,7 +92,7 @@ export function CinematicReveal({ token, propertyName, locale }: Props) {
         </p>
         <h1
           style={{
-            fontFamily: "var(--font-display), Georgia, serif",
+            fontFamily: "var(--font-display), system-ui, sans-serif",
             fontSize: "clamp(2.4rem, 9vw, 4.5rem)",
             fontWeight: 400,
             color: "var(--jood-ground)",

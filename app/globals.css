@@ -104,7 +104,7 @@ body {
 }
 
 /* ─── Typography utilities ──────────────────────────────────────────────── */
-.font-display { font-family: var(--font-display), Georgia, serif; }
+.font-display { font-family: var(--font-display), system-ui, sans-serif; }
 .font-body    { font-family: var(--font-body), system-ui, sans-serif; }
 .font-label   { font-family: var(--font-label), system-ui, sans-serif; }
 .font-arabic  { font-family: var(--font-arabic), system-ui, sans-serif; }

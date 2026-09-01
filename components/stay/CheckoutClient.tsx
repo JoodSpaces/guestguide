@@ -86,7 +86,6 @@ function ScrapbookCard({
           top: "-16px",
           fontFamily: "var(--font-display)",
           fontSize: "clamp(7rem, 22vw, 11rem)",
-          fontStyle: "italic",
           color: "rgba(245,244,237,0.04)",
           lineHeight: 1,
           userSelect: "none",
@@ -108,12 +107,12 @@ function ScrapbookCard({
         {isAr ? "إقامتك في" : "YOUR STAY AT"}
       </p>
 
-      {/* Property name — large italic serif */}
+      {/* Property name */}
       <p
         className="font-display"
         style={{
           fontSize: "clamp(1.6rem, 5vw, 2.6rem)",
-          fontStyle: "italic",
+          fontWeight: 600,
           color: "var(--jood-ground)",
           lineHeight: 1.1,
           marginBottom: "28px",
@@ -167,9 +166,8 @@ function ScrapbookCard({
 
       {/* Pull quote */}
       <p style={{
-        fontFamily: "var(--font-display)",
-        fontStyle: "italic",
-        fontSize: "clamp(0.9rem, 2.5vw, 1.1rem)",
+        fontFamily: "var(--font-body)",
+        fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)",
         color: "rgba(245,244,237,0.35)",
         lineHeight: 1.5,
         borderTop: "1px solid rgba(245,244,237,0.08)",

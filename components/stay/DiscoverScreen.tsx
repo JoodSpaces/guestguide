@@ -347,7 +347,7 @@ export function DiscoverScreen({
 
           {/* Why line */}
           {answer.kind === "places" && answer.why && (
-            <p style={{ margin: "0 0 12px", fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "16px", lineHeight: 1.5, color: "rgba(115,54,53,0.9)" }}>
+            <p style={{ margin: "0 0 12px", fontFamily: "var(--font-body)", fontSize: "16px", lineHeight: 1.5, color: "rgba(115,54,53,0.9)" }}>
               <span style={{ fontStyle: "normal", color: "var(--jood-accent)", marginInlineEnd: "8px" }}>—</span>
               {answer.why}
             </p>
@@ -510,7 +510,7 @@ export function DiscoverScreen({
 
       {!hasRecs && !answer && (
         <div style={{ padding: "clamp(28px,5vw,44px)", background: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-          <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: "1.2rem", color: "var(--jood-ink-muted)", margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "1.2rem", color: "var(--jood-ink-muted)", margin: 0, lineHeight: 1.5 }}>
             {isAr ? "نختار لك أفضل الأماكن." : "Curating the local list for you."}
           </p>
           <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "8px", lineHeight: 1.6 }}>

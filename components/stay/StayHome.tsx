@@ -205,7 +205,7 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
             <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
           </div>
           {timeKicker.tagline && (
-            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9rem", color: "var(--jood-ink-muted)", marginTop: "10px", fontStyle: "italic", lineHeight: 1.5 }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9rem", color: "var(--jood-ink-muted)", marginTop: "10px", lineHeight: 1.5 }}>
               {timeKicker.tagline}
             </p>
           )}
@@ -353,7 +353,7 @@ export function StayHome({ payload, token, requestSummary, tonightNote = null, t
             textAlign: isAr ? "right" : "left",
           }}
         >
-          <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.4rem, 4vw, 2rem)", color: "var(--jood-ink-faint)", lineHeight: 1.15, fontStyle: "italic" }}>
+          <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.4rem, 4vw, 2rem)", color: "var(--jood-ink-faint)", lineHeight: 1.15, fontWeight: 600 }}>
             {propertyName}
           </p>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-ink-ghost)", marginTop: "6px" }}>
