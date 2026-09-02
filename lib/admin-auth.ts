@@ -5,7 +5,7 @@ export interface AdminSession {
   id: string;
   name: string;
   role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
-  jti: string;
+  jti?: string;
   iat: number;
   exp: number;
   /** Property UUIDs this member may access. null = all properties (admin or unscoped). */
@@ -36,10 +36,20 @@ function getSessionRedis(): Redis | null {
 
 const SESSION_PREFIX = "jood:session:";
 
-export async function storeSessionJti(jti: string, ttlSeconds: number) {
+/** Returns true if Redis is available and the JTI was stored successfully. */
+export async function storeSessionJti(jti: string, ttlSeconds: number): Promise<boolean> {
   const redis = getSessionRedis();
-  if (!redis) return;
-  await redis.set(`${SESSION_PREFIX}${jti}`, "1", { ex: ttlSeconds });
+  if (!redis) return false;
+  try {
+    // 3-second timeout so a Redis outage never blocks login
+    await Promise.race([
+      redis.set(`${SESSION_PREFIX}${jti}`, "1", { ex: ttlSeconds }),
+      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("redis_timeout")), 3000)),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function revokeSession(jti: string) {

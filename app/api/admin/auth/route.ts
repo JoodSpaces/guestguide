@@ -31,9 +31,20 @@ export async function POST(req: NextRequest) {
     .single<{ id: string; name: string; role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge"; password_hash: string; property_ids: string[] | null }>();
 
   if (member && (await verifyPassword(password, member.password_hash))) {
-    const session: AdminSession = { id: member.id, name: member.name, role: member.role, jti, iat, exp, propertyIds: member.property_ids ?? null };
+    // Only embed JTI when Redis stored it — if Redis is unavailable the session
+    // runs without revocation tracking rather than blocking login or causing a
+    // fail-closed reject loop on every subsequent request.
+    const stored = await storeSessionJti(jti, 7 * 24 * 60 * 60);
+    const session: AdminSession = {
+      id: member.id,
+      name: member.name,
+      role: member.role,
+      ...(stored ? { jti } : {}),
+      iat,
+      exp,
+      propertyIds: member.property_ids ?? null,
+    };
     const token = await signAdminCookie(session);
-    await storeSessionJti(jti, 7 * 24 * 60 * 60);
     const res = NextResponse.json({ ok: true, role: member.role, redirect: ROLE_HOME[member.role] });
     setCookie(res, token);
     return res;
