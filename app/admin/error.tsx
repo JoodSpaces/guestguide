@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminError({
   error,
@@ -9,6 +10,7 @@ export default function AdminError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const router = useRouter();
   useEffect(() => {
     console.error("[AdminError]", error);
   }, [error]);
@@ -82,7 +84,7 @@ export default function AdminError({
           Retry
         </button>
         <button
-          onClick={() => (window.location.href = "/admin")}
+          onClick={() => router.push("/admin")}
           style={{
             background: "var(--jood-surface)",
             border: "1px solid var(--jood-line)",

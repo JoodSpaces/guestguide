@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 
 export interface Booking {
@@ -83,7 +83,8 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
   const monthEnd   = toDateStr(new Date(anchor.getFullYear(), anchor.getMonth(), days));
 
   // bookings that overlap this month, grouped by property_id
-  const byProp = useMemo(() => {
+  const byPropEntries: [string, Booking[]][] = [];
+  {
     const map = new Map<string, Booking[]>();
     for (const p of properties) map.set(p.id, []);
     for (const b of initialBookings) {
@@ -92,19 +93,19 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
       if (!map.has(pid)) map.set(pid, []);
       map.get(pid)!.push(b);
     }
-    return map;
-  }, [initialBookings, properties, monthStart, monthEnd]);
+    map.forEach((v, k) => byPropEntries.push([k, v]));
+  }
+  const byProp = new Map(byPropEntries);
 
   // List filtered
-  const filtered = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    if (!q) return initialBookings;
-    return initialBookings.filter((b) =>
-      `${b.guest_first_name} ${b.guest_last_name}`.toLowerCase().includes(q) ||
-      propName(b).toLowerCase().includes(q) ||
-      b.status.toLowerCase().includes(q)
-    );
-  }, [query, initialBookings]);
+  const q = query.toLowerCase().trim();
+  const filtered = q
+    ? initialBookings.filter((b) =>
+        `${b.guest_first_name} ${b.guest_last_name}`.toLowerCase().includes(q) ||
+        propName(b).toLowerCase().includes(q) ||
+        b.status.toLowerCase().includes(q)
+      )
+    : initialBookings;
 
   const totalW = PROP_COL + days * DAY_W;
   const todayCol = today.getFullYear() === anchor.getFullYear() && today.getMonth() === anchor.getMonth()
