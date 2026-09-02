@@ -15,9 +15,9 @@ export default async function ServicesPage({ params }: Props) {
 
   const { data: tokenRow } = await supabase
     .from("stay_tokens")
-    .select("booking_id, revoked_at, bookings(check_out, guest_lang, property_id)")
+    .select("booking_id, revoked_at, bookings(check_out, guest_lang)")
     .eq("token_hash", hash)
-    .single<{ booking_id: string; revoked_at: string | null; bookings: { check_out: string; guest_lang: string; property_id: string } | { check_out: string; guest_lang: string; property_id: string }[] }>();
+    .single<{ booking_id: string; revoked_at: string | null; bookings: { check_out: string; guest_lang: string } | { check_out: string; guest_lang: string }[] }>();
 
   if (!tokenRow || tokenRow.revoked_at) notFound();
 
@@ -26,13 +26,7 @@ export default async function ServicesPage({ params }: Props) {
   if (isTokenExpired(booking.check_out)) redirect(`/s/${token}/expired`);
 
   const [{ data: services }, { data: myRequests }] = await Promise.all([
-    supabase
-      .from("services")
-      .select("*")
-      .eq("is_active", true)
-      .or(`property_id.is.null,property_id.eq.${booking.property_id}`)
-      .order("sort_order")
-      .order("created_at"),
+    supabase.from("services").select("*").eq("is_active", true).order("sort_order").order("created_at"),
     supabase
       .from("service_requests")
       .select("id, service_id, quantity, status, guest_notes, paymob_payment_url, created_at, services(name_en, price_egp)")
