@@ -133,7 +133,7 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
             {(["calendar", "list"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} style={{
                 padding: "7px 18px",
-                background: view === v ? "var(--jood-garnet)" : "transparent",
+                background: view === v ? "var(--jood-ink)" : "transparent",
                 color: view === v ? "var(--jood-ground)" : "var(--jood-ink-muted)",
                 border: "none", cursor: "pointer", fontFamily: "var(--font-label)",
                 fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase",
@@ -146,7 +146,7 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
 
           <Link href="/admin/bookings/new" style={{
             padding: "10px 22px",
-            backgroundColor: "var(--jood-garnet)",
+            backgroundColor: "var(--jood-ink)",
             color: "var(--jood-ground)",
             borderRadius: "var(--radius-pill)",
             textDecoration: "none",
