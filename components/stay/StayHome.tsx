@@ -412,7 +412,9 @@ export function StayHome({
       {(tonightNote || tonightNoteAr) && (
         <div style={{ padding: "0 22px 24px" }}>
           <TonightCard
-            note={isAr ? (tonightNoteAr ?? tonightNote ?? "") : (tonightNote ?? "")}
+            token={token}
+            note={tonightNote ?? ""}
+            noteAr={tonightNoteAr ?? ""}
             isAr={isAr}
           />
         </div>
