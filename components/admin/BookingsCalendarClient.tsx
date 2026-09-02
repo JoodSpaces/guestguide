@@ -22,11 +22,11 @@ interface Props {
 
 // ── Palette ──────────────────────────────────────────────────────────────────
 const BAR: Record<string, { bg: string; text: string; border: string }> = {
-  confirmed:  { bg: "var(--jood-garnet)",        text: "var(--jood-ground)",   border: "transparent" },
-  paid:       { bg: "var(--jood-info-surface)",  text: "var(--jood-info)",     border: "var(--jood-info)" },
-  pending:    { bg: "rgba(255,96,55,0.12)",       text: "var(--jood-accent)",   border: "var(--jood-accent)" },
+  confirmed:  { bg: "var(--jood-ink)",            text: "var(--jood-ground)",    border: "transparent" },
+  paid:       { bg: "var(--jood-info-surface)",   text: "var(--jood-info)",      border: "var(--jood-info)" },
+  pending:    { bg: "rgba(255,96,55,0.12)",        text: "var(--jood-accent)",    border: "var(--jood-accent)" },
   completed:  { bg: "var(--jood-surface-raised)", text: "var(--jood-ink-muted)", border: "var(--jood-line)" },
-  cancelled:  { bg: "var(--jood-surface)",        text: "var(--jood-ink-ghost)", border: "var(--jood-line)" },
+  cancelled:  { bg: "var(--jood-surface)",         text: "var(--jood-ink-ghost)", border: "var(--jood-line)" },
 };
 function barStyle(status: string) {
   return BAR[status] ?? BAR.confirmed;
@@ -204,13 +204,13 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
                     <div key={i} style={{
                       width: `${DAY_W}px`, flexShrink: 0, textAlign: "center",
                       padding: "6px 0 5px",
-                      backgroundColor: isToday ? "var(--jood-garnet)" : isWeekend ? "var(--jood-surface-raised)" : "transparent",
+                      backgroundColor: isToday ? "var(--jood-ink)" : isWeekend ? "var(--jood-surface-raised)" : "transparent",
                       borderLeft: i > 0 ? "1px solid var(--jood-line)" : "none",
                     }}>
-                      <div style={{ fontFamily: "var(--font-label)", fontSize: "7px", letterSpacing: "0.1em", color: isToday ? "rgba(255,255,255,0.7)" : "var(--jood-ink-ghost)", textTransform: "uppercase" }}>
+                      <div style={{ fontFamily: "var(--font-label)", fontSize: "7px", letterSpacing: "0.1em", color: isToday ? "var(--jood-ground)" : "var(--jood-ink-ghost)", textTransform: "uppercase" }}>
                         {DAY_ABBR[dow]}
                       </div>
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontVariantNumeric: "tabular-nums", color: isToday ? "#fff" : isWeekend ? "var(--jood-ink-muted)" : "var(--jood-ink)", fontWeight: isToday ? 700 : 400 }}>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: "11px", fontVariantNumeric: "tabular-nums", color: isToday ? "var(--jood-ground)" : isWeekend ? "var(--jood-ink-muted)" : "var(--jood-ink)", fontWeight: isToday ? 700 : 400 }}>
                         {i + 1}
                       </div>
                     </div>
