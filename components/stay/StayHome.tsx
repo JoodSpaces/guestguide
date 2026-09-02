@@ -64,7 +64,7 @@ interface StayPayload {
   guestFirstNameAr?: string;
   propertyName: string;
   propertyNameAr?: string;
-  phase: "pre" | "anticipation" | "settling" | "living" | "departure";
+  phase: string;
   checkIn: string;
   checkOut: string;
   unitNumber?: string;
