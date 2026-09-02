@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
 const TOKEN = process.env.TEST_TOKEN;
 
@@ -35,5 +36,15 @@ test.describe("Guest golden path", () => {
     await page.goto(`/s/${TOKEN}/checkout`);
     await expect(page.locator("h1, h2").first()).toBeVisible();
     await expect(page.locator("text=not found")).toHaveCount(0);
+  });
+
+  test("stay home has no critical a11y violations", async ({ page }) => {
+    await page.goto(`/s/${TOKEN}`);
+    await expect(page.locator("h1, h2").first()).toBeVisible();
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa"])
+      .exclude("[aria-hidden='true']")
+      .analyze();
+    expect(results.violations.filter((v) => v.impact === "critical")).toEqual([]);
   });
 });
