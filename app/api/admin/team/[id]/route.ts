@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { hashPassword, verifyAdminCookie } from "@/lib/admin-auth";
-
-async function requireAdmin(req: NextRequest) {
-  const cookie = req.cookies.get("jood_admin")?.value;
-  if (!cookie) return null;
-  const session = await verifyAdminCookie(cookie);
-  return session?.role === "admin" ? session : null;
-}
+import { hashPassword, requireSession, forbidden } from "@/lib/admin-auth";
 
 const patchSchema = z.object({
   role: z.enum(["admin", "ops", "housekeeping", "maintenance", "concierge"]).optional(),
@@ -17,7 +10,7 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
@@ -39,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
 
   const { id } = await params;
   const supabase = createServiceClient();

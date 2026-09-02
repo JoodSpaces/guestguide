@@ -1,16 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { verifyAdminCookie } from "@/lib/admin-auth";
-
-async function requireAdmin(req: NextRequest) {
-  const cookie = req.cookies.get("jood_admin")?.value;
-  if (!cookie) return null;
-  const session = await verifyAdminCookie(cookie);
-  return session?.role === "admin" ? session : null;
-}
+import { requireSession, forbidden } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
   const { id } = await params;
 
   const form = await req.formData().catch(() => null);
@@ -47,7 +40,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
   const { id } = await params;
 
   const supabase = createServiceClient();

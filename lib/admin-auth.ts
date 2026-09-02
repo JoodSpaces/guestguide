@@ -124,12 +124,18 @@ export async function verifyAdminCookie(cookie: string): Promise<AdminSession | 
     if (!valid) return null;
     const session = JSON.parse(Buffer.from(payload, "base64url").toString()) as AdminSession;
     if (Date.now() > session.exp) return null;
-    // JTI revocation check — skip gracefully when Redis is not configured
+    // JTI revocation check.
+    // In production, Redis is required for revocation to work — fail closed if absent.
+    // In development, skip the check when Redis is not configured.
     if (session.jti) {
       const redis = getSessionRedis();
       if (redis) {
         const alive = await redis.exists(`${SESSION_PREFIX}${session.jti}`);
         if (!alive) return null;
+      } else if (process.env.NODE_ENV === "production") {
+        // Revocation cannot be verified without Redis. Reject the session to
+        // ensure logout is always effective in production deployments.
+        return null;
       }
     }
     return session;

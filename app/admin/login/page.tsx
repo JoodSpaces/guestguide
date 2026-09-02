@@ -136,7 +136,7 @@ export default function AdminLoginPage() {
         <p style={{
           marginTop: "48px",
           fontSize: "0.6875rem",
-          color: "var(--jood-ink-ghost)",
+          color: "var(--jood-ink-muted)",
           lineHeight: 1.7,
           fontFamily: "var(--font-mono)",
           letterSpacing: "0.02em",

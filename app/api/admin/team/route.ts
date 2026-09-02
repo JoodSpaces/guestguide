@@ -1,17 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { hashPassword, verifyAdminCookie } from "@/lib/admin-auth";
-
-async function requireAdmin(req: NextRequest) {
-  const cookie = req.cookies.get("jood_admin")?.value;
-  if (!cookie) return null;
-  const session = await verifyAdminCookie(cookie);
-  return session?.role === "admin" ? session : null;
-}
+import { hashPassword, requireSession, forbidden } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
 
   const supabase = createServiceClient();
   const { data } = await supabase
@@ -29,7 +22,7 @@ const createSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  if (!(await requireAdmin(req))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  if (!(await requireSession(req, ["admin"]))) return forbidden();
 
   const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
