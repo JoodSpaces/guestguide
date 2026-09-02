@@ -27,24 +27,15 @@ const STATUS_LABEL_AR: Record<string, string> = {
   cancelled:   "ملغى",
 };
 
-type UrgencyLevel = "low" | "medium" | "high" | "emergency";
-
-interface Reply {
-  id: string;
-  body: string;
-  sender: "guest" | "staff";
-  created_at: string;
-}
-
+/* Matches the DB columns selected by the requests page */
 interface GuestRequest {
   id: string;
   category: string;
   body: string;
+  urgency: string;
   status: string;
-  urgency: UrgencyLevel;
-  is_urgent: boolean;
+  admin_notes: string | null;
   created_at: string;
-  replies?: Reply[];
 }
 
 interface GuestRequestsClientProps {
@@ -54,13 +45,12 @@ interface GuestRequestsClientProps {
 }
 
 function fmtDate(iso: string, isAr: boolean): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString(isAr ? "ar-EG" : "en-GB", {
+  return new Date(iso).toLocaleDateString(isAr ? "ar-EG" : "en-GB", {
     day: "2-digit", month: "short",
   });
 }
 
-function groupByDate(requests: GuestRequest[], isAr: boolean): { label: string; items: GuestRequest[] }[] {
+function groupByDate(requests: GuestRequest[], isAr: boolean) {
   const map = new Map<string, GuestRequest[]>();
   for (const r of requests) {
     const key = fmtDate(r.created_at, isAr);
@@ -81,9 +71,8 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const classifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [predictedCategory, setPredictedCategory] = useState<string | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Realtime subscription
+  /* Realtime subscription */
   useEffect(() => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
     const channel = supabase
@@ -93,8 +82,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
         { event: "*", schema: "public", table: "guest_requests", filter: `booking_id=eq.${bookingId}` },
         (payload) => {
           if (payload.eventType === "INSERT") {
-            const newReq = payload.new as GuestRequest;
-            setRequests((prev) => [newReq, ...prev]);
+            setRequests((prev) => [payload.new as GuestRequest, ...prev]);
           } else if (payload.eventType === "UPDATE") {
             setRequests((prev) =>
               prev.map((r) => (r.id === payload.new.id ? { ...r, ...payload.new } : r))
@@ -106,10 +94,13 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
     return () => { supabase.removeChannel(channel); };
   }, [bookingId]);
 
-  // Auto-classify with 800ms debounce
+  /* Auto-classify — debounced 800 ms, no setState in effect body */
   useEffect(() => {
     if (classifyTimer.current) clearTimeout(classifyTimer.current);
-    if (body.trim().length < 10) { setPredictedCategory(null); return; }
+    if (body.trim().length < 10) {
+      classifyTimer.current = setTimeout(() => setPredictedCategory(null), 0);
+      return () => { if (classifyTimer.current) clearTimeout(classifyTimer.current); };
+    }
     classifyTimer.current = setTimeout(async () => {
       try {
         const res = await fetch("/api/guest/classify-request", {
@@ -145,10 +136,11 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
   }
 
   const groups = groupByDate(requests, isAr);
+  const isUrgent = (r: GuestRequest) => r.urgency === "high" || r.urgency === "emergency";
 
   return (
     <div>
-      {/* ── New request compose area ────────────────────────────────────── */}
+      {/* ── Compose ─────────────────────────────────────────────────────── */}
       <div style={{
         border: "1px solid var(--jood-line)",
         borderRadius: "16px",
@@ -157,7 +149,6 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
         backgroundColor: "var(--jood-surface)",
       }}>
         <textarea
-          ref={textareaRef}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={isAr ? "كيف يمكننا مساعدتك؟" : "How can we help you?"}
@@ -179,30 +170,17 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
         />
 
         {predictedCategory && (
-          <div style={{
-            padding: "0 18px 10px",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}>
+          <div style={{ padding: "0 18px 10px", display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{
-              fontFamily: "var(--font-label)",
-              fontSize: "8px",
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "var(--jood-ink-faint)",
+              fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.14em",
+              textTransform: "uppercase", color: "var(--jood-ink-faint)",
             }}>
               {isAr ? "تصنيف" : "Category"}
             </span>
             <span style={{
-              fontFamily: "var(--font-label)",
-              fontSize: "8px",
-              letterSpacing: "0.12em",
-              textTransform: "uppercase",
-              color: "var(--jood-garnet)",
-              border: "1px solid var(--jood-garnet)",
-              borderRadius: "99px",
-              padding: "2px 7px",
+              fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
+              textTransform: "uppercase", color: "var(--jood-garnet)",
+              border: "1px solid var(--jood-garnet)", borderRadius: "99px", padding: "2px 7px",
             }}>
               {predictedCategory}
             </span>
@@ -210,29 +188,18 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
         )}
 
         <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "10px 18px 14px",
-          borderTop: "1px solid var(--jood-line)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "10px 18px 14px", borderTop: "1px solid var(--jood-line)",
         }}>
-          <label style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            cursor: "pointer",
-          }}>
+          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
             <div
               onClick={() => setUrgent((u) => !u)}
               style={{
-                width: "18px", height: "18px",
-                borderRadius: "4px",
+                width: "18px", height: "18px", borderRadius: "4px",
                 border: urgent ? "none" : "1.5px solid var(--jood-line)",
                 backgroundColor: urgent ? "var(--jood-garnet)" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer",
-                flexShrink: 0,
-                transition: "background-color 180ms",
+                cursor: "pointer", flexShrink: 0, transition: "background-color 180ms",
               }}
             >
               {urgent && <span style={{ color: "#fff", fontSize: "10px", lineHeight: 1 }}>✓</span>}
@@ -246,17 +213,12 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
             onClick={submitRequest}
             disabled={sending || !body.trim()}
             style={{
-              fontFamily: "var(--font-label)",
-              fontSize: "9px",
-              letterSpacing: "0.18em",
+              fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.18em",
               textTransform: "uppercase",
               color: body.trim() ? "var(--jood-garnet)" : "var(--jood-ink-faint)",
-              background: "none",
-              border: "none",
+              background: "none", border: "none",
               cursor: body.trim() ? "pointer" : "default",
-              opacity: sending ? 0.5 : 1,
-              padding: "0",
-              transition: "color 180ms",
+              opacity: sending ? 0.5 : 1, padding: "0", transition: "color 180ms",
             }}
           >
             {sending ? (isAr ? "جاري الإرسال…" : "Sending…") : (isAr ? "أرسل ←" : "Send →")}
@@ -264,185 +226,93 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
         </div>
       </div>
 
-      {/* ── Logbook entries ──────────────────────────────────────────────── */}
+      {/* ── Logbook ──────────────────────────────────────────────────────── */}
       {requests.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-faint)" }}>
           <p style={{ fontSize: "1.5rem", marginBottom: "8px" }}>✦</p>
-          <p style={{ fontSize: "14px" }}>
-            {isAr ? "لا توجد طلبات بعد" : "No requests yet"}
-          </p>
+          <p style={{ fontSize: "14px" }}>{isAr ? "لا توجد طلبات بعد" : "No requests yet"}</p>
         </div>
       ) : (
-        <div>
-          {groups.map((group) => (
-            <div key={group.label}>
-              {/* Date divider */}
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                marginBottom: "12px",
-                marginTop: "24px",
+        groups.map((group) => (
+          <div key={group.label}>
+            {/* Date divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "24px 0 12px" }}>
+              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
+              <p style={{
+                fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em",
+                textTransform: "uppercase", color: "var(--jood-ink-faint)", whiteSpace: "nowrap",
               }}>
-                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
-                <p style={{
-                  fontFamily: "var(--font-label)",
-                  fontSize: "8px",
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color: "var(--jood-ink-faint)",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}>
-                  {group.label}
-                </p>
-                <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
-              </div>
+                {group.label}
+              </p>
+              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
+            </div>
 
-              {group.items.map((req) => {
-                const statusColor = STATUS_COLOR[req.status] ?? "var(--jood-line)";
-                const statusLabel = isAr ? STATUS_LABEL_AR[req.status] : STATUS_LABEL_EN[req.status];
-                const isExpanded = expandedId === req.id;
-                const hasReplies = req.replies && req.replies.length > 0;
+            {group.items.map((req) => {
+              const statusColor = STATUS_COLOR[req.status] ?? "var(--jood-line)";
+              const statusLabel = isAr ? (STATUS_LABEL_AR[req.status] ?? req.status) : (STATUS_LABEL_EN[req.status] ?? req.status);
+              const isExpanded = expandedId === req.id;
 
-                return (
-                  <div
-                    key={req.id}
-                    style={{
-                      display: "flex",
-                      borderBottom: "1px solid var(--jood-line)",
-                      gap: "0",
-                    }}
-                  >
-                    {/* Colored status bar */}
-                    <div style={{
-                      width: "2px",
-                      background: statusColor,
-                      margin: "16px 16px 16px 0",
-                      borderRadius: "99px",
-                      flexShrink: 0,
-                      alignSelf: "stretch",
-                      transition: "background 300ms",
-                    }} />
+              return (
+                <div key={req.id} style={{ display: "flex", borderBottom: "1px solid var(--jood-line)" }}>
+                  {/* Status bar */}
+                  <div style={{
+                    width: "2px", background: statusColor,
+                    margin: "16px 16px 16px 0", borderRadius: "99px",
+                    flexShrink: 0, alignSelf: "stretch", transition: "background 300ms",
+                  }} />
 
-                    <div style={{ flex: 1, padding: "14px 0" }}>
-                      {/* Header row */}
-                      <div
-                        onClick={() => setExpandedId(isExpanded ? null : req.id)}
-                        style={{ display: "flex", alignItems: "flex-start", gap: "12px", cursor: "pointer" }}
-                      >
-                        <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, padding: "14px 0" }}>
+                    <div
+                      onClick={() => setExpandedId(isExpanded ? null : req.id)}
+                      style={{ display: "flex", alignItems: "flex-start", gap: "12px", cursor: "pointer" }}
+                    >
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: "15px", color: "var(--jood-ink)", lineHeight: 1.5, wordBreak: "break-word" }}>
+                          {req.body}
+                        </p>
+                        {isUrgent(req) && (
                           <p style={{
-                            fontSize: "15px",
-                            color: "var(--jood-ink)",
-                            lineHeight: 1.5,
-                            wordBreak: "break-word",
+                            fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
+                            textTransform: "uppercase", color: "var(--jood-danger)", marginTop: "4px",
                           }}>
-                            {req.body}
+                            {isAr ? "عاجل" : "Urgent"}
                           </p>
-                          {req.is_urgent && (
-                            <p style={{
-                              fontFamily: "var(--font-label)",
-                              fontSize: "8px",
-                              letterSpacing: "0.12em",
-                              textTransform: "uppercase",
-                              color: "var(--jood-danger)",
-                              marginTop: "4px",
-                            }}>
-                              {isAr ? "عاجل" : "Urgent"}
-                            </p>
-                          )}
-                        </div>
-
-                        <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px" }}>
-                          <span style={{
-                            fontFamily: "var(--font-label)",
-                            fontSize: "8px",
-                            letterSpacing: "0.12em",
-                            textTransform: "uppercase",
-                            color: statusColor,
-                            border: `1px solid ${statusColor}`,
-                            borderRadius: "99px",
-                            padding: "3px 8px",
-                            whiteSpace: "nowrap",
-                          }}>
-                            {statusLabel}
-                          </span>
-                          {hasReplies && (
-                            <span style={{
-                              fontFamily: "var(--font-mono)",
-                              fontSize: "10px",
-                              color: "var(--jood-ink-faint)",
-                            }}>
-                              {isAr ? `${req.replies!.length} رد` : `${req.replies!.length} reply`}
-                            </span>
-                          )}
-                        </div>
+                        )}
                       </div>
 
-                      {/* Expanded replies */}
-                      {isExpanded && req.replies && req.replies.length > 0 && (
-                        <div style={{ marginTop: "14px", borderTop: "1px solid var(--jood-line)", paddingTop: "12px" }}>
-                          {req.replies.map((reply) => {
-                            const isStaff = reply.sender === "staff";
-                            return (
-                              <div
-                                key={reply.id}
-                                style={{
-                                  marginBottom: "10px",
-                                  paddingLeft: isStaff ? "12px" : "0",
-                                  borderLeft: isStaff ? "2px solid var(--jood-garnet)" : "none",
-                                }}
-                              >
-                                <p style={{
-                                  fontFamily: "var(--font-label)",
-                                  fontSize: "8px",
-                                  letterSpacing: "0.12em",
-                                  textTransform: "uppercase",
-                                  color: isStaff ? "var(--jood-garnet)" : "var(--jood-ink-faint)",
-                                  marginBottom: "3px",
-                                }}>
-                                  {isStaff ? "JOOD" : (isAr ? "أنت" : "You")}
-                                </p>
-                                <p style={{
-                                  fontSize: "14px",
-                                  color: "var(--jood-ink)",
-                                  lineHeight: 1.5,
-                                }}>
-                                  {reply.body}
-                                </p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
-                      {hasReplies && !isExpanded && (
-                        <button
-                          onClick={() => setExpandedId(req.id)}
-                          style={{
-                            marginTop: "8px",
-                            fontFamily: "var(--font-label)",
-                            fontSize: "8px",
-                            letterSpacing: "0.12em",
-                            textTransform: "uppercase",
-                            color: "var(--jood-garnet)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: "0",
-                          }}
-                        >
-                          {isAr ? "عرض الردود →" : "View replies →"}
-                        </button>
-                      )}
+                      <span style={{
+                        fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
+                        textTransform: "uppercase", color: statusColor,
+                        border: `1px solid ${statusColor}`, borderRadius: "99px",
+                        padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
+                      }}>
+                        {statusLabel}
+                      </span>
                     </div>
+
+                    {/* Admin notes (staff reply) */}
+                    {req.admin_notes && (
+                      <div style={{
+                        marginTop: "10px", borderTop: "1px solid var(--jood-line)", paddingTop: "10px",
+                        paddingLeft: "12px", borderLeft: "2px solid var(--jood-garnet)",
+                      }}>
+                        <p style={{
+                          fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
+                          textTransform: "uppercase", color: "var(--jood-garnet)", marginBottom: "4px",
+                        }}>
+                          JOOD
+                        </p>
+                        <p style={{ fontSize: "14px", color: "var(--jood-ink)", lineHeight: 1.5 }}>
+                          {req.admin_notes}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
+                </div>
+              );
+            })}
+          </div>
+        ))
       )}
     </div>
   );
