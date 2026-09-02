@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
       .order("created_at"),
     supabase
       .from("service_requests")
-      .select("id, service_id, quantity, status, guest_notes, paymob_payment_url, guest_rating, created_at, services(name_en, price_egp)")
+      .select("id, service_id, quantity, status, guest_notes, paymob_payment_url, created_at, services(name_en, price_egp)")
       .eq("booking_id", booking.id)
       .order("created_at", { ascending: false }),
   ]);

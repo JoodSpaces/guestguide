@@ -91,6 +91,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   }, [token]);
 
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const inFlight = useRef(false);
   const [requested, setRequested] = useState<Set<string>>(
     new Set(initialRequests.map((r) => r.service_id).filter(Boolean) as string[])
@@ -104,29 +105,35 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
     if (inFlight.current) return;
     inFlight.current = true;
     setSubmitting(serviceId);
+    setSubmitError(null);
     try {
-    const res = await fetch("/api/guest/service-requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token,
-        serviceId,
-        quantity: qty[serviceId] ?? 1,
-        guestNotes: notes[serviceId] || null,
-      }),
-    });
-    if (res.ok) {
-      const { id } = await res.json();
-      const svc = initialServices.find((s) => s.id === serviceId);
-      setRequested((r) => new Set([...r, serviceId]));
-      setMyRequests((prev) => [{
-        id, service_id: serviceId, quantity: qty[serviceId] ?? 1,
-        status: "pending", guest_notes: notes[serviceId] || null,
-        paymob_payment_url: null, created_at: new Date().toISOString(),
-        services: svc ? { name_en: svc.name_en, price_egp: svc.price_egp } : null,
-      }, ...prev]);
-      setShowNotes(null);
-    }
+      const res = await fetch("/api/guest/service-requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token,
+          serviceId,
+          quantity: qty[serviceId] ?? 1,
+          guestNotes: notes[serviceId] || null,
+        }),
+      });
+      if (res.ok) {
+        const { id } = await res.json();
+        const svc = initialServices.find((s) => s.id === serviceId);
+        setRequested((r) => new Set([...r, serviceId]));
+        setMyRequests((prev) => [{
+          id, service_id: serviceId, quantity: qty[serviceId] ?? 1,
+          status: "pending", guest_notes: notes[serviceId] || null,
+          paymob_payment_url: null, created_at: new Date().toISOString(),
+          services: svc ? { name_en: svc.name_en, price_egp: svc.price_egp } : null,
+        }, ...prev]);
+        setShowNotes(null);
+      } else {
+        const body = await res.json().catch(() => ({})) as { error?: string };
+        setSubmitError(body.error ?? `Error ${res.status}`);
+      }
+    } catch {
+      setSubmitError("Network error — please try again");
     } finally {
       setSubmitting(null);
       inFlight.current = false;
@@ -287,6 +294,11 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                         style={{ width: "100%", resize: "vertical", minHeight: "60px", boxSizing: "border-box", direction: isAr ? "rtl" : "ltr", marginBottom: "10px" }}
                       />
 
+                      {submitError && submitting === null && (
+                        <p style={{ fontSize: "12px", color: "var(--jood-danger)", marginBottom: "8px" }}>
+                          {submitError}
+                        </p>
+                      )}
                       <div style={{ display: "flex", gap: "10px" }}>
                         <button
                           onClick={() => requestService(svc.id)}
@@ -296,7 +308,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                         >
                           {isSubmitting ? (isAr ? "جاري الإرسال…" : "Sending…") : (isAr ? "تأكيد الطلب" : "Confirm")}
                         </button>
-                        <button onClick={() => setShowNotes(null)} className="btn btn-ghost btn-sm">
+                        <button onClick={() => { setShowNotes(null); setSubmitError(null); }} className="btn btn-ghost btn-sm">
                           {isAr ? "إلغاء" : "Cancel"}
                         </button>
                       </div>
