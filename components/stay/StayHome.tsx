@@ -72,7 +72,7 @@ interface StayPayload {
   doorCode?: string;
 }
 
-interface RequestSummary { pending: number; total: number; }
+interface RequestSummary { count: number; payNow: { url: string; serviceName: string } | null; }
 
 interface StayHomeProps {
   payload: StayPayload;
