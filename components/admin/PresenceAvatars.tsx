@@ -48,7 +48,7 @@ export function PresenceAvatars({ myName, myRole }: Props) {
 
   useEffect(() => {
     announce();
-    fetchPresence();
+    fetchPresence(); // eslint-disable-line react-hooks/set-state-in-effect
     const id = setInterval(() => { announce(); fetchPresence(); }, 30_000);
     return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps

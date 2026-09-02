@@ -1,4 +1,5 @@
 import webPush from "web-push";
+import * as Sentry from "@sentry/nextjs";
 
 webPush.setVapidDetails(
   "mailto:team@jood.com",
@@ -25,6 +26,12 @@ export async function sendPush(sub: Sub, payload: PushPayload): Promise<"ok" | "
     return "ok";
   } catch (err: unknown) {
     const e = err as { statusCode?: number; body?: string; message?: string };
+    if (e.statusCode !== 410) {
+      Sentry.captureException(err, {
+        extra: { statusCode: e.statusCode, body: e.body, endpoint: sub.endpoint.slice(0, 60) },
+        tags: { subsystem: "push" },
+      });
+    }
     console.error("[push] sendNotification failed", {
       statusCode: e.statusCode,
       body: e.body,

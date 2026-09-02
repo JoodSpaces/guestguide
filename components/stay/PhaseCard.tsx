@@ -1,20 +1,16 @@
-"use client";
-
 import Link from "next/link";
+import type { ReactNode } from "react";
 
-export type CardVariant = "primary" | "secondary" | "tile" | "cta";
-
-interface Props {
+interface PhaseCardProps {
   href: string;
   eyebrow?: string;
-  children: React.ReactNode;
-  /** Layout variant. Default = "primary" (full-width dark). */
-  variant?: CardVariant;
+  children: ReactNode;
+  variant?: "primary" | "secondary" | "tile" | "cta";
   locked?: boolean;
   lockedLabel?: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   description?: string;
-  watermark?: React.ReactNode;
+  watermark?: ReactNode;
 }
 
 export function PhaseCard({
@@ -27,9 +23,9 @@ export function PhaseCard({
   icon,
   description,
   watermark,
-}: Props) {
+}: PhaseCardProps) {
 
-  /* ── Primary: full-width dark hero card ─────────────────────────────── */
+  /* ── Primary: full-width dark hero card ────────────────────────────────── */
   if (variant === "primary") {
     return (
       <Link
@@ -39,40 +35,46 @@ export function PhaseCard({
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "#351E1C",
+          backgroundColor: "var(--jood-ink-deep)",
           borderRadius: "var(--radius-lg)",
-          padding: "clamp(24px, 4vw, 40px)",
+          padding: "clamp(22px, 4vw, 36px)",
           textDecoration: "none",
           opacity: locked ? 0.5 : 1,
           pointerEvents: locked ? "none" : undefined,
           position: "relative",
           overflow: "hidden",
-          minHeight: "clamp(150px, 30vw, 190px)",
-          boxShadow: "0 8px 32px rgba(53,30,28,0.18), 0 2px 6px rgba(53,30,28,0.10)",
+          minHeight: "clamp(148px, 30vw, 188px)",
+          boxShadow: "0 6px 24px rgba(53,30,28,0.16), 0 2px 6px rgba(53,30,28,0.08)",
         }}
       >
+        {/* Subtle watermark */}
         {watermark && (
-          <div aria-hidden style={{ position: "absolute", right: "-10px", bottom: "-14px", opacity: 0.06, color: "#F5F4ED", pointerEvents: "none" }}>
+          <div aria-hidden style={{
+            position: "absolute", right: "-8px", bottom: "-12px",
+            opacity: 0.05, color: "#F5F4ED", pointerEvents: "none",
+          }}>
             {watermark}
           </div>
         )}
+
+        {/* Content */}
         <div>
           {eyebrow && (
-            <p className="label-eyebrow" style={{ color: "var(--jood-aqua)", marginBottom: "12px" }}>
+            <p className="label-eyebrow" style={{ color: "var(--jood-aqua)", marginBottom: "10px" }}>
               {locked && lockedLabel ? lockedLabel : eyebrow}
             </p>
           )}
-          <div style={{ color: "#F5F4ED" }}>{children}</div>
+          <div style={{ color: "#EDE9E0" }}>{children}</div>
         </div>
+
+        {/* Footer CTA */}
         <div style={{
-          marginTop: "16px",
-          display: "flex",
-          alignItems: "center",
-          gap: "6px",
-          color: "rgba(245,244,237,0.30)",
+          marginTop: "14px",
+          display: "flex", alignItems: "center", gap: "5px",
+          color: "rgba(245,244,237,0.25)",
           fontSize: "0.6875rem",
           fontFamily: "var(--font-label)",
-          letterSpacing: "0.14em",
+          letterSpacing: "0.12em",
           textTransform: "uppercase",
         }}>
           <span>Open</span>
@@ -82,93 +84,78 @@ export function PhaseCard({
     );
   }
 
-  /* ── Secondary: full-width light featured card ──────────────────────── */
+  /* ── Secondary: horizontal list card ───────────────────────────────────── */
   if (variant === "secondary") {
     return (
       <Link
         href={href}
         className="jood-card"
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-          backgroundColor: "var(--jood-surface-glass)",
+          display: "flex", alignItems: "center", gap: "14px",
+          backgroundColor: "var(--jood-surface)",
+          border: "1px solid var(--jood-line)",
           borderRadius: "var(--radius-lg)",
-          padding: "18px 20px",
+          padding: "16px 18px",
           textDecoration: "none",
-          boxShadow: "var(--shadow-tile)",
+          boxShadow: "var(--shadow-card)",
         }}
       >
         {icon && (
           <div style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "14px",
-            backgroundColor: "var(--jood-ground)",
-            boxShadow: "var(--shadow-card)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            width: "44px", height: "44px",
+            borderRadius: "12px",
+            backgroundColor: "var(--jood-surface-raised)",
+            boxShadow: "var(--shadow-xs)",
+            display: "flex", alignItems: "center", justifyContent: "center",
             flexShrink: 0,
-            color: "var(--jood-accent)",
+            color: "var(--jood-mid)",  /* refined: mid instead of accent */
           }}>
             {icon}
           </div>
         )}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "1rem", lineHeight: 1.25 }}>
+          <div style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem", lineHeight: 1.25 }}>
             {children}
           </div>
           {description && (
             <p style={{
-              color: "var(--jood-ink-muted)",
-              fontSize: "0.8125rem",
-              marginTop: "3px",
-              fontFamily: "var(--font-body)",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
+              color: "var(--jood-ink-muted)", fontSize: "0.8125rem",
+              marginTop: "2px", fontFamily: "var(--font-body)",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             }}>
               {description}
             </p>
           )}
         </div>
-        <span style={{ color: "var(--jood-ink-faint)", fontSize: "1.125rem", flexShrink: 0 }}>→</span>
+        <span style={{ color: "var(--jood-ink-faint)", fontSize: "1rem", flexShrink: 0 }}>→</span>
       </Link>
     );
   }
 
-  /* ── Tile: 2-col grid card, vertical layout ─────────────────────────── */
+  /* ── Tile: 2-col grid card ──────────────────────────────────────────────── */
   if (variant === "tile") {
     return (
       <Link
         href={href}
         className="jood-card"
         style={{
-          display: "flex",
-          flexDirection: "column",
-          backgroundColor: "var(--jood-surface-glass)",
+          display: "flex", flexDirection: "column",
+          backgroundColor: "var(--jood-surface)",
+          border: "1px solid var(--jood-line)",
           borderRadius: "var(--radius-lg)",
           padding: "16px 16px 18px",
           textDecoration: "none",
           boxShadow: "var(--shadow-card)",
-          minHeight: "120px",
-          height: "100%",
+          minHeight: "120px", height: "100%",
         }}
       >
         {icon && (
           <div style={{
-            width: "38px",
-            height: "38px",
-            borderRadius: "11px",
-            backgroundColor: "var(--jood-ground)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--jood-accent)",
-            marginBottom: "14px",
-            flexShrink: 0,
-            boxShadow: "0 1px 3px rgba(53,30,28,0.07)",
+            width: "36px", height: "36px", borderRadius: "10px",
+            backgroundColor: "var(--jood-surface-raised)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--jood-mid)",  /* refined: mid instead of accent */
+            marginBottom: "12px", flexShrink: 0,
           }}>
             {icon}
           </div>
@@ -179,11 +166,8 @@ export function PhaseCard({
           </div>
           {description && (
             <p style={{
-              color: "var(--jood-ink-muted)",
-              fontSize: "0.725rem",
-              marginTop: "4px",
-              fontFamily: "var(--font-body)",
-              lineHeight: 1.4,
+              color: "var(--jood-ink-muted)", fontSize: "0.725rem",
+              marginTop: "4px", fontFamily: "var(--font-body)", lineHeight: 1.4,
             }}>
               {description}
             </p>
@@ -193,48 +177,41 @@ export function PhaseCard({
     );
   }
 
-  /* ── CTA: slim full-width strip ─────────────────────────────────────── */
+  /* ── CTA: slim full-width strip ─────────────────────────────────────────── */
   return (
     <Link
       href={href}
       className="jood-card"
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
+        display: "flex", alignItems: "center", gap: "12px",
         backgroundColor: "transparent",
         border: "1px solid var(--jood-line)",
         borderRadius: "var(--radius-lg)",
-        padding: "14px 18px",
+        padding: "13px 16px",
         textDecoration: "none",
       }}
     >
       {icon && (
         <div style={{
-          width: "34px",
-          height: "34px",
-          borderRadius: "10px",
+          width: "32px", height: "32px", borderRadius: "9px",
           backgroundColor: "var(--jood-surface)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          color: "var(--jood-ink-muted)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "var(--jood-mid)", flexShrink: 0,
         }}>
           {icon}
         </div>
       )}
-      <div style={{ flex: 1 }}>
-        <div style={{ color: "var(--jood-ink-muted)", fontWeight: 500, fontSize: "0.875rem" }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.875rem", lineHeight: 1.25 }}>
           {children}
         </div>
         {description && (
-          <p style={{ color: "var(--jood-ink-ghost)", fontSize: "0.75rem", marginTop: "2px" }}>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.75rem", marginTop: "2px" }}>
             {description}
           </p>
         )}
       </div>
-      <span style={{ color: "var(--jood-ink-ghost)", fontSize: "0.875rem", flexShrink: 0 }}>→</span>
+      <span style={{ color: "var(--jood-ink-faint)", flexShrink: 0 }}>→</span>
     </Link>
   );
 }

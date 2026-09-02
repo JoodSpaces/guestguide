@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
 
@@ -64,7 +65,7 @@ export default async function PropertyGuidePage({ params }: Props) {
   return (
     <div>
       {/* Back — try to go back to the referring booking if possible */}
-      <a
+      <Link
         href="/admin/bookings"
         style={{
           display: "inline-flex",
@@ -77,7 +78,7 @@ export default async function PropertyGuidePage({ params }: Props) {
         }}
       >
         ← Bookings
-      </a>
+      </Link>
 
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: "28px" }}>
         <div>

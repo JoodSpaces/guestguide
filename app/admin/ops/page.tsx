@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { CreateTurnoverForm } from "@/components/admin/CreateTurnoverForm";
@@ -145,9 +146,9 @@ export default async function OpsPage() {
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Operations</h1>
         <div style={{ display: "flex", gap: "10px" }}>
           {role === "admin" && (
-            <a href="/admin/ops/maintenance/new" style={{ padding: "9px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem" }}>
+            <Link href="/admin/ops/maintenance/new" style={{ padding: "9px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem" }}>
               + Ticket
-            </a>
+            </Link>
           )}
           {(role === "admin" || role === "ops") && (
             <CreateTurnoverForm
@@ -223,7 +224,7 @@ export default async function OpsPage() {
               <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                 Open tickets · {tickets?.length ?? 0}
               </p>
-              <a href="/admin/ops/maintenance" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "none" }}>View all →</a>
+              <Link href="/admin/ops/maintenance" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "none" }}>View all →</Link>
             </div>
 
             {!tickets?.length && (
@@ -238,7 +239,7 @@ export default async function OpsPage() {
               {tickets?.map((ticket) => {
                 const property = Array.isArray(ticket.properties) ? ticket.properties[0] : ticket.properties;
                 return (
-                  <a key={ticket.id} href={`/admin/ops/maintenance/${ticket.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", borderLeft: ticket.priority === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
+                  <Link key={ticket.id} href={`/admin/ops/maintenance/${ticket.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", borderLeft: ticket.priority === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
                         <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{ticket.title}</p>
@@ -246,7 +247,7 @@ export default async function OpsPage() {
                       </div>
                       <StatusChip value={ticket.priority} colorMap={PRIORITY_COLOR} />
                     </div>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -260,9 +261,9 @@ export default async function OpsPage() {
           <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "12px" }}>Inventory</p>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {properties?.map((p) => (
-              <a key={p.id} href={`/admin/ops/inventory/${p.id}`} style={{ ...card, textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem", padding: "10px 16px" }}>
+              <Link key={p.id} href={`/admin/ops/inventory/${p.id}`} style={{ ...card, textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem", padding: "10px 16px" }}>
                 {p.name} →
-              </a>
+              </Link>
             ))}
           </div>
         </section>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 interface Props {
   token: string;
@@ -10,6 +10,7 @@ interface Props {
 export function PushPrompt({ token }: Props) {
   const locale = useLocale();
   const isAr = locale === "ar";
+  const t = useTranslations("push");
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(true); // start hidden
 
@@ -98,10 +99,10 @@ export function PushPrompt({ token }: Props) {
       <div style={{ fontSize: "1.5rem", flexShrink: 0, lineHeight: 1.2 }}>🛎️</div>
       <div style={{ flex: 1 }}>
         <p style={{ fontWeight: 500, fontSize: "0.9rem", color: "var(--jood-ink)", marginBottom: "4px" }}>
-          {isAr ? "ابق على اطلاع" : "Stay in the loop"}
+          {t("title")}
         </p>
         <p style={{ fontSize: "0.8rem", color: "var(--jood-ink-muted)", lineHeight: 1.5, marginBottom: "12px" }}>
-          {isAr ? "أرسل لك إشعاراً عندما نرد على طلبك" : "We'll notify you the moment we reply to your request"}
+          {t("body")}
         </p>
         <div style={{ display: "flex", gap: "8px" }}>
           <button
@@ -117,7 +118,7 @@ export function PushPrompt({ token }: Props) {
               fontFamily: "inherit",
             }}
           >
-            {isAr ? "تفعيل" : "Enable"}
+            {t("enable")}
           </button>
           <button
             onClick={handleDismiss}
@@ -132,7 +133,7 @@ export function PushPrompt({ token }: Props) {
               fontFamily: "inherit",
             }}
           >
-            {isAr ? "لا، شكراً" : "Not now"}
+            {t("dismiss")}
           </button>
         </div>
       </div>

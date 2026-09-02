@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { toast } from "@/components/admin/Toaster";
 import { ROOM_LABELS } from "@/lib/ops-checklist";
 
@@ -293,9 +295,9 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
   return (
     <div style={{ maxWidth: "680px" }}>
       {/* Back */}
-      <a href="/admin/ops" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.875rem", marginBottom: "20px" }}>
+      <Link href="/admin/ops" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.875rem", marginBottom: "20px" }}>
         ← Back to Operations
-      </a>
+      </Link>
 
       {/* Header */}
       <div style={{ ...card, marginBottom: "16px", borderLeft: `4px solid ${statusColor}` }}>
@@ -352,7 +354,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
               </div>
             ) : task.assigned_to === myName ? (
               <p style={{ fontSize: "0.875rem", color: "var(--jood-aqua)", marginTop: "8px", fontWeight: 500 }}>
-                👤 You're on this task
+                👤 You&apos;re on this task
               </p>
             ) : (
               <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "8px" }}>
@@ -517,9 +519,8 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                   {/* Photo */}
                   <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                     {item.photo_url && (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <a href={item.photo_url} target="_blank" rel="noopener noreferrer">
-                        <img src={item.photo_url} alt="" style={{ width: "36px", height: "36px", objectFit: "cover", borderRadius: "6px", border: "1px solid var(--jood-line)" }} />
+                        <Image src={item.photo_url} alt="" width={36} height={36} style={{ objectFit: "cover", borderRadius: "6px", border: "1px solid var(--jood-line)" }} />
                       </a>
                     )}
                     <input
@@ -695,7 +696,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
             ) : (
               <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-ghost)" }}>
                 No inventory set up for this property.{" "}
-                <a href="/admin/ops" style={{ color: "var(--jood-accent)" }}>Go to Ops → Inventory</a>.
+                <Link href="/admin/ops" style={{ color: "var(--jood-accent)" }}>Go to Ops → Inventory</Link>.
               </p>
             )}
           </div>

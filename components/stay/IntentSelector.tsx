@@ -1,81 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-export type Intent = "relax" | "explore" | "eat" | "work";
+import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "jood-intent";
 
-const INTENTS: { id: Intent; labelEn: string; labelAr: string; icon: React.ReactNode }[] = [
-  {
-    id: "relax",
-    labelEn: "Relax",
-    labelAr: "استرخاء",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 18c1.4-1.4 3-2 5-2s3.6.6 5 2 3 2 5 2" />
-        <path d="M2 14c1.4-1.4 3-2 5-2s3.6.6 5 2 3 2 5 2" />
-        <circle cx="12" cy="7" r="3" />
-      </svg>
-    ),
-  },
-  {
-    id: "explore",
-    labelEn: "Explore",
-    labelAr: "استكشف",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <polygon points="16.24,7.76 14.12,14.12 7.76,16.24 9.88,9.88" />
-      </svg>
-    ),
-  },
-  {
-    id: "eat",
-    labelEn: "Eat",
-    labelAr: "طعام",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2" />
-        <path d="M7 2v20" />
-        <path d="M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" />
-      </svg>
-    ),
-  },
-  {
-    id: "work",
-    labelEn: "Work",
-    labelAr: "عمل",
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" />
-        <path d="M8 21h8M12 17v4" />
-      </svg>
-    ),
-  },
-];
+const INTENTS = [
+  { id: "relax",   labelEn: "Relax",    labelAr: "استرخاء", icon: "✦" },
+  { id: "explore", labelEn: "Explore",  labelAr: "اكتشاف",  icon: "◎" },
+  { id: "work",    labelEn: "Work",     labelAr: "عمل",     icon: "⌘" },
+  { id: "social",  labelEn: "Social",   labelAr: "تواصل",   icon: "◇" },
+] as const;
 
-interface Props {
+type IntentId = typeof INTENTS[number]["id"];
+
+interface IntentSelectorProps {
   isAr: boolean;
-  onChange: (intent: Intent | null) => void;
+  onChange: (id: IntentId | null) => void;
 }
 
-export function IntentSelector({ isAr, onChange }: Props) {
-  const [active, setActive] = useState<Intent | null>(null);
+export function IntentSelector({ isAr, onChange }: IntentSelectorProps) {
+  const [active, setActive] = useState<IntentId | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as Intent | null;
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved && INTENTS.some((i) => i.id === saved)) {
-        setActive(saved);
-        onChange(saved);
+        setActive(saved as IntentId);
+        onChange(saved as IntentId);
       }
     } catch {}
     setMounted(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const select = (id: Intent) => {
+  const select = (id: IntentId) => {
     const next = active === id ? null : id;
     setActive(next);
     onChange(next);
@@ -88,18 +46,19 @@ export function IntentSelector({ isAr, onChange }: Props) {
   if (!mounted) return null;
 
   return (
-    <div style={{ marginBottom: "24px" }}>
+    <div style={{ marginBottom: "28px" }}>
       <p style={{
-        fontFamily: "var(--font-mono)",
+        fontFamily: "var(--font-label)",
         fontSize: "9px",
         letterSpacing: "0.18em",
         textTransform: "uppercase",
         color: "var(--jood-ink-ghost)",
-        marginBottom: "10px",
+        marginBottom: "12px",
       }}>
         {isAr ? "ما مزاجك اليوم؟" : "What's your vibe today?"}
       </p>
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+
+      <div style={{ display: "flex", gap: "7px", flexWrap: "wrap" }}>
         {INTENTS.map(({ id, labelEn, labelAr, icon }) => {
           const isActive = active === id;
           return (
@@ -109,26 +68,35 @@ export function IntentSelector({ isAr, onChange }: Props) {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
-                padding: "8px 14px",
+                gap: "7px",
+                padding: "8px 16px",
                 borderRadius: "var(--radius-pill)",
                 border: isActive
-                  ? "1px solid var(--jood-accent)"
+                  ? "1px solid var(--jood-ink)"
                   : "1px solid var(--jood-line)",
                 backgroundColor: isActive
-                  ? "var(--jood-accent)"
+                  ? "var(--jood-ink)"
                   : "transparent",
-                color: isActive ? "white" : "var(--jood-ink-muted)",
+                color: isActive
+                  ? "var(--jood-ground)"
+                  : "var(--jood-ink-muted)",
                 fontFamily: "var(--font-label)",
-                fontSize: "0.75rem",
+                fontSize: "0.6875rem",
                 letterSpacing: "0.1em",
                 textTransform: "uppercase",
                 cursor: "pointer",
-                transition: "all 220ms cubic-bezier(0.16,1,0.3,1)",
+                transition: "all 240ms var(--ease-spring)",
                 WebkitTapHighlightColor: "transparent",
+                outline: "none",
               }}
             >
-              {icon}
+              <span style={{
+                fontSize: "11px",
+                lineHeight: 1,
+                opacity: isActive ? 1 : 0.7,
+              }}>
+                {icon}
+              </span>
               {isAr ? labelAr : labelEn}
             </button>
           );

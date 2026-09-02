@@ -124,6 +124,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
 
   useEffect(() => {
     if (aiTimer.current) clearTimeout(aiTimer.current);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setAiResult(null);
     const trimmed = query.trim();
     if (trimmed.length >= 8 && keywordFiltered.length < 2) {

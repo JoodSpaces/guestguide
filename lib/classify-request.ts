@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import * as Sentry from "@sentry/nextjs";
 
 export type GuestRequestCategory = "maintenance" | "housekeeping" | "supplies" | "service" | "other";
 export type GuestRequestUrgency = "normal" | "urgent";

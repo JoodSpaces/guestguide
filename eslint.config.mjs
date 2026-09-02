@@ -3,7 +3,7 @@ import nextConfig from "eslint-config-next";
 // Spread the base Next.js flat config array and append overrides.
 // Pre-existing violations are downgraded to warn so CI passes today;
 // tighten these to "error" as the codebase is cleaned up.
-export default [
+const config = [
   ...nextConfig,
   {
     rules: {
@@ -18,3 +18,5 @@ export default [
     },
   },
 ];
+
+export default config;

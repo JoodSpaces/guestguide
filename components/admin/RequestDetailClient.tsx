@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 interface ServiceRequest {
   id: string;
@@ -96,9 +97,9 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
 
   return (
     <div style={{ maxWidth: "620px" }}>
-      <a href="/admin/requests" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
+      <Link href="/admin/requests" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
         ← Requests
-      </a>
+      </Link>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Service request</span>
@@ -117,7 +118,7 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
             <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>Summary</p>
             <p style={{ fontSize: "0.9375rem" }}>{req.quantity} × {req.services?.name_en}</p>
             {req.services?.description_en && <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginTop: "4px" }}>{req.services.description_en}</p>}
-            {req.guest_notes && <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink)", marginTop: "8px", fontStyle: "italic" }}>"{req.guest_notes}"</p>}
+            {req.guest_notes && <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink)", marginTop: "8px", fontStyle: "italic" }}>&ldquo;{req.guest_notes}&rdquo;</p>}
           </div>
           {totalPrice > 0 && (
             <p style={{ fontSize: "1.4rem", fontFamily: "var(--font-display)", color: "var(--jood-ink)" }}>{totalPrice.toLocaleString()} EGP</p>
@@ -218,9 +219,9 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
 
   return (
     <div style={{ maxWidth: "620px" }}>
-      <a href="/admin/requests" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
+      <Link href="/admin/requests" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
         ← Requests
-      </a>
+      </Link>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{CAT_LABELS[req.category] ?? req.category}</span>

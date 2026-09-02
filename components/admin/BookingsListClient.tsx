@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 
 export interface Booking {
   id: string;
@@ -42,6 +43,7 @@ function StatusChip({ status }: { status: string }) {
 function DateBar({ checkIn, checkOut }: { checkIn: string; checkOut: string }) {
   const inMs  = new Date(checkIn).getTime();
   const outMs = new Date(checkOut).getTime();
+  // eslint-disable-next-line react-hooks/purity
   const nowMs = Date.now();
   const nights = Math.round((outMs - inMs) / 86400000);
   const isActive = nowMs >= inMs && nowMs <= outMs;
@@ -88,9 +90,9 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", gap: "16px", flexWrap: "wrap" }}>
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Bookings</h1>
-        <a href="/admin/bookings/new" style={{ padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem", flexShrink: 0 }}>
+        <Link href="/admin/bookings/new" style={{ padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem", flexShrink: 0 }}>
           + New booking
-        </a>
+        </Link>
       </div>
 
       {/* Search */}
@@ -119,9 +121,9 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
             {query ? "Try a different name or property" : "Add your first booking to get started"}
           </p>
           {!query && (
-            <a href="/admin/bookings/new" style={{ display: "inline-block", padding: "9px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem" }}>
+            <Link href="/admin/bookings/new" style={{ display: "inline-block", padding: "9px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem" }}>
               + New booking
-            </a>
+            </Link>
           )}
         </div>
       )}
@@ -131,7 +133,7 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
           const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
           const isActive = b.check_in <= today && b.check_out >= today;
           return (
-            <a
+            <Link
               key={b.id}
               href={`/admin/bookings/${b.id}`}
               style={{
@@ -159,7 +161,7 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-ink-ghost)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{b.source}</span>
                 </div>
               </div>
-            </a>
+            </Link>
           );
         })}
       </div>

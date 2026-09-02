@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 
 const SECTION_OPTIONS = [
@@ -257,12 +258,12 @@ export function GuideEditor({ propertyId, propertyName, initialSections }: Props
     <div>
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
-        <a
+        <Link
           href="/admin/bookings"
           style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}
         >
           ← Bookings
-        </a>
+        </Link>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>

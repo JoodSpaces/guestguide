@@ -47,11 +47,10 @@ function ScrapbookCard({ propertyName, checkInDate, checkoutDate, nightsCount, c
   propertyName: string; checkInDate: string; checkoutDate: string;
   nightsCount: number; checkInMonth: number; isAr: boolean;
 }) {
+  const t = useTranslations("checkout");
   const season = getSeason(checkInMonth);
   const quote = SEASON_QUOTE[season];
-  const nightsLabel = isAr
-    ? `${nightsCount} ${nightsCount === 1 ? "ليلة" : "ليالٍ"}`
-    : `${nightsCount} ${nightsCount === 1 ? "night" : "nights"}`;
+  const nightsLabel = nightsCount === 1 ? t("nights_one") : t("nights_other", { count: nightsCount });
 
   return (
     <div className="animate-reveal" style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 44px)", position: "relative", overflow: "hidden" }}>
@@ -59,7 +58,7 @@ function ScrapbookCard({ propertyName, checkInDate, checkoutDate, nightsCount, c
         {nightsCount}
       </div>
       <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.35)", marginBottom: "20px" }}>
-        {isAr ? "إقامتك في" : "YOUR STAY AT"}
+        {t("stay_at")}
       </p>
       <p className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1, marginBottom: "28px" }}>
         {propertyName}
@@ -78,7 +77,7 @@ function ScrapbookCard({ propertyName, checkInDate, checkoutDate, nightsCount, c
         <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "rgba(245,244,237,0.5)" }}>{checkoutDate}</p>
       </div>
       <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.35)", lineHeight: 1.5, borderTop: "1px solid rgba(245,244,237,0.08)", paddingTop: "16px" }}>
-        "{isAr ? quote.ar : quote.en}"
+        &ldquo;{isAr ? quote.ar : quote.en}&rdquo;
       </p>
     </div>
   );
@@ -129,6 +128,7 @@ function StepDots({ step, total }: { step: number; total: number }) {
 
 export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, checkoutDate, checkoutTime, nightsCount, propertyName, onCallPhone, locale }: Props) {
   const t = useTranslations("checkout");
+  const tCommon = useTranslations("common");
   const isAr = locale === "ar";
 
   const [step, setStep] = useState(1);
@@ -193,10 +193,10 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
         }}>
           <div style={{ fontSize: "3.5rem", lineHeight: 1 }}>✦</div>
           <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 6vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1 }}>
-            {isAr ? "نراك قريباً" : "See you next time"}
+            {t("farewell")}
           </p>
           <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.45)", lineHeight: 1.6, maxWidth: "28ch" }}>
-            {isAr ? "شكراً لاختيارك JOOD — كان شرفاً استضافتك." : "Thank you for choosing JOOD — it was a pleasure hosting you."}
+            {t("thank_you")}
           </p>
         </div>
 
@@ -221,10 +221,10 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
             </div>
             <div style={{ flex: 1 }}>
               <p style={{ color: "var(--jood-ink)", fontSize: "14px", margin: "0 0 2px" }}>
-                {isAr ? "احجز معنا مرة أخرى" : "Book with us again"}
+                {t("rebook")}
               </p>
               <p style={{ color: "var(--jood-ink-muted)", fontSize: "12px", margin: 0 }}>
-                {isAr ? "تواصل عبر واتساب" : "Message us on WhatsApp"}
+                {t("whatsapp")}
               </p>
             </div>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--jood-ink-faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -251,7 +251,7 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
           onClick={() => setStep(2)}
           style={{ width: "100%", padding: "16px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.9375rem", cursor: "pointer" }}
         >
-          {isAr ? "التالي" : "Continue"} →
+          {tCommon("continue")} →
         </button>
       </div>
     );
@@ -264,10 +264,10 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
         <StepDots step={2} total={3} />
         <div style={{ textAlign: "center", paddingTop: "12px" }}>
           <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 5vw, 2rem)", fontWeight: 600, color: "var(--jood-ink)", marginBottom: "8px" }}>
-            {isAr ? "كيف كانت إقامتك؟" : "How was your stay?"}
+            {t("rating_title")}
           </p>
           <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.9rem" }}>
-            {isAr ? "تقييمك يساعدنا على التحسين" : "Your rating helps us improve"}
+            {t("rating_body")}
           </p>
         </div>
 
@@ -278,7 +278,7 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder={isAr ? "أخبرنا المزيد (اختياري)" : "Tell us more (optional)"}
+              placeholder={t("comment_placeholder")}
               rows={3}
               style={{
                 width: "100%",
@@ -303,10 +303,10 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
             onClick={submitRating}
             style={{ width: "100%", padding: "16px", backgroundColor: stars > 0 ? "var(--jood-ink)" : "var(--jood-surface)", color: stars > 0 ? "var(--jood-ground)" : "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.9375rem", cursor: "pointer", transition: "all 200ms" }}
           >
-            {stars > 0 ? (isAr ? "إرسال التقييم" : "Submit rating") : (isAr ? "تخطي" : "Skip")}
+            {stars > 0 ? t("submit_rating") : tCommon("skip")}
           </button>
           <button onClick={() => setStep(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-muted)", fontSize: "0.875rem", fontFamily: "inherit" }}>
-            ← {isAr ? "السابق" : "Back"}
+            ← {tCommon("back")}
           </button>
         </div>
       </div>
@@ -370,7 +370,7 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
           transition: "all 300ms",
         }}
       >
-        {loading ? (isAr ? "جارٍ الإرسال…" : "Sending…") : t("departed_cta")}
+        {loading ? tCommon("sending") : t("departed_cta")}
       </button>
       {checkedItems.size < items.length && (
         <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem", textAlign: "center", lineHeight: 1.5 }}>

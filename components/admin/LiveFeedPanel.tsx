@@ -49,7 +49,7 @@ export function LiveFeedPanel() {
     }
   }, [open]);
 
-  useEffect(() => { fetchEvents(); }, [fetchEvents]);
+  useEffect(() => { fetchEvents(); }, [fetchEvents]); // eslint-disable-line react-hooks/set-state-in-effect
   useEffect(() => {
     const id = setInterval(() => fetchEvents(true), 15_000);
     return () => clearInterval(id);

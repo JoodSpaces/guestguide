@@ -1,23 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { BottomNav, type NavTab } from "@/components/stay/BottomNav";
-import { ScrollProgress } from "@/components/ui/ScrollProgress";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { BottomNav } from "@/components/stay/BottomNav";
 import { PushPrompt } from "@/components/stay/PushPrompt";
+import type { ReactNode } from "react";
 
-interface Props {
+interface StayShellProps {
   token: string;
   title?: string;
-  children: React.ReactNode;
+  eyebrow?: string;
+  children: ReactNode;
   back?: boolean;
-  activeTab?: NavTab;
+  activeTab?: "home" | "discover" | "services" | "help";
 }
 
-export function StayShell({ token, title, children, back, activeTab = "home" }: Props) {
+const PUSH_KEY = "BLj7itobprKLwVWBzI0oBqK0VSnzN-16naPiHeS45dKH_NJ4NUWTVMF9aBv5mDBA20SsTaG0TFne8FzzovBcKC4";
+
+export function StayShell({ token, title, eyebrow, children, back, activeTab = "home" }: StayShellProps) {
   const locale = useLocale();
   const isRtl = locale === "ar";
   const [showBell, setShowBell] = useState(false);
@@ -40,66 +43,50 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: process.env.NEXT_PUBLIC_VAPID_KEY,
+        applicationServerKey: PUSH_KEY,
       });
       const json = sub.toJSON();
       await fetch("/api/stay/push-subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, endpoint: json.endpoint, p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "" }),
+        body: JSON.stringify({ token, endpoint: json.endpoint, keys: json.keys }),
       });
-      try { localStorage.removeItem("jood_push_dismissed"); } catch {}
-      setShowBell(false);
-    } catch { /* denied or unsupported */ }
+    } catch {}
+    setShowBell(false);
     setSubscribing(false);
   }
 
   return (
-    <main className="min-h-dvh" style={{ backgroundColor: "var(--jood-ground)" }}>
-      <ScrollProgress />
-      {/* Page frame */}
-      <div
-        className="fixed pointer-events-none z-50"
-        style={{
-          inset: "var(--frame-inset)",
-          border: "1px solid var(--jood-line)",
-          borderRadius: "var(--radius-lg)",
-        }}
-      />
+    <div style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)" }}>
 
-      {/* Header */}
+      {/* ── Sticky header — minimal ────────────────────────────────────────── */}
       <header
         className="jood-header-glass"
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 24px",
-          height: "56px",
+          padding: "0 22px",
+          height: "54px",
           borderBottom: "1px solid var(--jood-line)",
           position: "sticky",
           top: 0,
           zIndex: 40,
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           {back && (
             <Link
               href={`/s/${token}`}
               aria-label={isRtl ? "رجوع" : "Back"}
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "32px",
-                height: "32px",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: "28px", height: "28px",
                 borderRadius: "50%",
                 border: "1px solid var(--jood-line)",
                 color: "var(--jood-ink)",
                 textDecoration: "none",
-                fontSize: "0.875rem",
+                fontSize: "0.8125rem",
                 flexShrink: 0,
                 transform: isRtl ? "scaleX(-1)" : "none",
               }}
@@ -107,24 +94,15 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
               ←
             </Link>
           )}
-          {/* JOOD logo */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/jood-logo-dark.png" alt="JOOD" className="jood-logo" style={{ height: "22px", width: "auto", display: "block" }} />
-          {title && (
-            <p
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                color: "var(--jood-ink-muted)",
-              }}
-            >
-              {title}
-            </p>
-          )}
+          <img
+            src="/jood-logo-dark.png"
+            alt="JOOD"
+            className="jood-logo"
+            style={{ height: "22px", width: "auto", display: "block" }}
+          />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
           {showBell && (
             <button
               onClick={handleBellSubscribe}
@@ -133,20 +111,20 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
               style={{
                 position: "relative",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                width: "32px", height: "32px",
+                width: "30px", height: "30px",
                 borderRadius: "50%",
                 border: "1px solid var(--jood-line)",
                 backgroundColor: "transparent",
                 cursor: "pointer",
-                fontSize: "0.95rem",
+                fontSize: "0.875rem",
                 opacity: subscribing ? 0.5 : 1,
               }}
             >
               🔔
-              <span style={{
+              <span aria-hidden style={{
                 position: "absolute", top: "4px", right: "4px",
-                width: "6px", height: "6px", borderRadius: "50%",
-                backgroundColor: "var(--jood-accent)",
+                width: "5px", height: "5px", borderRadius: "50%",
+                backgroundColor: "var(--jood-garnet)",
               }} />
             </button>
           )}
@@ -155,13 +133,49 @@ export function StayShell({ token, title, children, back, activeTab = "home" }: 
         </div>
       </header>
 
-      {/* Content */}
-      <div className="pb-24" style={{ padding: "clamp(20px, 3vw, 36px) 24px 96px" }}>
+      {/* ── Editorial page title ───────────────────────────────────────────── */}
+      {title && (
+        <div style={{
+          padding: "22px 22px 20px",
+          borderBottom: "1px solid var(--jood-line)",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+        }}>
+          <div>
+            {eyebrow && (
+              <p style={{
+                fontFamily: "var(--font-label)",
+                fontSize: "8.5px",
+                letterSpacing: "0.2em",
+                textTransform: "uppercase",
+                color: "var(--jood-ink-faint)",
+                marginBottom: "6px",
+              }}>
+                {eyebrow}
+              </p>
+            )}
+            <h1 style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "clamp(2.4rem, 9vw, 3rem)",
+              fontWeight: 300,
+              fontStyle: "italic",
+              color: "var(--jood-ink)",
+              lineHeight: 1,
+            }}>
+              {title}
+            </h1>
+          </div>
+        </div>
+      )}
+
+      {/* ── Page content ──────────────────────────────────────────────────── */}
+      <div style={{ padding: "clamp(20px, 3vw, 32px) 22px 88px" }}>
         {children}
       </div>
 
       <PushPrompt token={token} />
       <BottomNav token={token} active={activeTab} />
-    </main>
+    </div>
   );
 }

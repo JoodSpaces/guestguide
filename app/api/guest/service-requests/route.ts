@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       .select("id, name_en")
       .eq("id", parsed.data.serviceId)
       .eq("is_active", true)
+      .or(`property_id.is.null,property_id.eq.${booking.property_id}`)
       .single<{ id: string; name_en: string }>(),
     supabase
       .from("properties")

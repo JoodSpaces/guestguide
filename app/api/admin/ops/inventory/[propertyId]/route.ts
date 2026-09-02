@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 
 const schema = z.object({
   category: z.enum(["linen", "consumables", "kitchen", "amenities", "general"]),
@@ -15,9 +15,11 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ propertyId: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops", "housekeeping"]);
+  if (!session) return forbidden();
   const { propertyId } = await params;
   if (!/^[0-9a-f-]{36}$/.test(propertyId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
+  if (!checkPropertyAccess(session, propertyId)) return forbidden();
 
   const supabase = createServiceClient();
   // Join property_inventory for trigger-maintained quantity (authoritative after damage/supply ops)
@@ -43,9 +45,11 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ propertyId: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops"]);
+  if (!session) return forbidden();
   const { propertyId } = await params;
   if (!/^[0-9a-f-]{36}$/.test(propertyId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
+  if (!checkPropertyAccess(session, propertyId)) return forbidden();
 
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);

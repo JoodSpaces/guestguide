@@ -9,15 +9,24 @@ import { Redis } from "@upstash/redis";
 // counting when the env var is absent (dev / preview without Upstash).
 
 let upstashLimiter: Ratelimit | null = null;
+let upstashApiLimiter: Ratelimit | null = null;
+
+function getRedis() {
+  return new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  });
+}
+
+function hasUpstash() {
+  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+}
 
 function getUpstashLimiter(): Ratelimit | null {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
+  if (!hasUpstash()) return null;
   if (!upstashLimiter) {
     upstashLimiter = new Ratelimit({
-      redis: new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN,
-      }),
+      redis: getRedis(),
       limiter: Ratelimit.slidingWindow(
         process.env.NODE_ENV === "development" ? 120 : 10,
         "60 s"
@@ -26,6 +35,22 @@ function getUpstashLimiter(): Ratelimit | null {
     });
   }
   return upstashLimiter;
+}
+
+// Stricter limiter for auth/sensitive API endpoints: 10 req / 5 min per IP
+function getApiLimiter(): Ratelimit | null {
+  if (!hasUpstash()) return null;
+  if (!upstashApiLimiter) {
+    upstashApiLimiter = new Ratelimit({
+      redis: getRedis(),
+      limiter: Ratelimit.slidingWindow(
+        process.env.NODE_ENV === "development" ? 120 : 10,
+        "300 s"
+      ),
+      prefix: "jood:api-rl",
+    });
+  }
+  return upstashApiLimiter;
 }
 
 // In-memory fallback (per-isolate — not shared across Vercel edge instances)
@@ -60,9 +85,27 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  // ── Rate-limit guest token routes ──────────────────────────────────────
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+  // ── Rate-limit sensitive API endpoints (auth, reveal-code, concierge) ──
+  const isSensitiveApi =
+    pathname === "/api/admin/auth" ||
+    pathname === "/api/stay/reveal-code" ||
+    pathname === "/api/guest/concierge" ||
+    pathname.startsWith("/api/stay/subscribe-push");
+
+  if (isSensitiveApi) {
+    const limiter = getApiLimiter();
+    if (limiter) {
+      const { success } = await limiter.limit(ip);
+      if (!success) {
+        return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "300" } });
+      }
+    }
+  }
+
+  // ── Rate-limit guest token page routes ─────────────────────────────────
   if (pathname.startsWith("/s/")) {
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const limiter = getUpstashLimiter();
 
     if (limiter) {
@@ -88,5 +131,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/s/:path*", "/api/stay/:path*", "/admin", "/admin/:path*"],
+  matcher: ["/s/:path*", "/api/stay/:path*", "/api/guest/:path*", "/api/admin/auth", "/admin", "/admin/:path*"],
 };

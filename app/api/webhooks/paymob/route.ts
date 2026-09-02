@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   if (!body || body.type !== "TRANSACTION") return NextResponse.json({ ok: true });
 
   const obj = body.obj as Record<string, unknown>;
-  const hmac = obj.hmac as string;
+  const hmac = req.nextUrl.searchParams.get("hmac");
 
   if (!hmac || !verifyPaymobHmac(obj, hmac)) {
     return NextResponse.json({ error: "invalid_hmac" }, { status: 400 });

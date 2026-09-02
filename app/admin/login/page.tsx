@@ -3,20 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "14px 16px",
-  fontSize: "0.9375rem",
-  backgroundColor: "var(--jood-surface)",
-  border: "1px solid var(--jood-line)",
-  borderRadius: "var(--radius-md)",
-  color: "var(--jood-ink)",
-  outline: "none",
-  marginBottom: "12px",
-  boxSizing: "border-box",
-  fontFamily: "inherit",
-};
-
 export default function AdminLoginPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -45,70 +31,118 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        backgroundColor: "var(--jood-ground)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-      }}
-    >
-      <div style={{ width: "100%", maxWidth: "340px" }}>
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "28px", width: "auto" }} />
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginTop: "10px" }}>
-            Team access
+    <div style={{
+      minHeight: "100dvh",
+      backgroundColor: "var(--jood-ground)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "24px",
+      /* Subtle noise from body is inherited */
+    }}>
+      {/* Editorial frame */}
+      <div style={{
+        position: "fixed",
+        inset: "12px",
+        border: "1px solid var(--jood-line)",
+        borderRadius: "var(--radius-lg)",
+        pointerEvents: "none",
+        zIndex: 0,
+      }} />
+
+      <div style={{ width: "100%", maxWidth: "320px", position: "relative", zIndex: 1 }}>
+
+        {/* Brand mark */}
+        <div style={{ marginBottom: "52px" }}>
+          <img
+            src="/jood-logo-dark.png"
+            alt="JOOD"
+            className="jood-logo"
+            style={{ height: "24px", width: "auto", display: "block" }}
+          />
+          <div style={{
+            marginTop: "8px",
+            height: "1px",
+            width: "32px",
+            backgroundColor: "var(--jood-garnet)",
+            opacity: 0.6,
+          }} />
+          <p style={{
+            fontFamily: "var(--font-label)",
+            fontSize: "8.5px",
+            letterSpacing: "0.22em",
+            textTransform: "uppercase",
+            color: "var(--jood-ink-muted)",
+            marginTop: "12px",
+          }}>
+            Team Access
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoComplete="username"
-            autoFocus
-            required
-            style={{ ...inputStyle, borderColor: error ? "var(--jood-danger)" : "var(--jood-line)" }}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-            required
-            style={{ ...inputStyle, borderColor: error ? "var(--jood-danger)" : "var(--jood-line)", marginBottom: error ? "8px" : "16px" }}
-          />
+        {/* Form */}
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="jood-field">
+            <label className="jood-label" htmlFor="admin-name">Name</label>
+            <input
+              id="admin-name"
+              type="text"
+              placeholder=""
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoComplete="username"
+              autoFocus
+              required
+              className={`jood-input${error ? " is-error" : ""}`}
+            />
+          </div>
+
+          <div className="jood-field" style={{ marginBottom: "28px" }}>
+            <label className="jood-label" htmlFor="admin-password">Password</label>
+            <input
+              id="admin-password"
+              type="password"
+              placeholder=""
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              required
+              className={`jood-input${error ? " is-error" : ""}`}
+            />
+          </div>
+
+          {/* Error message */}
           {error && (
-            <p style={{ color: "var(--jood-danger)", fontSize: "0.8125rem", marginBottom: "16px" }}>
-              Name or password is incorrect
+            <p style={{
+              fontSize: "0.8125rem",
+              color: "var(--jood-danger)",
+              marginBottom: "16px",
+              lineHeight: 1.5,
+            }}>
+              Incorrect name or password.
             </p>
           )}
+
           <button
             type="submit"
-            disabled={loading || !name || !password}
-            style={{
-              width: "100%",
-              padding: "14px",
-              backgroundColor: loading ? "var(--jood-ink-muted)" : "var(--jood-ink)",
-              color: "var(--jood-ground)",
-              border: "none",
-              borderRadius: "var(--radius-pill)",
-              fontSize: "0.9375rem",
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
+            disabled={loading}
+            className="btn btn-primary btn-full"
+            style={{ fontSize: "0.875rem" }}
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <p style={{ marginTop: "32px", textAlign: "center", fontSize: "0.75rem", color: "var(--jood-ink-ghost)", lineHeight: 1.6 }}>
-          Locked out? Ask your property manager<br />to reset your team member account.
+        {/* Footer */}
+        <p style={{
+          marginTop: "48px",
+          fontSize: "0.6875rem",
+          color: "var(--jood-ink-ghost)",
+          lineHeight: 1.7,
+          fontFamily: "var(--font-mono)",
+          letterSpacing: "0.02em",
+        }}>
+          This area is restricted to JOOD staff.
+          <br />If you are a guest, please use your stay link.
         </p>
       </div>
     </div>

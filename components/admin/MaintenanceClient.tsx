@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Property { id: string; name: string; }
 
@@ -77,9 +78,9 @@ export function MaintenanceClient({ properties, defaultPropertyId }: Props) {
 
   return (
     <form onSubmit={submit} style={{ maxWidth: "560px" }}>
-      <a href="/admin/ops/maintenance" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
+      <Link href="/admin/ops/maintenance" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
         ← Maintenance
-      </a>
+      </Link>
       <h1 className="font-display" style={{ fontSize: "1.8rem", marginBottom: "28px" }}>New ticket</h1>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

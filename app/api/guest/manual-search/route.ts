@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import * as Sentry from "@sentry/nextjs";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getBookingFromToken } from "@/lib/guest-auth";
 import Anthropic from "@anthropic-ai/sdk";
+
+let _limiter: Ratelimit | null = null;
+
+function getLimiter(): Ratelimit | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
+  if (!_limiter) {
+    _limiter = new Ratelimit({
+      redis: new Redis({ url: process.env.UPSTASH_REDIS_REST_URL, token: process.env.UPSTASH_REDIS_REST_TOKEN }),
+      limiter: Ratelimit.slidingWindow(10, "60 s"),
+      prefix: "jood:rl:search",
+    });
+  }
+  return _limiter;
+}
 
 const schema = z.object({
   token: z.string(),
@@ -32,6 +49,12 @@ export async function POST(req: NextRequest) {
 
   const booking = await getBookingFromToken(parsed.data.token);
   if (!booking) return NextResponse.json({ error: "invalid_token" }, { status: 401 });
+
+  const limiter = getLimiter();
+  if (limiter) {
+    const { success } = await limiter.limit(`token:${parsed.data.token}`);
+    if (!success) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
 
   const supabase = createServiceClient();
   const { data: entries } = await supabase
@@ -79,8 +102,8 @@ export async function POST(req: NextRequest) {
           : [],
       };
     }
-  } catch {
-    // Fail gracefully — client falls back to keyword results
+  } catch (err) {
+    Sentry.captureException(err, { tags: { subsystem: "ai_manual_search" } });
   }
 
   return NextResponse.json(result);

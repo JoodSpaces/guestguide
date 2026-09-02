@@ -1,6 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef } from "react";
+import Link from "next/link";
 
 interface Ticket {
   id: string;
@@ -94,9 +96,9 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
 
   return (
     <div style={{ maxWidth: "640px" }}>
-      <a href="/admin/ops/maintenance" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
+      <Link href="/admin/ops/maintenance" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
         ← Maintenance
-      </a>
+      </Link>
 
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>
@@ -121,9 +123,8 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
         <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Photos</p>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           {photos.map((url, i) => (
-            // eslint-disable-next-line @next/next/no-img-element
             <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-              <img src={url} alt="" style={{ width: "72px", height: "72px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--jood-line)" }} />
+              <Image src={url} alt="" width={72} height={72} style={{ objectFit: "cover", borderRadius: "8px", border: "1px solid var(--jood-line)" }} />
             </a>
           ))}
           <input type="file" accept="image/*" capture="environment" ref={fileRef} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface Props {
   properties: { id: string; name: string }[];
@@ -27,6 +28,19 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
   const [assignTo, setAssignTo] = useState("");
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleId = "create-turnover-title";
+
+  useEffect(() => {
+    if (!open) return;
+    // Trap Escape to close
+    function onKey(e: KeyboardEvent) { if (e.key === "Escape") setOpen(false); }
+    document.addEventListener("keydown", onKey);
+    // Focus first focusable element in modal
+    const el = dialogRef.current?.querySelector<HTMLElement>("select,button,input");
+    el?.focus();
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   async function handleCreate() {
     if (!propertyId) return;
@@ -67,22 +81,32 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
   }
 
   return (
-    <div style={{
-      position: "fixed", inset: 0, zIndex: 200,
-      backgroundColor: "rgba(0,0,0,0.4)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      padding: "16px",
-    }}>
-      <div style={{
-        backgroundColor: "var(--jood-surface)",
-        borderRadius: "var(--radius-lg)",
-        padding: "24px",
-        width: "100%", maxWidth: "400px",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
-      }}>
+    <div
+      role="presentation"
+      style={{
+        position: "fixed", inset: 0, zIndex: 200,
+        backgroundColor: "rgba(0,0,0,0.4)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "16px",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        style={{
+          backgroundColor: "var(--jood-surface)",
+          borderRadius: "var(--radius-lg)",
+          padding: "24px",
+          width: "100%", maxWidth: "400px",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-          <p style={{ fontSize: "1rem", fontWeight: 600, color: "var(--jood-ink)" }}>Create turnover task</p>
-          <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--jood-ink-ghost)", padding: "4px" }}>×</button>
+          <p id={titleId} style={{ fontSize: "1rem", fontWeight: 600, color: "var(--jood-ink)" }}>Create turnover task</p>
+          <button aria-label="Close" onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--jood-ink-ghost)", padding: "4px" }}>×</button>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -109,7 +133,7 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
             ) : (
               <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>
                 No team members yet.{" "}
-                <a href="/admin/team" style={{ color: "var(--jood-accent)" }}>Add staff →</a>
+                <Link href="/admin/team" style={{ color: "var(--jood-accent)" }}>Add staff →</Link>
               </p>
             )}
           </div>

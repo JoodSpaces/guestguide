@@ -75,7 +75,6 @@ export function PropertiesClient({ initialProperties }: Props) {
     setSaving(true);
     setError(null);
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { hero_image_url: _hero, ...payload } = form;
       const body = { ...payload, bedrooms: Number(form.bedrooms), max_guests: Number(form.max_guests) };
       if (editing) {

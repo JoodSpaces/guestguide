@@ -42,6 +42,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (parsed.data.adminNotes !== undefined) updates.admin_notes = parsed.data.adminNotes;
 
   if (parsed.data.action === "mark_paid") {
+    if (session.role !== "admin") return forbidden();
     updates.status = "paid";
     updates.paid_at = now;
     updates.updated_at = now;
@@ -54,6 +55,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   if (parsed.data.action === "fulfill") {
+    const { data: current } = await supabase
+      .from("service_requests")
+      .select("status")
+      .eq("id", id)
+      .single<{ status: string }>();
+    if (!current || !["approved", "paid"].includes(current.status)) {
+      return NextResponse.json({ error: "payment_required", message: "Cannot fulfill an unpaid request" }, { status: 422 });
+    }
     updates.status = "fulfilled";
     updates.fulfilled_at = now;
     updates.updated_at = now;

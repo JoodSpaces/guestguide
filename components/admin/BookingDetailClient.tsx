@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type Status = "confirmed" | "cancelled" | "completed";
@@ -153,7 +154,7 @@ export function BookingDetailClient({ booking, property, tokens, rating }: Props
   return (
     <div>
       {/* Back */}
-      <a
+      <Link
         href="/admin/bookings"
         style={{
           display: "inline-flex",
@@ -166,7 +167,7 @@ export function BookingDetailClient({ booking, property, tokens, rating }: Props
         }}
       >
         ← Bookings
-      </a>
+      </Link>
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px" }}>
@@ -223,7 +224,7 @@ export function BookingDetailClient({ booking, property, tokens, rating }: Props
           </div>
           {rating.comment && (
             <p style={{ fontSize: "0.9375rem", color: "var(--jood-ink)", lineHeight: 1.6, borderTop: "1px solid var(--jood-line)", paddingTop: "12px", fontStyle: "italic" }}>
-              "{rating.comment}"
+              &ldquo;{rating.comment}&rdquo;
             </p>
           )}
         </div>

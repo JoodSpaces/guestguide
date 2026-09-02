@@ -1,8 +1,11 @@
 {
   "common": {
     "loading": "Loading…",
+    "sending": "Sending…",
     "error": "Something went wrong",
     "back": "Back",
+    "continue": "Continue",
+    "skip": "Skip",
     "copy": "Copy",
     "copied": "Copied",
     "close": "Close",
@@ -79,10 +82,22 @@
     "title": "Services",
     "from": "From",
     "egp": "EGP",
+    "free": "Free",
     "request": "Request",
     "book": "Book",
     "lead_time": "Book {hours}h in advance",
     "instant": "Confirms instantly",
+    "sent": "Sent",
+    "quantity": "Quantity",
+    "notes_placeholder": "Optional notes…",
+    "confirm_request": "Confirm request",
+    "my_requests": "My requests",
+    "awaiting_payment": "Awaiting payment",
+    "pay_now": "Pay now",
+    "status_pending": "Pending",
+    "status_approved": "Approved",
+    "status_paid": "Paid",
+    "status_fulfilled": "Done",
     "modes": {
       "instant": "Instant",
       "request": "On request"
@@ -117,7 +132,18 @@
     "key_handling": "Keys & access",
     "late_checkout": "Late checkout available",
     "departed_cta": "We've left",
-    "departed_confirm": "Tap to let us know — we'll get the unit ready."
+    "departed_confirm": "Tap to let us know — we'll get the unit ready.",
+    "stay_at": "YOUR STAY AT",
+    "nights_one": "1 night",
+    "nights_other": "{count} nights",
+    "farewell": "See you next time",
+    "thank_you": "Thank you for choosing JOOD — it was a pleasure hosting you.",
+    "rebook": "Book with us again",
+    "whatsapp": "Message us on WhatsApp",
+    "rating_title": "How was your stay?",
+    "rating_body": "Your rating helps us improve",
+    "comment_placeholder": "Tell us more (optional)",
+    "submit_rating": "Submit rating"
   },
   "discover": {
     "title": "Discover",
@@ -151,6 +177,40 @@
     "failed_body": "The payment could not be processed. Please return to your stay portal and try again.",
     "ref": "REF",
     "return_prompt": "Return to your stay portal using the original link sent to you."
+  },
+  "push": {
+    "title": "Stay in the loop",
+    "body": "We'll notify you the moment we reply to your request",
+    "enable": "Enable",
+    "dismiss": "Not now"
+  },
+  "home_cards": {
+    "arrival_desc": "Door code & directions",
+    "manual_desc": "Wi-Fi · Appliances · Rules",
+    "discover_desc": "Local spots & restaurants",
+    "restaurants_desc": "Best restaurants nearby",
+    "services_desc": "Add-ons for your stay",
+    "housekeeping_desc": "Towels · Pool · Room service",
+    "concierge_label": "JOOD Concierge",
+    "concierge_desc": "Ask anything about your stay",
+    "whatsapp_desc": "Talk to the JOOD team",
+    "payment_pending": "Payment pending",
+    "pay_now": "Pay now",
+    "powered_by": "Powered by JOOD",
+    "discover_nav": "Discover",
+    "services_nav": "Services",
+    "manual_nav": "Guide",
+    "help_nav": "Help"
+  },
+  "time_of_day": {
+    "morning_kicker": "GOOD MORNING",
+    "morning_tagline": "Golden hour before the heat.",
+    "midday_kicker": "MIDDAY",
+    "midday_tagline": "Pool and shade o'clock.",
+    "afternoon_kicker": "AFTERNOON",
+    "golden_hour_kicker": "GOLDEN HOUR",
+    "golden_hour_tagline": "Best time for the water.",
+    "evening_kicker": "GOOD EVENING"
   },
   "errors": {
     "token_invalid": "This link is no longer valid.",

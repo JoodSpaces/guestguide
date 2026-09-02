@@ -69,7 +69,11 @@ export async function createPaymentLink({
         state: "NA",
       },
       currency: "EGP",
-      integration_id: parseInt(process.env.PAYMOB_INTEGRATION_ID ?? "0"),
+      integration_id: (() => {
+        const id = parseInt(process.env.PAYMOB_INTEGRATION_ID ?? "0");
+        if (!id) throw new Error("PAYMOB_INTEGRATION_ID env var is not configured");
+        return id;
+      })(),
       lock_order_when_paid: true,
     }),
   });

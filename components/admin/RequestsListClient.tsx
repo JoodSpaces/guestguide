@@ -70,6 +70,39 @@ function EmptyState({ icon, title, subtitle }: { icon: string; title: string; su
 
 type Tab = "service" | "guest";
 
+function TabBtn({ t, label, pending, activeTab, setTab }: { t: Tab; label: string; pending: number; activeTab: Tab; setTab: (t: Tab) => void }) {
+  const active = activeTab === t;
+  return (
+    <button
+      onClick={() => setTab(t)}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: "8px",
+        padding: "8px 16px",
+        borderRadius: "var(--radius-pill)",
+        border: `1px solid ${active ? "var(--jood-ink)" : "var(--jood-line)"}`,
+        backgroundColor: active ? "var(--jood-ink)" : "transparent",
+        color: active ? "var(--jood-ground)" : "var(--jood-ink-muted)",
+        fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit",
+        transition: "all 150ms",
+      }}
+    >
+      {label}
+      {pending > 0 && (
+        <span style={{
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          minWidth: "18px", height: "18px", borderRadius: "9px",
+          backgroundColor: "var(--jood-danger)",
+          color: "white",
+          fontSize: "0.6rem", fontFamily: "var(--font-mono)",
+          fontWeight: 600, padding: "0 4px",
+        }}>
+          {pending}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export function RequestsListClient({
   initialServiceReqs,
   initialGuestReqs,
@@ -114,39 +147,6 @@ export function RequestsListClient({
     });
   }, [query, initialServiceReqs]);
 
-  function TabBtn({ t, label, pending }: { t: Tab; label: string; pending: number }) {
-    const active = tab === t;
-    return (
-      <button
-        onClick={() => setTab(t)}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: "8px",
-          padding: "8px 16px",
-          borderRadius: "var(--radius-pill)",
-          border: `1px solid ${active ? "var(--jood-ink)" : "var(--jood-line)"}`,
-          backgroundColor: active ? "var(--jood-ink)" : "transparent",
-          color: active ? "var(--jood-ground)" : "var(--jood-ink-muted)",
-          fontSize: "0.875rem", cursor: "pointer", fontFamily: "inherit",
-          transition: "all 150ms",
-        }}
-      >
-        {label}
-        {pending > 0 && (
-          <span style={{
-            display: "inline-flex", alignItems: "center", justifyContent: "center",
-            minWidth: "18px", height: "18px", borderRadius: "9px",
-            backgroundColor: active ? "var(--jood-danger)" : "var(--jood-danger)",
-            color: "white",
-            fontSize: "0.6rem", fontFamily: "var(--font-mono)",
-            fontWeight: 600, padding: "0 4px",
-          }}>
-            {pending}
-          </span>
-        )}
-      </button>
-    );
-  }
-
   const card: React.CSSProperties = {
     display: "block",
     backgroundColor: "var(--jood-surface)",
@@ -166,8 +166,8 @@ export function RequestsListClient({
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <TabBtn t="guest" label="Guest requests" pending={pendingGuest} />
-        <TabBtn t="service" label="Service bookings" pending={pendingServices} />
+        <TabBtn t="guest" label="Guest requests" pending={pendingGuest} activeTab={tab} setTab={setTab} />
+        <TabBtn t="service" label="Service bookings" pending={pendingServices} activeTab={tab} setTab={setTab} />
       </div>
 
       {/* Search */}

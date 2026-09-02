@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 
 const PRIORITY_COLOR: Record<string, string> = {
@@ -41,12 +42,12 @@ export default async function MaintenancePage() {
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
         <div>
-          <a href="/admin/ops" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "8px" }}>← Ops</a>
+          <Link href="/admin/ops" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "8px" }}>← Ops</Link>
           <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Maintenance</h1>
         </div>
-        <a href="/admin/ops/maintenance/new" style={{ padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem" }}>
+        <Link href="/admin/ops/maintenance/new" style={{ padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem" }}>
           + New ticket
-        </a>
+        </Link>
       </div>
 
       {/* Open */}
@@ -56,7 +57,7 @@ export default async function MaintenancePage() {
         {open.map((t) => {
           const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;
           return (
-            <a key={t.id} href={`/admin/ops/maintenance/${t.id}`} style={{ ...card, borderLeft: t.priority === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
+            <Link key={t.id} href={`/admin/ops/maintenance/${t.id}`} style={{ ...card, borderLeft: t.priority === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{t.title}</p>
@@ -70,7 +71,7 @@ export default async function MaintenancePage() {
                   <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: PRIORITY_COLOR[t.priority] }}>{t.priority}</span>
                 </div>
               </div>
-            </a>
+            </Link>
           );
         })}
       </div>
@@ -83,10 +84,10 @@ export default async function MaintenancePage() {
             {resolved.slice(0, 10).map((t) => {
               const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;
               return (
-                <a key={t.id} href={`/admin/ops/maintenance/${t.id}`} style={card}>
+                <Link key={t.id} href={`/admin/ops/maintenance/${t.id}`} style={card}>
                   <p style={{ fontWeight: 500, fontSize: "0.875rem" }}>{t.title}</p>
                   <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>{(property as { name: string })?.name} · {fmt(t.created_at)}</p>
-                </a>
+                </Link>
               );
             })}
           </div>

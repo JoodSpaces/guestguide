@@ -1,11 +1,33 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import { ROLE_HOME } from "@/lib/admin-auth";
 
+function Section({ title, count }: { title: string; count: number }) {
+  return (
+    <p className="label-eyebrow" style={{ color: "var(--jood-ink-muted)", marginBottom: "16px" }}>
+      {title}
+      <span
+        style={{
+          marginInlineStart: "8px",
+          backgroundColor: count > 0 ? "var(--jood-accent)" : "var(--jood-line)",
+          color: count > 0 ? "white" : "var(--jood-ink-muted)",
+          borderRadius: "20px",
+          padding: "2px 8px",
+          fontSize: "0.7rem",
+        }}
+      >
+        {count}
+      </span>
+    </p>
+  );
+}
+
 export default async function AdminTodayPage() {
   const h = await headers();
-  const role = h.get("x-admin-role") ?? "admin";
+  const role = h.get("x-admin-role");
+  if (!role) redirect("/admin/login");
   if (role !== "admin") redirect(ROLE_HOME[role] ?? "/admin/login");
 
   const supabase = createServiceClient();
@@ -81,31 +103,13 @@ export default async function AdminTodayPage() {
   // Prefer the dedicated count (join-free); fall back to array length if count query failed
   const openCount = openRequestsCount ?? openRequests.length;
 
-  const Section = ({ title, count }: { title: string; count: number }) => (
-    <p className="label-eyebrow" style={{ color: "var(--jood-ink-muted)", marginBottom: "16px" }}>
-      {title}
-      <span
-        style={{
-          marginInlineStart: "8px",
-          backgroundColor: count > 0 ? "var(--jood-accent)" : "var(--jood-line)",
-          color: count > 0 ? "white" : "var(--jood-ink-muted)",
-          borderRadius: "20px",
-          padding: "2px 8px",
-          fontSize: "0.7rem",
-        }}
-      >
-        {count}
-      </span>
-    </p>
-  );
-
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px" }}>
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>
           {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
         </h1>
-        <a
+        <Link
           href="/admin/bookings/new"
           style={{
             padding: "10px 20px",
@@ -117,7 +121,7 @@ export default async function AdminTodayPage() {
           }}
         >
           + New booking
-        </a>
+        </Link>
       </div>
 
       {/* Property status rings */}
@@ -169,7 +173,7 @@ export default async function AdminTodayPage() {
                 const circ = 2 * Math.PI * r;
                 const pct = s === "clear" ? 1 : s === "amber" ? 0.6 : 0.85;
                 return (
-                  <a
+                  <Link
                     key={p.id}
                     href={`/admin/ops/inventory/${p.id}`}
                     title={STATUS_LABEL[s]}
@@ -198,7 +202,7 @@ export default async function AdminTodayPage() {
                       </span>
                     </div>
                     <p style={{ fontSize: "0.6875rem", color: "var(--jood-ink-muted)", textAlign: "center", maxWidth: "64px", lineHeight: 1.3 }}>{p.name}</p>
-                  </a>
+                  </Link>
                 );
               })}
             </div>
@@ -232,15 +236,15 @@ export default async function AdminTodayPage() {
                   {critical.length > 0 ? ` · ${critical.length} critical` : ""}
                 </span>
               </div>
-              <a href="/admin/ops" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+              <Link href="/admin/ops" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                 View all →
-              </a>
+              </Link>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               {(invAlerts ?? []).slice(0, 5).map((a) => {
                 const item = Array.isArray(a.inventory_items) ? a.inventory_items[0] : a.inventory_items;
                 return (
-                  <a
+                  <Link
                     key={a.id}
                     href="/admin/ops"
                     style={{
@@ -272,13 +276,13 @@ export default async function AdminTodayPage() {
                     }}>
                       {a.severity}
                     </span>
-                  </a>
+                  </Link>
                 );
               })}
               {total > 5 && (
-                <a href="/admin/ops" style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--jood-ink-ghost)", padding: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                <Link href="/admin/ops" style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--jood-ink-ghost)", padding: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                   +{total - 5} more alert{total - 5 !== 1 ? "s" : ""}
-                </a>
+                </Link>
               )}
             </div>
           </div>
@@ -299,15 +303,15 @@ export default async function AdminTodayPage() {
           {arrivals?.length === 0 && (
             <div>
               <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>None today</p>
-              <a href="/admin/bookings/new" style={{ display: "inline-block", marginTop: "10px", fontSize: "0.8rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+              <Link href="/admin/bookings/new" style={{ display: "inline-block", marginTop: "10px", fontSize: "0.8rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                 + Add a booking
-              </a>
+              </Link>
             </div>
           )}
           {arrivals?.map((b) => {
             const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
             return (
-              <a
+              <Link
                 key={b.id}
                 href={`/admin/bookings/${b.id}`}
                 style={{ display: "block", textDecoration: "none", marginBottom: "10px" }}
@@ -316,7 +320,7 @@ export default async function AdminTodayPage() {
                   {b.guest_first_name} {b.guest_last_name}
                 </p>
                 <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -338,7 +342,7 @@ export default async function AdminTodayPage() {
           {departures?.map((b) => {
             const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
             return (
-              <a
+              <Link
                 key={b.id}
                 href={`/admin/bookings/${b.id}`}
                 style={{ display: "block", textDecoration: "none", marginBottom: "10px" }}
@@ -347,7 +351,7 @@ export default async function AdminTodayPage() {
                   {b.guest_first_name} {b.guest_last_name}
                 </p>
                 <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -365,7 +369,7 @@ export default async function AdminTodayPage() {
         const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
         const prop = Array.isArray(booking?.properties) ? booking?.properties[0] : booking?.properties;
         return (
-          <a
+          <Link
             key={r.id}
             href={`/admin/requests/guest/${r.id}`}
             style={{
@@ -402,7 +406,7 @@ export default async function AdminTodayPage() {
                 Urgent
               </span>
             )}
-          </a>
+          </Link>
         );
       })}
 
@@ -419,7 +423,7 @@ export default async function AdminTodayPage() {
           const prop = Array.isArray(t.properties) ? t.properties[0] : t.properties;
           const isUrgent = t.priority === "urgent";
           return (
-            <a
+            <Link
               key={t.id}
               href={`/admin/ops/maintenance/${t.id}`}
               style={{
@@ -444,7 +448,7 @@ export default async function AdminTodayPage() {
                   Urgent
                 </span>
               )}
-            </a>
+            </Link>
           );
         })}
       </div>
@@ -463,7 +467,7 @@ export default async function AdminTodayPage() {
           const prop = Array.isArray((booking as { properties?: unknown })?.properties) ? (booking as { properties: { name: string }[] }).properties[0] : (booking as { properties: { name: string } } | null)?.properties;
           const svc = Array.isArray(r.services) ? r.services[0] : r.services;
           return (
-            <a
+            <Link
               key={r.id}
               href={`/admin/requests/service/${r.id}`}
               style={{
@@ -489,7 +493,7 @@ export default async function AdminTodayPage() {
               <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-aqua)", flexShrink: 0 }}>
                 🛎 Pending
               </span>
-            </a>
+            </Link>
           );
         })}
       </div>

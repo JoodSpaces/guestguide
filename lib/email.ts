@@ -12,10 +12,17 @@ const FROM = process.env.FROM_EMAIL ?? "JOOD <onboarding@resend.dev>";
 const ADMIN = process.env.ADMIN_EMAIL ?? "";
 const APP_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
 
-function safe(fn: (r: Resend) => Promise<unknown>) {
+function safe(fn: (r: Resend) => Promise<unknown>, context?: string) {
   const r = getResend();
   if (!r) return;
-  fn(r).catch((err) => console.error("[email]", err));
+  fn(r).catch((err: unknown) => {
+    const e = err as { statusCode?: number; message?: string };
+    console.error("[email] send failed", {
+      context,
+      statusCode: e.statusCode,
+      message: e.message,
+    });
+  });
 }
 
 export function notifyAdminServiceRequest({
@@ -32,7 +39,7 @@ export function notifyAdminServiceRequest({
       "",
       APP_URL ? `Review: ${APP_URL}/admin/requests/service/${requestId}` : `Request ID: ${requestId}`,
     ].join("\n"),
-  }));
+  }), "notifyAdminServiceRequest");
 }
 
 export function notifyAdminGuestRequest({
@@ -51,7 +58,7 @@ export function notifyAdminGuestRequest({
       "",
       APP_URL ? `Review: ${APP_URL}/admin/requests/guest/${requestId}` : `Request ID: ${requestId}`,
     ].join("\n"),
-  }));
+  }), "notifyAdminGuestRequest");
 }
 
 export function confirmGuestServiceRequest({
@@ -70,7 +77,7 @@ export function confirmGuestServiceRequest({
       "",
       "— The JOOD team",
     ].join("\n"),
-  }));
+  }), "confirmGuestServiceRequest");
 }
 
 export function confirmGuestRequest({
@@ -93,5 +100,5 @@ export function confirmGuestRequest({
       "",
       "— The JOOD team",
     ].join("\n"),
-  }));
+  }), "confirmGuestRequest");
 }

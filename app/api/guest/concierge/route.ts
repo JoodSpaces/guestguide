@@ -35,11 +35,11 @@ export async function POST(req: NextRequest) {
   const [{ data: property }, { data: entries }] = await Promise.all([
     supabase
       .from("properties")
-      .select("name, name_ar, wifi_ssid, wifi_password_encrypted, checkin_time, checkout_time")
+      .select("name, name_ar, wifi_ssid, checkin_time, checkout_time")
       .eq("id", booking.property_id)
       .single<{
         name: string; name_ar: string;
-        wifi_ssid: string | null; wifi_password_encrypted: string | null;
+        wifi_ssid: string | null;
         checkin_time: string; checkout_time: string;
       }>(),
     supabase
@@ -56,14 +56,6 @@ export async function POST(req: NextRequest) {
   const isAr = parsed.data.locale === "ar";
   const propertyName = isAr ? property.name_ar : property.name;
   const phase = computePhase(booking.check_in, booking.check_out);
-
-  let wifiPassword: string | null = null;
-  if (property.wifi_password_encrypted) {
-    try {
-      const { decrypt } = await import("@/lib/crypto");
-      wifiPassword = decrypt(property.wifi_password_encrypted);
-    } catch { /* ignore */ }
-  }
 
   const fmt = (iso: string) =>
     new Date(iso).toLocaleDateString(isAr ? "ar-EG" : "en-GB", {
@@ -86,10 +78,10 @@ export async function POST(req: NextRequest) {
         .join("\n\n")
     : (isAr ? "لا يوجد دليل حالياً." : "No manual content yet.");
 
+  // WiFi password is intentionally excluded from the AI prompt — it is served
+  // directly from the stay page to avoid sending credentials to external APIs.
   const wifiLine = property.wifi_ssid
-    ? (isAr
-        ? `- الواي فاي: ${property.wifi_ssid}${wifiPassword ? ` / كلمة المرور: ${wifiPassword}` : ""}`
-        : `- WiFi: ${property.wifi_ssid}${wifiPassword ? ` / Password: ${wifiPassword}` : ""}`)
+    ? (isAr ? `- الواي فاي: ${property.wifi_ssid}` : `- WiFi SSID: ${property.wifi_ssid} (password shown on your stay page)`)
     : "";
 
   const systemPrompt = isAr

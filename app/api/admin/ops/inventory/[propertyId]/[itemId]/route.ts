@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 
 const schema = z.object({
   current_stock: z.number().int().min(0).optional(),
@@ -19,9 +19,11 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ propertyId: string; itemId: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops", "housekeeping"]);
+  if (!session) return forbidden();
   const { propertyId, itemId } = await params;
   if (!validate(propertyId, itemId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
+  if (!checkPropertyAccess(session, propertyId)) return forbidden();
 
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
@@ -53,9 +55,11 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ propertyId: string; itemId: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops"]);
+  if (!session) return forbidden();
   const { propertyId, itemId } = await params;
   if (!validate(propertyId, itemId)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
+  if (!checkPropertyAccess(session, propertyId)) return forbidden();
 
   const supabase = createServiceClient();
   const { error } = await supabase

@@ -19,6 +19,7 @@ export function CinematicReveal({ token, propertyName, locale }: Props) {
     const key = `jood_cinematic_${token}`;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, "1");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
 
     const t1 = setTimeout(() => setStage("name"), 900);

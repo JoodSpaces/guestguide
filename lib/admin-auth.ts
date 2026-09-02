@@ -1,11 +1,51 @@
 import { type NextRequest } from "next/server";
+import { Redis } from "@upstash/redis";
 
 export interface AdminSession {
   id: string;
   name: string;
   role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
+  jti: string;
   iat: number;
   exp: number;
+  /** Property UUIDs this member may access. null = all properties (admin or unscoped). */
+  propertyIds?: string[] | null;
+}
+
+/** Returns true if the session may access the given property. */
+export function checkPropertyAccess(session: AdminSession, propertyId: string): boolean {
+  if (session.role === "admin") return true;
+  if (!session.propertyIds) return true; // null/undefined = unscoped (all properties)
+  return session.propertyIds.includes(propertyId);
+}
+
+// ─── JTI revocation store (Redis-backed, no-op when Redis is not configured) ─
+
+let _redis: Redis | null = null;
+
+function getSessionRedis(): Redis | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
+  if (!_redis) {
+    _redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    });
+  }
+  return _redis;
+}
+
+const SESSION_PREFIX = "jood:session:";
+
+export async function storeSessionJti(jti: string, ttlSeconds: number) {
+  const redis = getSessionRedis();
+  if (!redis) return;
+  await redis.set(`${SESSION_PREFIX}${jti}`, "1", { ex: ttlSeconds });
+}
+
+export async function revokeSession(jti: string) {
+  const redis = getSessionRedis();
+  if (!redis) return;
+  await redis.del(`${SESSION_PREFIX}${jti}`);
 }
 
 // ─── Password hashing (PBKDF2 — works in Edge + Node) ───────────────────────
@@ -84,6 +124,14 @@ export async function verifyAdminCookie(cookie: string): Promise<AdminSession | 
     if (!valid) return null;
     const session = JSON.parse(Buffer.from(payload, "base64url").toString()) as AdminSession;
     if (Date.now() > session.exp) return null;
+    // JTI revocation check — skip gracefully when Redis is not configured
+    if (session.jti) {
+      const redis = getSessionRedis();
+      if (redis) {
+        const alive = await redis.exists(`${SESSION_PREFIX}${session.jti}`);
+        if (!alive) return null;
+      }
+    }
     return session;
   } catch {
     return null;

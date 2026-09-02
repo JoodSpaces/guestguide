@@ -11,7 +11,13 @@ export async function GET(req: NextRequest) {
 
   const supabase = createServiceClient();
   const [{ data: services }, { data: myRequests }] = await Promise.all([
-    supabase.from("services").select("*").eq("is_active", true).order("sort_order").order("created_at"),
+    supabase
+      .from("services")
+      .select("*")
+      .eq("is_active", true)
+      .or(`property_id.is.null,property_id.eq.${booking.property_id}`)
+      .order("sort_order")
+      .order("created_at"),
     supabase
       .from("service_requests")
       .select("id, service_id, quantity, status, guest_notes, paymob_payment_url, created_at, services(name_en, price_egp)")

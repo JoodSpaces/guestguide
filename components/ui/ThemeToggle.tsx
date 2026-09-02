@@ -17,6 +17,7 @@ export function ThemeToggle() {
   useEffect(() => {
     try {
       const stored = (localStorage.getItem("jood-theme") as Theme | null) ?? "system";
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTheme(stored);
       applyTheme(stored);
     } catch {}

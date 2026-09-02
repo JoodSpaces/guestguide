@@ -12,7 +12,7 @@ interface Props {
 
 export function CountdownChip({ phase, checkIn, checkOut }: Props) {
   const t = useTranslations("home");
-  const [now, setNow] = useState(Date.now());
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     // Tick every 30s — switch to every second when under an hour

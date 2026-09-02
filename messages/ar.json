@@ -1,8 +1,11 @@
 {
   "common": {
     "loading": "جارٍ التحميل…",
+    "sending": "جارٍ الإرسال…",
     "error": "حدث خطأ ما",
     "back": "رجوع",
+    "continue": "التالي",
+    "skip": "تخطي",
     "copy": "نسخ",
     "copied": "تم النسخ",
     "close": "إغلاق",
@@ -79,10 +82,22 @@
     "title": "الخدمات",
     "from": "يبدأ من",
     "egp": "ج.م",
+    "free": "مجاني",
     "request": "طلب",
     "book": "احجز",
     "lead_time": "يُحجز قبل {hours} ساعة",
     "instant": "تأكيد فوري",
+    "sent": "مُرسَل",
+    "quantity": "الكمية",
+    "notes_placeholder": "ملاحظات اختيارية…",
+    "confirm_request": "تأكيد الطلب",
+    "my_requests": "طلباتي",
+    "awaiting_payment": "في انتظار الدفع",
+    "pay_now": "ادفع الآن",
+    "status_pending": "قيد المراجعة",
+    "status_approved": "موافق عليه",
+    "status_paid": "مدفوع",
+    "status_fulfilled": "تم التنفيذ",
     "modes": {
       "instant": "فوري",
       "request": "عند الطلب"
@@ -117,7 +132,18 @@
     "key_handling": "المفاتيح والدخول",
     "late_checkout": "المغادرة المتأخرة متاحة",
     "departed_cta": "غادرنا",
-    "departed_confirm": "انقر لإعلامنا — سنجهّز الوحدة فوراً."
+    "departed_confirm": "انقر لإعلامنا — سنجهّز الوحدة فوراً.",
+    "stay_at": "إقامتك في",
+    "nights_one": "ليلة واحدة",
+    "nights_other": "{count} ليالٍ",
+    "farewell": "نراك قريباً",
+    "thank_you": "شكراً لاختيارك JOOD — كان شرفاً استضافتك.",
+    "rebook": "احجز معنا مرة أخرى",
+    "whatsapp": "تواصل عبر واتساب",
+    "rating_title": "كيف كانت إقامتك؟",
+    "rating_body": "تقييمك يساعدنا على التحسين",
+    "comment_placeholder": "أخبرنا المزيد (اختياري)",
+    "submit_rating": "إرسال التقييم"
   },
   "discover": {
     "title": "استكشاف",
@@ -151,6 +177,40 @@
     "failed_body": "لم نتمكن من معالجة الدفع. يرجى العودة إلى بوابة إقامتك والمحاولة مجدداً.",
     "ref": "المرجع",
     "return_prompt": "عُد إلى بوابة إقامتك عبر الرابط الأصلي الذي أُرسل إليك."
+  },
+  "push": {
+    "title": "ابق على اطلاع",
+    "body": "أرسل لك إشعاراً عندما نرد على طلبك",
+    "enable": "تفعيل",
+    "dismiss": "لا، شكراً"
+  },
+  "home_cards": {
+    "arrival_desc": "رمز الباب والتوجيهات",
+    "manual_desc": "الواي فاي · الأجهزة · القواعد",
+    "discover_desc": "المطاعم والأماكن المحلية المفضلة",
+    "restaurants_desc": "أفضل مطاعم المنطقة",
+    "services_desc": "إضافات اختيارية لإقامتك",
+    "housekeeping_desc": "مناشف · مسبح · خدمة الغرف",
+    "concierge_label": "كونسيرج جود",
+    "concierge_desc": "اسألني أي شيء عن إقامتك",
+    "whatsapp_desc": "تحدث مع فريق جود",
+    "payment_pending": "في انتظار الدفع",
+    "pay_now": "ادفع الآن",
+    "powered_by": "مدعوم من جود",
+    "discover_nav": "اكتشف",
+    "services_nav": "الخدمات",
+    "manual_nav": "الدليل",
+    "help_nav": "تواصل"
+  },
+  "time_of_day": {
+    "morning_kicker": "صباح الخير",
+    "morning_tagline": "الساعة الذهبية قبل الحر.",
+    "midday_kicker": "وقت الظهيرة",
+    "midday_tagline": "وقت الظل والمسبح.",
+    "afternoon_kicker": "بعد الظهر",
+    "golden_hour_kicker": "الساعة الذهبية",
+    "golden_hour_tagline": "أفضل وقت للشاطئ.",
+    "evening_kicker": "مساء الخير"
   },
   "errors": {
     "token_invalid": "هذا الرابط لم يعد صالحاً.",
