@@ -81,6 +81,10 @@ interface StayHomeProps {
   tonightNote?: string | null;
   tonightNoteAr?: string | null;
   heroImageUrl?: string | null;
+  dndActive?: boolean;
+  hostPick?: string | null;
+  hostPickAr?: string | null;
+  hasArrivalPrefs?: boolean;
 }
 
 /* ── Carousel portrait card ─────────────────────────────────────────────── */
@@ -157,6 +161,9 @@ function PortraitCard({
 export function StayHome({
   payload, token, requestSummary = null,
   tonightNote = null, tonightNoteAr = null, heroImageUrl = null,
+  dndActive: initialDnd = false,
+  hostPick = null, hostPickAr = null,
+  hasArrivalPrefs = false,
 }: StayHomeProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -167,6 +174,9 @@ export function StayHome({
 
   const [hour, setHour] = useState(() => new Date().getHours());
   const [now, setNow] = useState(() => Date.now());
+  const [dnd, setDnd] = useState(initialDnd);
+  const [dndSaving, setDndSaving] = useState(false);
+
   useEffect(() => {
     const id = setInterval(() => {
       setHour(new Date().getHours());
@@ -174,6 +184,18 @@ export function StayHome({
     }, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  async function toggleDnd() {
+    setDndSaving(true);
+    const next = !dnd;
+    setDnd(next);
+    await fetch("/api/guest/dnd", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, active: next }),
+    }).catch(() => {});
+    setDndSaving(false);
+  }
 
   // Arrival countdown — show when check-in is between 0 and 6 hours away
   const msUntilCheckIn = new Date(payload.checkIn).getTime() - now;
@@ -203,6 +225,8 @@ export function StayHome({
   }, []);
 
   const isDeparture = payload.phase === "departure";
+  const isAfterOrDeparture = payload.phase === "departure" || payload.phase === "afterglow";
+  const isPreArrival = payload.phase === "anticipation" || payload.phase === "preparation";
 
   return (
     <main style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)", ...ambience }}>
@@ -246,7 +270,28 @@ export function StayHome({
             alt="JOOD"
             style={{ height: "22px", filter: "brightness(0) invert(1) opacity(0.9)", display: "block" }}
           />
-          <div style={{ display: "flex", gap: "6px" }}>
+          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+            {/* DND toggle */}
+            <button
+              onClick={toggleDnd}
+              disabled={dndSaving}
+              title={dnd ? (isAr ? "إلغاء عدم الإزعاج" : "Disable Do Not Disturb") : (isAr ? "عدم الإزعاج" : "Do Not Disturb")}
+              style={{
+                width: "34px", height: "34px",
+                borderRadius: "50%",
+                border: "none",
+                background: dnd ? "rgba(115,54,53,0.85)" : "rgba(245,244,237,0.12)",
+                backdropFilter: "blur(8px)",
+                color: dnd ? "#F5F4ED" : "rgba(245,244,237,0.6)",
+                fontSize: "14px",
+                cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "background 200ms",
+                flexShrink: 0,
+              }}
+            >
+              {dnd ? "🔕" : "🔔"}
+            </button>
             <ThemeToggle />
             <LanguageToggle />
           </div>
@@ -487,6 +532,76 @@ export function StayHome({
           arrow={isAr ? "عرض →" : "View →"}
           faded={!isDeparture}
         />
+
+        {/* Pre-arrival customization — shown in anticipation/preparation */}
+        {isPreArrival && (
+          <Link
+            href={`/s/${token}/customize`}
+            style={{
+              flexShrink: 0, width: "172px", height: "216px",
+              borderRadius: "20px", padding: "20px", textDecoration: "none",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              background: "linear-gradient(155deg, #1A1C2A 0%, #121420 60%, #1A2410 100%)",
+              position: "relative", overflow: "hidden",
+            }}
+          >
+            <div style={{
+              position: "absolute", top: "-20px", right: "-20px",
+              width: "80px", height: "80px", borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(140,180,140,0.2) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }} />
+            <div>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", color: hasArrivalPrefs ? "#8CB48C" : "rgba(140,180,140,0.6)", marginBottom: "10px" }}>
+                {hasArrivalPrefs ? (isAr ? "تم ✓" : "Done ✓") : (isAr ? "قبل الوصول" : "Pre-arrival")}
+              </p>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 300, fontStyle: "italic", lineHeight: 1.1, color: "#EDE9E0" }}>
+                {isAr ? "خصّص\nإقامتك." : "Customize\nyour stay."}
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <span style={{ fontSize: "18px", lineHeight: 1 }}>✦</span>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(140,180,140,0.4)" }}>
+                {isAr ? "أخبرنا →" : "Tell us →"}
+              </p>
+            </div>
+          </Link>
+        )}
+
+        {/* Stay Memory — shown in departure/afterglow */}
+        {isAfterOrDeparture && (
+          <Link
+            href={`/s/${token}/memory`}
+            style={{
+              flexShrink: 0, width: "172px", height: "216px",
+              borderRadius: "20px", padding: "20px", textDecoration: "none",
+              display: "flex", flexDirection: "column", justifyContent: "space-between",
+              background: "linear-gradient(155deg, #1C1410 0%, #2A1A14 60%, #1C1C2E 100%)",
+              position: "relative", overflow: "hidden",
+            }}
+          >
+            <div style={{
+              position: "absolute", top: "-20px", right: "-20px",
+              width: "80px", height: "80px", borderRadius: "50%",
+              background: "radial-gradient(circle, rgba(196,154,130,0.2) 0%, transparent 70%)",
+              pointerEvents: "none",
+            }} />
+            <div>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C49A82", marginBottom: "10px" }}>
+                {isAr ? "ذكراك هنا" : "Your memory"}
+              </p>
+              <p style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 300, fontStyle: "italic", lineHeight: 1.1, color: "#EDE9E0" }}>
+                {isAr ? "إقامة\nلا تُنسى." : "An unforgettable\nstay."}
+              </p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              <span style={{ fontSize: "18px", lineHeight: 1 }}>◈</span>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(196,154,130,0.4)" }}>
+                {isAr ? "عرض →" : "View →"}
+              </p>
+            </div>
+          </Link>
+        )}
       </div>
 
       {/* ── Intent selector ──────────────────────────────────────────────── */}
@@ -498,6 +613,34 @@ export function StayHome({
       <div style={{ padding: "0 22px 24px" }}>
         <WeatherStrip token={token} isAr={isAr} />
       </div>
+
+      {/* ── Host's Live Pick ─────────────────────────────────────────────── */}
+      {(hostPick || hostPickAr) && (
+        <div style={{ padding: "0 22px 24px" }}>
+          <div style={{
+            borderRadius: "16px",
+            padding: "20px 22px",
+            background: "var(--jood-surface)",
+            border: "1px solid var(--jood-line)",
+            position: "relative",
+          }}>
+            <p style={{
+              fontFamily: "var(--font-label)", fontSize: "8px",
+              letterSpacing: "0.2em", textTransform: "uppercase",
+              color: "var(--jood-garnet)", marginBottom: "10px",
+            }}>
+              {isAr ? "نصيحة من مضيفك" : "From your host"}
+            </p>
+            <p style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "18px", fontWeight: 300, fontStyle: "italic",
+              color: "var(--jood-ink)", lineHeight: 1.45,
+            }}>
+              {isAr ? (hostPickAr ?? hostPick) : (hostPick ?? hostPickAr)}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* ── Tonight note ─────────────────────────────────────────────────── */}
       {(tonightNote || tonightNoteAr) && (

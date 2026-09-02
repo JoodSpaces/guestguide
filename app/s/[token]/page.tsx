@@ -25,11 +25,11 @@ export default async function StayPage({ params }: Props) {
 
   if (!tokenRow || tokenRow.revoked_at) notFound();
 
-  const [{ data: booking }, { data: serviceRequests }] = await Promise.all([
+  const [{ data: booking }, { data: serviceRequests }, { data: arrivalPrefs }] = await Promise.all([
     supabase
       .from("bookings")
-      .select(`id, property_id, guest_first_name, guest_lang, check_in, check_out,
-               properties (name, name_ar, tonight_note, tonight_note_ar)`)
+      .select(`id, property_id, guest_first_name, guest_lang, check_in, check_out, dnd_active,
+               properties (name, name_ar, tonight_note, tonight_note_ar, host_pick, host_pick_ar)`)
       .eq("id", tokenRow.booking_id)
       .single<{
         id: string;
@@ -38,7 +38,8 @@ export default async function StayPage({ params }: Props) {
         guest_lang: "en" | "ar";
         check_in: string;
         check_out: string;
-        properties: { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null } | { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null }[];
+        dnd_active: boolean;
+        properties: { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null; host_pick: string | null; host_pick_ar: string | null } | { name: string; name_ar: string; tonight_note: string | null; tonight_note_ar: string | null; host_pick: string | null; host_pick_ar: string | null }[];
       }>(),
     supabase
       .from("service_requests")
@@ -47,6 +48,11 @@ export default async function StayPage({ params }: Props) {
       .neq("status", "rejected")
       .order("created_at", { ascending: false })
       .limit(20),
+    supabase
+      .from("arrival_preferences")
+      .select("occasion")
+      .eq("booking_id", tokenRow.booking_id)
+      .maybeSingle<{ occasion: string | null }>(),
   ]);
 
   if (!booking) notFound();
@@ -125,6 +131,10 @@ export default async function StayPage({ params }: Props) {
       tonightNote={property?.tonight_note ?? null}
       tonightNoteAr={property?.tonight_note_ar ?? null}
       heroImageUrl={heroImageUrl}
+      dndActive={booking?.dnd_active ?? false}
+      hostPick={property?.host_pick ?? null}
+      hostPickAr={property?.host_pick_ar ?? null}
+      hasArrivalPrefs={!!arrivalPrefs}
     />
   );
 }

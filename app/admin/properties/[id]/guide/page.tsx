@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createServiceClient } from "@/lib/supabase/server";
+import { HostPickEditor } from "@/components/admin/HostPickEditor";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -40,9 +41,9 @@ export default async function PropertyGuidePage({ params }: Props) {
   const [{ data: property }, { data: content }] = await Promise.all([
     supabase
       .from("properties")
-      .select("id, name, name_ar, slug")
+      .select("id, name, name_ar, slug, host_pick, host_pick_ar")
       .eq("id", id)
-      .single<{ id: string; name: string; name_ar: string; slug: string }>(),
+      .single<{ id: string; name: string; name_ar: string; slug: string; host_pick: string | null; host_pick_ar: string | null }>(),
     supabase
       .from("property_content")
       .select("id, section, sort_order, title_en, title_ar, body_en, body_ar, is_published")
@@ -132,6 +133,12 @@ export default async function PropertyGuidePage({ params }: Props) {
           </a>
         </div>
       </div>
+
+      <HostPickEditor
+        propertyId={id}
+        initialPick={property.host_pick ?? ""}
+        initialPickAr={property.host_pick_ar ?? ""}
+      />
 
       {!content?.length && (
         <div style={{ ...card, color: "var(--jood-ink-muted)", textAlign: "center", padding: "40px" }}>

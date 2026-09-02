@@ -13,10 +13,11 @@ export default async function BookingDetailPage({ params }: Props) {
 
   const supabase = createServiceClient();
 
-  const { data: booking } = await supabase
+  const [{ data: booking }, { data: arrivalPrefs }] = await Promise.all([
+   supabase
     .from("bookings")
     .select(
-      "id, guest_first_name, guest_last_name, guest_email, guest_phone, guest_lang, guest_count, check_in, check_out, status, source, external_ref, door_code_encrypted, created_at, property_id, properties(id, name, name_ar)"
+      "id, guest_first_name, guest_last_name, guest_email, guest_phone, guest_lang, guest_count, check_in, check_out, status, source, external_ref, door_code_encrypted, created_at, property_id, dnd_active, properties(id, name, name_ar)"
     )
     .eq("id", id)
     .single<{
@@ -35,8 +36,15 @@ export default async function BookingDetailPage({ params }: Props) {
       door_code_encrypted: string | null;
       created_at: string;
       property_id: string;
+      dnd_active: boolean;
       properties: { id: string; name: string; name_ar: string } | { id: string; name: string; name_ar: string }[];
-    }>();
+    }>(),
+   supabase
+    .from("arrival_preferences")
+    .select("occasion, temp_pref, notes, submitted_at")
+    .eq("booking_id", id)
+    .maybeSingle<{ occasion: string | null; temp_pref: string | null; notes: string | null; submitted_at: string }>(),
+  ]);
 
   if (!booking) notFound();
 
@@ -83,10 +91,12 @@ export default async function BookingDetailPage({ params }: Props) {
         doorCode,
         createdAt: booking.created_at,
         propertyId: booking.property_id,
+        dndActive: booking.dnd_active,
       }}
       property={property ?? null}
       tokens={tokens ?? []}
       rating={rating ?? null}
+      arrivalPrefs={arrivalPrefs ?? null}
     />
   );
 }

@@ -21,6 +21,7 @@ export interface BookingData {
   doorCode: string | null;
   createdAt: string;
   propertyId: string;
+  dndActive?: boolean;
 }
 
 interface TokenRow {
@@ -38,11 +39,19 @@ interface RatingRow {
   created_at: string;
 }
 
+interface ArrivalPrefs {
+  occasion: string | null;
+  temp_pref: string | null;
+  notes: string | null;
+  submitted_at: string;
+}
+
 interface Props {
   booking: BookingData;
   property: { id: string; name: string; name_ar: string } | null;
   tokens: TokenRow[];
   rating: RatingRow | null;
+  arrivalPrefs?: ArrivalPrefs | null;
 }
 
 const field: React.CSSProperties = {
@@ -89,7 +98,15 @@ function fmt(iso: string) {
   });
 }
 
-export function BookingDetailClient({ booking, property, tokens, rating }: Props) {
+const OCCASION_LABEL: Record<string, string> = {
+  leisure: "Leisure 🌴", business: "Business 💼", honeymoon: "Honeymoon 🌹",
+  birthday: "Birthday 🎂", anniversary: "Anniversary ✦", family: "Family 👨‍👩‍👧", other: "Other",
+};
+const TEMP_LABEL: Record<string, string> = {
+  cool: "Cool (AC on) ❄️", warm: "Warm ☀️", any: "No preference",
+};
+
+export function BookingDetailClient({ booking, property, tokens, rating, arrivalPrefs }: Props) {
   const [doorCode, setDoorCode] = useState(booking.doorCode ?? "");
   const [editingCode, setEditingCode] = useState(false);
   const [savingCode, setSavingCode] = useState(false);
@@ -225,6 +242,49 @@ export function BookingDetailClient({ booking, property, tokens, rating }: Props
           {rating.comment && (
             <p style={{ fontSize: "0.9375rem", color: "var(--jood-ink)", lineHeight: 1.6, borderTop: "1px solid var(--jood-line)", paddingTop: "12px", fontStyle: "italic" }}>
               &ldquo;{rating.comment}&rdquo;
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* DND status */}
+      {booking.dndActive && (
+        <div style={{ ...card, border: "1px solid rgba(115,54,53,0.35)", background: "rgba(115,54,53,0.06)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "1.25rem" }}>🔕</span>
+            <div>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-garnet)", marginBottom: "2px" }}>
+                Do Not Disturb — active
+              </p>
+              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
+                Guest has enabled DND. Avoid calling or visiting the unit unless urgent.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Arrival preferences */}
+      {arrivalPrefs && (
+        <div style={card}>
+          <p style={eyebrow}>Pre-arrival preferences</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: arrivalPrefs.notes ? "14px" : 0 }}>
+            {arrivalPrefs.occasion && (
+              <div>
+                <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "4px" }}>Occasion</p>
+                <p style={{ fontSize: "0.9375rem", color: "var(--jood-ink)" }}>{OCCASION_LABEL[arrivalPrefs.occasion] ?? arrivalPrefs.occasion}</p>
+              </div>
+            )}
+            {arrivalPrefs.temp_pref && (
+              <div>
+                <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "4px" }}>Temperature</p>
+                <p style={{ fontSize: "0.9375rem", color: "var(--jood-ink)" }}>{TEMP_LABEL[arrivalPrefs.temp_pref] ?? arrivalPrefs.temp_pref}</p>
+              </div>
+            )}
+          </div>
+          {arrivalPrefs.notes && (
+            <p style={{ fontSize: "0.9375rem", color: "var(--jood-ink)", lineHeight: 1.6, borderTop: arrivalPrefs.occasion || arrivalPrefs.temp_pref ? "1px solid var(--jood-line)" : "none", paddingTop: arrivalPrefs.occasion || arrivalPrefs.temp_pref ? "12px" : 0, fontStyle: "italic" }}>
+              &ldquo;{arrivalPrefs.notes}&rdquo;
             </p>
           )}
         </div>
