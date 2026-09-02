@@ -29,7 +29,7 @@ export default async function ServicesPage({ params }: Props) {
     supabase.from("services").select("*").eq("is_active", true).order("sort_order").order("created_at"),
     supabase
       .from("service_requests")
-      .select("id, service_id, quantity, status, guest_notes, paymob_payment_url, created_at, services(name_en, price_egp)")
+      .select("id, service_id, quantity, status, guest_notes, paymob_payment_url, guest_rating, created_at, services(name_en, price_egp)")
       .eq("booking_id", tokenRow.booking_id)
       .order("created_at", { ascending: false }),
   ]);

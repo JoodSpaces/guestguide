@@ -60,6 +60,7 @@ interface ServiceRequest {
   status: string;
   guest_notes: string | null;
   paymob_payment_url: string | null;
+  guest_rating?: number | null;
   created_at: string;
   services?: { name_en: string; price_egp: number } | null;
 }
@@ -97,6 +98,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [showNotes, setShowNotes] = useState<string | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
+  const [ratings, setRatings] = useState<Record<string, number>>({});
 
   async function requestService(serviceId: string) {
     if (inFlight.current) return;
@@ -129,6 +131,15 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
       setSubmitting(null);
       inFlight.current = false;
     }
+  }
+
+  async function submitRating(requestId: string, rating: number) {
+    setRatings((r) => ({ ...r, [requestId]: rating }));
+    await fetch(`/api/guest/service-requests/${requestId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, rating }),
+    }).catch(() => {});
   }
 
   const name = (svc: Service) => (isAr && svc.name_ar ? svc.name_ar : svc.name_en);
@@ -394,6 +405,60 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                       paddingTop: "8px",
                     }}>
                       "{r.guest_notes}"
+                    </p>
+                  )}
+
+                  {/* Mood pulse — only for fulfilled, unrated requests */}
+                  {r.status === "fulfilled" && !r.guest_rating && !ratings[r.id] && (
+                    <div style={{
+                      marginTop: "12px",
+                      paddingTop: "12px",
+                      borderTop: "1px solid var(--jood-line)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}>
+                      <p style={{
+                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        letterSpacing: "0.14em", textTransform: "uppercase",
+                        color: "var(--jood-ink-ghost)", flexShrink: 0,
+                      }}>
+                        {isAr ? "كيف كانت التجربة؟" : "How was it?"}
+                      </p>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        {([["😞", 1], ["😐", 2], ["😊", 3]] as const).map(([emoji, val]) => (
+                          <button
+                            key={val}
+                            onClick={() => submitRating(r.id, val)}
+                            style={{
+                              width: "36px", height: "36px",
+                              borderRadius: "50%",
+                              border: "1px solid var(--jood-line)",
+                              background: "var(--jood-surface)",
+                              fontSize: "18px",
+                              cursor: "pointer",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              transition: "transform 150ms, border-color 150ms",
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.borderColor = "var(--jood-ink-muted)"; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.borderColor = "var(--jood-line)"; }}
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Thank-you after rating */}
+                  {r.status === "fulfilled" && (r.guest_rating || ratings[r.id]) && (
+                    <p style={{
+                      marginTop: "10px", paddingTop: "10px",
+                      borderTop: "1px solid var(--jood-line)",
+                      fontSize: "12px", color: "var(--jood-ink-muted)",
+                      fontFamily: "var(--font-label)", letterSpacing: "0.08em",
+                    }}>
+                      {isAr ? "شكراً على تقييمك ✦" : "Thanks for your feedback ✦"}
                     </p>
                   )}
                 </div>

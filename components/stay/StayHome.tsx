@@ -166,10 +166,20 @@ export function StayHome({
   const ambience = useTimeAmbience();
 
   const [hour, setHour] = useState(() => new Date().getHours());
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setHour(new Date().getHours()), 60_000);
+    const id = setInterval(() => {
+      setHour(new Date().getHours());
+      setNow(Date.now());
+    }, 60_000);
     return () => clearInterval(id);
   }, []);
+
+  // Arrival countdown — show when check-in is between 0 and 6 hours away
+  const msUntilCheckIn = new Date(payload.checkIn).getTime() - now;
+  const showArrivalCountdown = msUntilCheckIn > 0 && msUntilCheckIn < 6 * 60 * 60 * 1000;
+  const hoursUntil = Math.floor(msUntilCheckIn / (1000 * 60 * 60));
+  const minsUntil  = Math.floor((msUntilCheckIn % (1000 * 60 * 60)) / (1000 * 60));
 
   const timeKickerKeys = getTimeKicker(hour);
   const timeKicker = {
@@ -278,6 +288,53 @@ export function StayHome({
         </div>
       </div>
 
+      {/* ── Arrival countdown ────────────────────────────────────────────── */}
+      {showArrivalCountdown && (
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "18px 22px",
+          background: "linear-gradient(135deg, var(--jood-ink) 0%, var(--jood-ink-deep) 100%)",
+          gap: "16px",
+        }}>
+          <div>
+            <p style={{
+              fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.2em",
+              textTransform: "uppercase", color: "rgba(245,244,237,0.5)", marginBottom: "6px",
+            }}>
+              {isAr ? "إقامتك تبدأ قريباً" : "Your stay begins soon"}
+            </p>
+            <p style={{
+              fontFamily: "var(--font-mono)", fontSize: "2.2rem", fontVariantNumeric: "tabular-nums",
+              color: "#F5F4ED", lineHeight: 1, letterSpacing: "-0.02em",
+            }}>
+              {hoursUntil > 0
+                ? `${hoursUntil}h ${String(minsUntil).padStart(2, "0")}m`
+                : `${minsUntil}m`}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <a href={`/s/${token}/arrival`} style={{
+              padding: "9px 18px",
+              border: "1px solid rgba(245,244,237,0.25)",
+              borderRadius: "var(--radius-pill)",
+              color: "#F5F4ED",
+              textDecoration: "none",
+              fontFamily: "var(--font-label)",
+              fontSize: "9px",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}>
+              {isAr ? "معلومات الوصول" : "Arrival info"}
+            </a>
+          </div>
+          {/* Subtle pulsing dot */}
+          <style>{`
+            @keyframes jood-pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+          `}</style>
+        </div>
+      )}
+
       {/* ── Nudge strip ──────────────────────────────────────────────────── */}
       {nudge && (
         <div style={{
@@ -351,6 +408,40 @@ export function StayHome({
         scrollbarWidth: "none",
         WebkitOverflowScrolling: "touch",
       } as React.CSSProperties}>
+        {/* AI Concierge — hero card */}
+        <Link
+          href={`/s/${token}/concierge`}
+          style={{
+            flexShrink: 0, width: "172px", height: "216px",
+            borderRadius: "20px", padding: "20px", textDecoration: "none",
+            display: "flex", flexDirection: "column", justifyContent: "space-between",
+            background: "linear-gradient(155deg, #1a2f2a 0%, #0d1f1c 60%, #1a1a2e 100%)",
+            position: "relative", overflow: "hidden",
+          }}
+        >
+          {/* Ambient glow */}
+          <div style={{
+            position: "absolute", top: "-20px", right: "-20px",
+            width: "80px", height: "80px", borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(160,201,203,0.25) 0%, transparent 70%)",
+            pointerEvents: "none",
+          }} />
+          <div>
+            <p style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
+              {isAr ? "مساعد ذكي" : "AI concierge"}
+            </p>
+            <p style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 300, fontStyle: "italic", lineHeight: 1.1, color: "#EDE9E0" }}>
+              {isAr ? "اسألني\nأي شيء." : "Ask me\nanything."}
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <span style={{ fontSize: "18px", lineHeight: 1 }}>✦</span>
+            <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(160,201,203,0.5)" }}>
+              {isAr ? "تحدث →" : "Chat →"}
+            </p>
+          </div>
+        </Link>
+
         {/* Primary: services / active phase */}
         <PortraitCard
           href={`/s/${token}/services`}

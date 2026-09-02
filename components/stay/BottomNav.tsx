@@ -33,9 +33,17 @@ const IconChat = () => (
   </svg>
 );
 
+const IconAI = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+  </svg>
+);
+
 interface BottomNavProps {
   token: string;
-  active?: "home" | "discover" | "services" | "help";
+  active?: "home" | "discover" | "services" | "concierge" | "help";
 }
 
 export function BottomNav({ token, active = "home" }: BottomNavProps) {
@@ -43,10 +51,11 @@ export function BottomNav({ token, active = "home" }: BottomNavProps) {
   const isRtl = locale === "ar";
 
   const tabs = [
-    { id: "home",     href: `/s/${token}`,           icon: <IconHome />,    label: isRtl ? "الرئيسية" : "Home" },
-    { id: "discover", href: `/s/${token}/discover`,   icon: <IconCompass />, label: isRtl ? "اكتشف" : "Discover" },
-    { id: "services", href: `/s/${token}/services`,   icon: <IconSparkle />, label: isRtl ? "الخدمات" : "Services" },
-    { id: "help",     href: `/s/${token}/requests`,   icon: <IconChat />,    label: isRtl ? "تواصل" : "Help" },
+    { id: "home",      href: `/s/${token}`,             icon: <IconHome />,    label: isRtl ? "الرئيسية" : "Home" },
+    { id: "discover",  href: `/s/${token}/discover`,     icon: <IconCompass />, label: isRtl ? "اكتشف" : "Discover" },
+    { id: "services",  href: `/s/${token}/services`,     icon: <IconSparkle />, label: isRtl ? "الخدمات" : "Services" },
+    { id: "concierge", href: `/s/${token}/concierge`,    icon: <IconAI />,      label: isRtl ? "مساعد" : "AI" },
+    { id: "help",      href: `/s/${token}/requests`,     icon: <IconChat />,    label: isRtl ? "تواصل" : "Help" },
   ] as const;
 
   const ordered = isRtl ? [...tabs].reverse() : tabs;

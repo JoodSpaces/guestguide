@@ -103,21 +103,61 @@ export default async function AdminTodayPage() {
   // Prefer the dedicated count (join-free); fall back to array length if count query failed
   const openCount = openRequestsCount ?? openRequests.length;
 
+  // ── Daily brief narrative ─────────────────────────────────────────────────
+  const today = new Date();
+  const briefParts: string[] = [];
+  const arrCount = arrivals?.length ?? 0;
+  const depCount = departures?.length ?? 0;
+  const reqCount = openCount;
+  const urgentCount = (openRequests ?? []).filter((r) => r.urgency === "urgent").length;
+  const ticketCount = (openTickets ?? []).length;
+  const criticalAlerts = (invAlerts ?? []).filter((a) => a.severity === "critical").length;
+
+  if (arrCount > 0)
+    briefParts.push(`${arrCount} check-in${arrCount > 1 ? "s" : ""} today`);
+  if (depCount > 0)
+    briefParts.push(`${depCount} check-out${depCount > 1 ? "s" : ""}`);
+  if (reqCount > 0)
+    briefParts.push(`${reqCount} open request${reqCount > 1 ? "s" : ""}${urgentCount > 0 ? ` (${urgentCount} urgent)` : ""}`);
+  if (ticketCount > 0)
+    briefParts.push(`${ticketCount} maintenance ticket${ticketCount > 1 ? "s" : ""}`);
+  if (criticalAlerts > 0)
+    briefParts.push(`${criticalAlerts} critical inventory alert${criticalAlerts > 1 ? "s" : ""}`);
+
+  const briefSentence = briefParts.length === 0
+    ? "All clear — no open items today."
+    : briefParts.join(" · ") + ".";
+
+  const greetHour = today.getHours();
+  const greetWord = greetHour < 12 ? "Good morning" : greetHour < 17 ? "Good afternoon" : "Good evening";
+
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "32px" }}>
-        <h1 className="font-display" style={{ fontSize: "1.8rem" }}>
-          {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
-        </h1>
+      {/* ── Daily brief ──────────────────────────────────────────────────── */}
+      <div style={{
+        marginBottom: "32px",
+        padding: "22px 24px",
+        backgroundColor: "var(--jood-surface)",
+        border: "1px solid var(--jood-line)",
+        borderRadius: "var(--radius-lg)",
+        display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
+      }}>
+        <div>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "8.5px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-faint)", marginBottom: "6px" }}>
+            {today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
+          </p>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.7rem", fontWeight: 400, fontStyle: "italic", color: "var(--jood-ink)", marginBottom: "10px", lineHeight: 1 }}>
+            {greetWord}.
+          </h1>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9375rem", color: "var(--jood-ink-muted)", lineHeight: 1.6, maxWidth: "480px" }}>
+            {briefSentence}
+          </p>
+        </div>
         <Link
           href="/admin/bookings/new"
           style={{
-            padding: "10px 20px",
-            backgroundColor: "var(--jood-ink)",
-            color: "var(--jood-ground)",
-            borderRadius: "var(--radius-pill)",
-            textDecoration: "none",
-            fontSize: "0.875rem",
+            padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
+            borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem", flexShrink: 0, alignSelf: "flex-start",
           }}
         >
           + New booking
