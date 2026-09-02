@@ -6,6 +6,16 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
 import { requireSession, forbidden } from "@/lib/admin-auth";
 
+function resolveAppUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (configured && !configured.includes("localhost")) return configured.replace(/\/$/, "");
+  const vercelProd = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProd) return `https://${vercelProd}`;
+  const vercelDeploy = process.env.VERCEL_URL;
+  if (vercelDeploy) return `https://${vercelDeploy}`;
+  return configured || "http://localhost:3000";
+}
+
 const schema = z.object({
   propertyId: z.string().uuid(),
   guestFirstName: z.string().min(1).max(100),
@@ -123,8 +133,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "token_creation_failed" }, { status: 500 });
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const link = `${appUrl}/s/${plaintext}`;
+  const link = `${resolveAppUrl()}/s/${plaintext}`;
 
   await supabase.from("audit_log").insert({
     actor_type: "admin",
