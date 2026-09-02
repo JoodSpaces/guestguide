@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(false);
@@ -23,7 +21,10 @@ export default function AdminLoginPage() {
 
     if (res.ok) {
       const data = await res.json();
-      router.replace(data.redirect ?? "/admin");
+      // Hard navigation so the admin layout re-runs server-side with the new
+      // cookie — router.replace() is a soft nav that reuses the cached layout
+      // which was rendered unauthenticated, hiding the header until refresh.
+      window.location.href = data.redirect ?? "/admin";
     } else {
       setError(true);
       setLoading(false);
