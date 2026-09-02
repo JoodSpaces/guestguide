@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 import { sendPushToBooking } from "@/lib/push";
 
 const PUSH_MSG: Record<string, { en: string; ar: string }> = {
@@ -15,23 +15,27 @@ const patchSchema = z.object({
 });
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireSession(req))) return forbidden();
+  const session = await requireSession(req);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("guest_requests")
-    .select("*, bookings(guest_first_name, guest_last_name, check_in, check_out, properties(name))")
+    .select("*, bookings(property_id, guest_first_name, guest_last_name, check_in, check_out, properties(name))")
     .eq("id", id)
-    .single();
+    .single<{ bookings: { property_id: string } & Record<string, unknown> } & Record<string, unknown>>();
 
   if (!data) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const propId = (data.bookings as { property_id: string } | null)?.property_id;
+  if (!propId || !checkPropertyAccess(session, propId)) return forbidden();
   return NextResponse.json(data);
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireSession(req, ["admin", "ops", "concierge"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops", "concierge"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -39,11 +43,21 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 400 });
 
+  const supabase = createServiceClient();
+
+  // Verify property access before modifying
+  const { data: existing } = await supabase
+    .from("guest_requests")
+    .select("bookings(property_id)")
+    .eq("id", id)
+    .single<{ bookings: { property_id: string } | null }>();
+  if (!existing) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const propId = (existing.bookings as { property_id: string } | null)?.property_id;
+  if (!propId || !checkPropertyAccess(session, propId)) return forbidden();
+
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
   if (parsed.data.status !== undefined) updates.status = parsed.data.status;
   if (parsed.data.adminNotes !== undefined) updates.admin_notes = parsed.data.adminNotes;
-
-  const supabase = createServiceClient();
   const { data: updatedReq, error } = await supabase
     .from("guest_requests")
     .update(updates)
@@ -68,7 +82,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     // New note → push (only when note is non-empty and no status change in same request)
     else if (parsed.data.adminNotes) {
-      console.log("[push] triggering note push for booking", updatedReq.booking_id);
       sendPushToBooking(updatedReq.booking_id, {
         title: isAr ? "رسالة من فريق JOOD" : "Message from JOOD",
         body: isAr ? "لديك رد جديد على طلبك" : "You have a new reply on your request",

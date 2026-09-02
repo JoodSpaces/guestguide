@@ -54,7 +54,6 @@ export async function sendPushToBooking(
     .select("id, endpoint, p256dh, auth")
     .eq("booking_id", bookingId);
 
-  console.log("[push] subs for booking", bookingId, "→", subs?.length ?? 0);
   if (!subs?.length) return;
 
   const expired: string[] = [];

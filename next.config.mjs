@@ -1,5 +1,5 @@
 import createNextIntlPlugin from "next-intl/plugin";
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
@@ -54,7 +54,6 @@ const nextIntlConfig = withNextIntl(config);
 export default withSentryConfig(nextIntlConfig, {
   // Only upload source maps when SENTRY_AUTH_TOKEN is present
   silent: !process.env.SENTRY_AUTH_TOKEN,
-  disableLogger: true,
   // Disable source map upload when no auth token (local dev / CI without Sentry)
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,

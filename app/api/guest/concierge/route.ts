@@ -1,9 +1,35 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
+import { Redis } from "@upstash/redis";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getBookingFromToken } from "@/lib/guest-auth";
 import { computePhase } from "@/lib/token";
 import Anthropic from "@anthropic-ai/sdk";
+
+const DAILY_CALL_LIMIT = 100;
+
+function getConciergeRedis(): Redis | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
+  return new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+}
+
+async function checkAndIncrementConciergeUsage(bookingId: string): Promise<boolean> {
+  const redis = getConciergeRedis();
+  if (!redis) return true; // no cap when Redis is not configured
+
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const key = `jood:concierge:${bookingId}:${today}`;
+
+  const count = await redis.incr(key);
+  if (count === 1) {
+    // Set TTL on first write: expire after 25h (handles timezone edge cases)
+    await redis.expire(key, 25 * 60 * 60);
+  }
+  return count <= DAILY_CALL_LIMIT;
+}
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -28,6 +54,11 @@ export async function POST(req: NextRequest) {
 
   if (parsed.data.messages.at(-1)?.role !== "user") {
     return new Response("Last message must be from user", { status: 400 });
+  }
+
+  const withinLimit = await checkAndIncrementConciergeUsage(booking.id);
+  if (!withinLimit) {
+    return new Response("Daily concierge limit reached", { status: 429 });
   }
 
   const supabase = createServiceClient();

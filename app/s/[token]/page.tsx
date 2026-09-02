@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { hashToken, computePhase, isArrivalUnlocked, isTokenExpired } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import { StayHome } from "@/components/stay/StayHome";
@@ -49,6 +50,15 @@ export default async function StayPage({ params }: Props) {
   ]);
 
   if (!booking) notFound();
+
+  // Sync the UI locale to the booking's recorded guest language.
+  // If they differ, redirect through sync-locale (one-shot, sets the cookie,
+  // redirects back) so next-intl serves the correct language on reload.
+  const cookieStore = await cookies();
+  const currentLocale = cookieStore.get("jood_locale")?.value ?? "en";
+  if (booking.guest_lang !== currentLocale) {
+    redirect(`/api/stay/sync-locale?lang=${booking.guest_lang}&return=/s/${token}`);
+  }
 
   await supabase.rpc("record_token_open", { p_token_id: tokenRow.id });
 
