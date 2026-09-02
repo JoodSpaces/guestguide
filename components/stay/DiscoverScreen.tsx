@@ -79,10 +79,16 @@ const ROTATING_HINTS_AR = [
 
 interface DiscoverScreenProps {
   token: string;
-  places: Place[];
+  recs: Place[];
+  locale?: string;
+  propertyLat?: number | null;
+  propertyLng?: number | null;
+  wifiSsid?: string | null;
+  checkoutTime?: string | null;
+  onCallPhone?: string | null;
 }
 
-export function DiscoverScreen({ token, places: initialPlaces }: DiscoverScreenProps) {
+export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenProps) {
   const locale = useLocale();
   const isAr = locale === "ar";
 
