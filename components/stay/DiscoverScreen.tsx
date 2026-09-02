@@ -5,12 +5,12 @@ import { useLocale } from "next-intl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Category = "all" | "eat" | "coffee" | "beach" | "activities" | "wifi" | "checkout" | "emergency";
+type FilterCategory = "all" | "eat" | "coffee" | "beach" | "activities" | "wifi" | "checkout" | "emergency";
 
 interface Place {
   name: string;
   name_ar?: string;
-  category: Category;
+  category: string;
   description?: string;
   description_ar?: string;
   distance?: string;
@@ -27,7 +27,7 @@ interface Place {
 
 // ─── Icon helpers ─────────────────────────────────────────────────────────────
 
-const CAT_ICON: Record<Category, string> = {
+const CAT_ICON: Record<string, string> = {
   all:        "✦",
   eat:        "🍽",
   coffee:     "☕",
@@ -38,7 +38,7 @@ const CAT_ICON: Record<Category, string> = {
   emergency:  "🚨",
 };
 
-const CAT_EN: Record<Category, string> = {
+const CAT_EN: Record<string, string> = {
   all:        "All",
   eat:        "Eat",
   coffee:     "Coffee",
@@ -49,7 +49,7 @@ const CAT_EN: Record<Category, string> = {
   emergency:  "Emergency",
 };
 
-const CAT_AR: Record<Category, string> = {
+const CAT_AR: Record<string, string> = {
   all:        "الكل",
   eat:        "مطاعم",
   coffee:     "قهوة",
@@ -60,7 +60,7 @@ const CAT_AR: Record<Category, string> = {
   emergency:  "طوارئ",
 };
 
-const CATEGORIES: Category[] = ["all", "eat", "coffee", "beach", "activities", "wifi", "checkout", "emergency"];
+const CATEGORIES: FilterCategory[] = ["all", "eat", "coffee", "beach", "activities", "wifi", "checkout", "emergency"];
 
 const ROTATING_HINTS_EN = [
   "Fresh croissants at Breeze Bakery, 3 min walk",
@@ -92,7 +92,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
   const locale = useLocale();
   const isAr = locale === "ar";
 
-  const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [activeCategory, setActiveCategory] = useState<FilterCategory>("all");
   const [savedIds, setSavedIds] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem(`jood-saved-${token}`);
