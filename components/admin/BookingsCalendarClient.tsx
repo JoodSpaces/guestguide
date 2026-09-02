@@ -22,9 +22,11 @@ interface Props {
 
 // ── Palette ──────────────────────────────────────────────────────────────────
 const BAR: Record<string, { bg: string; text: string; border: string }> = {
-  confirmed: { bg: "var(--jood-garnet)", text: "#fff", border: "transparent" },
-  completed: { bg: "var(--jood-surface-raised)", text: "var(--jood-ink-muted)", border: "var(--jood-line)" },
-  cancelled:  { bg: "var(--jood-surface)", text: "var(--jood-ink-ghost)", border: "var(--jood-line)" },
+  confirmed:  { bg: "var(--jood-garnet)",        text: "var(--jood-ground)",   border: "transparent" },
+  paid:       { bg: "var(--jood-info-surface)",  text: "var(--jood-info)",     border: "var(--jood-info)" },
+  pending:    { bg: "rgba(255,96,55,0.12)",       text: "var(--jood-accent)",   border: "var(--jood-accent)" },
+  completed:  { bg: "var(--jood-surface-raised)", text: "var(--jood-ink-muted)", border: "var(--jood-line)" },
+  cancelled:  { bg: "var(--jood-surface)",        text: "var(--jood-ink-ghost)", border: "var(--jood-line)" },
 };
 function barStyle(status: string) {
   return BAR[status] ?? BAR.confirmed;
@@ -115,19 +117,27 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
   return (
     <div>
       {/* ── Toolbar ──────────────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px", gap: "12px", flexWrap: "wrap" }}>
-        <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Bookings</h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px", gap: "12px", flexWrap: "wrap" }}>
+        <div>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "8.5px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-faint)", marginBottom: "4px" }}>
+            Admin · Reservations
+          </p>
+          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "2rem", fontWeight: 400, fontStyle: "italic", color: "var(--jood-ink)", lineHeight: 1 }}>
+            Bookings
+          </h1>
+        </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
           {/* View toggle */}
           <div style={{ display: "flex", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", overflow: "hidden" }}>
             {(["calendar", "list"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} style={{
-                padding: "7px 16px", background: view === v ? "var(--jood-ink)" : "transparent",
+                padding: "7px 18px",
+                background: view === v ? "var(--jood-garnet)" : "transparent",
                 color: view === v ? "var(--jood-ground)" : "var(--jood-ink-muted)",
                 border: "none", cursor: "pointer", fontFamily: "var(--font-label)",
                 fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase",
-                transition: "background 150ms, color 150ms",
+                transition: "background 180ms, color 180ms",
               }}>
                 {v === "calendar" ? "Timeline" : "List"}
               </button>
@@ -135,8 +145,16 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
           </div>
 
           <Link href="/admin/bookings/new" style={{
-            padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
-            borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem", flexShrink: 0,
+            padding: "10px 22px",
+            backgroundColor: "var(--jood-garnet)",
+            color: "var(--jood-ground)",
+            borderRadius: "var(--radius-pill)",
+            textDecoration: "none",
+            fontFamily: "var(--font-label)",
+            fontSize: "9px",
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            flexShrink: 0,
           }}>
             + New booking
           </Link>
@@ -147,16 +165,21 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
       {view === "calendar" && (
         <>
           {/* Month nav */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
             <button onClick={() => setAnchor((a) => addMonths(a, -1))} style={navBtn}>‹</button>
-            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", minWidth: "160px", textAlign: "center" }}>
+            <span style={{
+              fontFamily: "var(--font-display)", fontSize: "1.15rem", fontStyle: "italic", fontWeight: 400,
+              minWidth: "170px", textAlign: "center", color: "var(--jood-ink)",
+            }}>
               {monthLabel}
             </span>
             <button onClick={() => setAnchor((a) => addMonths(a, 1))} style={navBtn}>›</button>
             {(anchor.getMonth() !== today.getMonth() || anchor.getFullYear() !== today.getFullYear()) && (
               <button onClick={() => setAnchor(startOfMonth(today.getFullYear(), today.getMonth()))} style={{
-                ...navBtn, fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase",
-                fontFamily: "var(--font-label)", padding: "6px 12px", borderRadius: "var(--radius-pill)",
+                padding: "6px 14px", border: "1px solid var(--jood-garnet)",
+                borderRadius: "var(--radius-pill)", background: "transparent", cursor: "pointer",
+                fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase",
+                fontFamily: "var(--font-label)", color: "var(--jood-garnet)",
               }}>
                 Today
               </button>
@@ -169,7 +192,7 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
 
               {/* Day header */}
               <div style={{ display: "flex", borderBottom: "1px solid var(--jood-line)", position: "sticky", top: 0, zIndex: 10, backgroundColor: "var(--jood-surface)" }}>
-                <div style={{ width: `${PROP_COL}px`, flexShrink: 0, padding: "10px 14px", borderRight: "1px solid var(--jood-line)" }}>
+                <div style={{ width: `${PROP_COL}px`, flexShrink: 0, padding: "10px 14px", borderRight: "1px solid var(--jood-line)", display: "flex", alignItems: "center" }}>
                   <span style={eyebrow}>Property</span>
                 </div>
                 {Array.from({ length: days }, (_, i) => {
@@ -216,9 +239,12 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
                       position: "sticky", left: 0, zIndex: 5,
                       backgroundColor: "var(--jood-surface)",
                     }}>
-                      <span style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--jood-ink)", wordBreak: "break-word", lineHeight: 1.3 }}>
-                        {prop.name}
-                      </span>
+                      <div>
+                        <div style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "var(--jood-garnet)", marginBottom: "6px", opacity: 0.7 }} />
+                        <span style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", fontWeight: 500, color: "var(--jood-ink)", wordBreak: "break-word", lineHeight: 1.3 }}>
+                          {prop.name}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Bars area */}
@@ -331,16 +357,17 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
               {filtered.map((b) => {
                 const isActive = b.check_in <= todayStr && b.check_out >= todayStr;
                 const nights = Math.round((new Date(b.check_out).getTime() - new Date(b.check_in).getTime()) / 86400000);
-                const { bg } = barStyle(b.status);
+                const { bg, border } = barStyle(b.status);
                 return (
                   <Link key={b.id} href={`/admin/bookings/${b.id}`} style={{
                     display: "flex", alignItems: "center", gap: "14px", padding: "13px 16px",
                     backgroundColor: isActive ? "var(--jood-surface-raised)" : "var(--jood-surface)",
-                    border: `1px solid ${isActive ? "var(--jood-accent)" : "var(--jood-line)"}`,
+                    border: "1px solid var(--jood-line)",
+                    borderLeft: isActive ? "3px solid var(--jood-garnet)" : "1px solid var(--jood-line)",
                     borderRadius: "var(--radius-lg)", textDecoration: "none", color: "inherit",
                     opacity: b.status === "cancelled" ? 0.5 : 1,
                   }}>
-                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: bg, flexShrink: 0 }} />
+                    <div style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: bg, flexShrink: 0, border: `1px solid ${border}` }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontWeight: 500, fontSize: "0.9375rem", color: "var(--jood-ink)" }}>{b.guest_first_name} {b.guest_last_name}</p>
                       <p style={{ fontSize: "0.8rem", color: "var(--jood-ink-muted)", marginTop: "1px" }}>{propName(b)}</p>
@@ -383,12 +410,12 @@ function packLanes(bookings: Booking[]): Booking[][] {
 // ── Shared micro-styles ───────────────────────────────────────────────────────
 const navBtn: React.CSSProperties = {
   width: "34px", height: "34px", border: "1px solid var(--jood-line)",
-  borderRadius: "var(--radius-md)", background: "none", cursor: "pointer",
-  fontSize: "1.1rem", color: "var(--jood-ink)", display: "flex",
-  alignItems: "center", justifyContent: "center",
+  borderRadius: "var(--radius-md)", background: "transparent", cursor: "pointer",
+  fontSize: "1.2rem", color: "var(--jood-ink-muted)", display: "flex",
+  alignItems: "center", justifyContent: "center", transition: "border-color 150ms, color 150ms",
 };
 
 const eyebrow: React.CSSProperties = {
-  fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.14em",
+  fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em",
   textTransform: "uppercase", color: "var(--jood-ink-ghost)",
 };
