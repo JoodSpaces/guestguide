@@ -313,7 +313,7 @@ export function StayHome({
         borderBottom: "1px solid var(--jood-line)",
         display: "flex", gap: "8px", flexWrap: "wrap",
       }}>
-        <CountdownChip phase={payload.phase} checkIn={payload.checkIn} checkOut={payload.checkOut} />
+        <CountdownChip phase={payload.phase as any} checkIn={payload.checkIn} checkOut={payload.checkOut} />
       </div>
 
       {/* ── Your stay carousel ───────────────────────────────────────────── */}
