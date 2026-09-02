@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useLocale } from "use-intl";
 
@@ -90,6 +90,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   }, [token]);
 
   const [submitting, setSubmitting] = useState<string | null>(null);
+  const inFlight = useRef(false);
   const [requested, setRequested] = useState<Set<string>>(
     new Set(initialRequests.map((r) => r.service_id).filter(Boolean) as string[])
   );
@@ -98,7 +99,10 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   const [qty, setQty] = useState<Record<string, number>>({});
 
   async function requestService(serviceId: string) {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setSubmitting(serviceId);
+    try {
     const res = await fetch("/api/guest/service-requests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -109,7 +113,6 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
         guestNotes: notes[serviceId] || null,
       }),
     });
-    setSubmitting(null);
     if (res.ok) {
       const { id } = await res.json();
       const svc = initialServices.find((s) => s.id === serviceId);
@@ -121,6 +124,10 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
         services: svc ? { name_en: svc.name_en, price_egp: svc.price_egp } : null,
       }, ...prev]);
       setShowNotes(null);
+    }
+    } finally {
+      setSubmitting(null);
+      inFlight.current = false;
     }
   }
 

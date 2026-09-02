@@ -68,6 +68,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
   const [body, setBody] = useState("");
   const [urgent, setUrgent] = useState(false);
   const [sending, setSending] = useState(false);
+  const inFlight = useRef(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const classifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [predictedCategory, setPredictedCategory] = useState<string | null>(null);
@@ -118,20 +119,25 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
   }, [body]);
 
   async function submitRequest() {
-    if (!body.trim()) return;
+    if (!body.trim() || inFlight.current) return;
+    inFlight.current = true;
     setSending(true);
+    try {
     const res = await fetch("/api/guest/requests", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token, body: body.trim(), isUrgent: urgent }),
     });
-    setSending(false);
     if (res.ok) {
       const newReq: GuestRequest = await res.json();
       setRequests((prev) => [newReq, ...prev]);
       setBody("");
       setUrgent(false);
       setPredictedCategory(null);
+    }
+    } finally {
+      setSending(false);
+      inFlight.current = false;
     }
   }
 

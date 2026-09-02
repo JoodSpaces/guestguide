@@ -1,6 +1,28 @@
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { hashToken } from "@/lib/token";
+import { createServiceClient } from "@/lib/supabase/server";
 
-export default async function ExpiredPage() {
+interface Props { params: Promise<{ token: string }> }
+
+export default async function ExpiredPage({ params }: Props) {
+  const { token } = await params;
+
+  // Validate token format before any DB call
+  if (!/^[A-Za-z0-9_-]{22}$/.test(token)) notFound();
+
+  // Verify the token actually exists in the DB (even if expired / revoked).
+  // Without this check any URL like /s/garbage/expired would render this page.
+  const hash = hashToken(token);
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("stay_tokens")
+    .select("booking_id")
+    .eq("token_hash", hash)
+    .limit(1)
+    .maybeSingle();
+  if (!data) notFound();
+
   const t = await getTranslations("expired");
 
   return (
