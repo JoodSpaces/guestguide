@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 
 const schema = z.object({
   item_id:   z.string().uuid(),
@@ -10,15 +10,29 @@ const schema = z.object({
   notes:     z.string().max(500).nullable().optional(),
 });
 
+async function getTaskPropertyId(supabase: ReturnType<typeof createServiceClient>, taskId: string) {
+  const { data } = await supabase
+    .from("turnover_tasks")
+    .select("property_id")
+    .eq("id", taskId)
+    .single<{ property_id: string }>();
+  return data?.property_id ?? null;
+}
+
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops", "housekeeping"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
   const supabase = createServiceClient();
+  const propertyId = await getTaskPropertyId(supabase, id);
+  if (!propertyId) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!checkPropertyAccess(session, propertyId)) return forbidden();
+
   const { data, error } = await supabase
     .from("turnover_damage_items")
     .select("id, item_id, quantity, condition, notes, created_at, inventory_items(name, unit, category)")
@@ -33,7 +47,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops", "housekeeping"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -42,6 +57,10 @@ export async function POST(
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 400 });
 
   const supabase = createServiceClient();
+  const propertyId = await getTaskPropertyId(supabase, id);
+  if (!propertyId) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!checkPropertyAccess(session, propertyId)) return forbidden();
+
   const { data, error } = await supabase
     .from("turnover_damage_items")
     .insert({ turnover_task_id: id, ...parsed.data })
@@ -56,7 +75,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops", "housekeeping"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
@@ -67,6 +87,10 @@ export async function DELETE(
   }
 
   const supabase = createServiceClient();
+  const propertyId = await getTaskPropertyId(supabase, id);
+  if (!propertyId) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!checkPropertyAccess(session, propertyId)) return forbidden();
+
   const { error } = await supabase
     .from("turnover_damage_items")
     .delete()

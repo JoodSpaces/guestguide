@@ -37,6 +37,13 @@ export async function POST(
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
 
+  // Revoke any previously issued tokens for this booking
+  await supabase
+    .from("stay_tokens")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("booking_id", id)
+    .is("revoked_at", null);
+
   const plaintext = generateToken();
   const hash = hashToken(plaintext);
   const expiresAt = new Date(new Date(booking.check_out).getTime() + 48 * 60 * 60 * 1000);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 
 const schema = z.object({
   checked: z.boolean().optional(),
@@ -13,7 +13,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
-  if (!(await requireSession(req, ["admin", "ops", "housekeeping"]))) return forbidden();
+  const session = await requireSession(req, ["admin", "ops", "housekeeping"]);
+  if (!session) return forbidden();
   const { id, itemId } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id) || !/^[0-9a-f-]{36}$/.test(itemId)) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
@@ -23,11 +24,21 @@ export async function PATCH(
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 400 });
 
+  const supabase = createServiceClient();
+
+  // Verify the task belongs to a property this session can access
+  const { data: task } = await supabase
+    .from("turnover_tasks")
+    .select("property_id")
+    .eq("id", id)
+    .single<{ property_id: string }>();
+  if (!task) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!checkPropertyAccess(session, task.property_id)) return forbidden();
+
   const updates: Record<string, unknown> = { ...parsed.data };
   if (parsed.data.checked === true) updates.checked_at = new Date().toISOString();
   if (parsed.data.checked === false) updates.checked_at = null;
 
-  const supabase = createServiceClient();
   const { error } = await supabase
     .from("turnover_items")
     .update(updates)

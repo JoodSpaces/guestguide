@@ -31,8 +31,8 @@ export async function getBookingFromToken(token: string): Promise<GuestBooking |
   const booking = Array.isArray(data.bookings) ? data.bookings[0] : data.bookings;
   if (!booking) return null;
 
-  // 24h after checkout grace period
-  const expiry = new Date(new Date(booking.check_out).getTime() + 24 * 60 * 60 * 1000);
+  // 48h after checkout grace period (matches isTokenExpired in lib/token.ts)
+  const expiry = new Date(new Date(booking.check_out).getTime() + 48 * 60 * 60 * 1000);
   if (new Date() > expiry) return null;
 
   return booking;

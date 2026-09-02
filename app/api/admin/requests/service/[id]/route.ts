@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { createPaymentLink } from "@/lib/paymob";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 
 const patchSchema = z.object({
   action: z.enum(["approve", "reject", "fulfill", "regenerate_link", "mark_paid"]).optional(),
@@ -10,18 +10,21 @@ const patchSchema = z.object({
 });
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireSession(req))) return forbidden();
+  const session = await requireSession(req);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
 
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("service_requests")
-    .select("*, services(*), bookings(id, guest_first_name, guest_last_name, guest_email, properties(name))")
+    .select("*, services(*), bookings(id, property_id, guest_first_name, guest_last_name, guest_email, properties(name))")
     .eq("id", id)
-    .single();
+    .single<{ bookings: { property_id: string } & Record<string, unknown> } & Record<string, unknown>>();
 
   if (!data) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const propId = (data.bookings as { property_id: string } | null)?.property_id;
+  if (!propId || !checkPropertyAccess(session, propId)) return forbidden();
   return NextResponse.json(data);
 }
 
@@ -36,6 +39,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 400 });
 
   const supabase = createServiceClient();
+
+  // Verify property access before any mutation
+  const { data: existing } = await supabase
+    .from("service_requests")
+    .select("status, bookings(property_id)")
+    .eq("id", id)
+    .single<{ status: string; bookings: { property_id: string } | null }>();
+  if (!existing) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  const propId = (existing.bookings as { property_id: string } | null)?.property_id;
+  if (!propId || !checkPropertyAccess(session, propId)) return forbidden();
+
   const updates: Record<string, unknown> = {};
   const now = new Date().toISOString();
 
@@ -55,14 +69,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   if (parsed.data.action === "fulfill") {
-    const { data: current } = await supabase
-      .from("service_requests")
-      .select("status")
-      .eq("id", id)
-      .single<{ status: string }>();
-    if (!current || !["approved", "paid"].includes(current.status)) {
-      return NextResponse.json({ error: "payment_required", message: "Cannot fulfill an unpaid request" }, { status: 422 });
-    }
+    // Conditional update prevents TOCTOU race: only transitions from approved/paid
     updates.status = "fulfilled";
     updates.fulfilled_at = now;
     updates.updated_at = now;
@@ -110,8 +117,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   if (Object.keys(updates).length === 0) return NextResponse.json({ ok: true });
 
-  const { error } = await supabase.from("service_requests").update(updates).eq("id", id);
+  // For fulfill: use a conditional update to prevent TOCTOU race
+  const baseQuery = supabase.from("service_requests").update(updates).eq("id", id);
+  const updateQuery =
+    parsed.data.action === "fulfill"
+      ? baseQuery.in("status", ["approved", "paid"])
+      : baseQuery;
+
+  const { data: affected, error } = await updateQuery.select("id");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (parsed.data.action === "fulfill" && (!affected || affected.length === 0)) {
+    return NextResponse.json({ error: "payment_required", message: "Cannot fulfill an unpaid request" }, { status: 422 });
+  }
 
   if (parsed.data.action) {
     await supabase.from("audit_log").insert({

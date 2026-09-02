@@ -58,6 +58,11 @@ const tokenRequestMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT = process.env.NODE_ENV === "development" ? 120 : 10;
 const RATE_WINDOW_MS = 60_000;
 
+// Separate fallback for admin login: 10 attempts per 5 minutes per IP
+const adminLoginMap = new Map<string, { count: number; resetAt: number }>();
+const ADMIN_RATE_LIMIT = process.env.NODE_ENV === "development" ? 120 : 10;
+const ADMIN_RATE_WINDOW_MS = 5 * 60_000;
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -100,6 +105,18 @@ export async function middleware(req: NextRequest) {
       const { success } = await limiter.limit(ip);
       if (!success) {
         return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "300" } });
+      }
+    } else if (pathname === "/api/admin/auth") {
+      // In-memory fallback for admin login when Upstash is not configured
+      const now = Date.now();
+      const entry = adminLoginMap.get(ip);
+      if (!entry || now > entry.resetAt) {
+        adminLoginMap.set(ip, { count: 1, resetAt: now + ADMIN_RATE_WINDOW_MS });
+      } else {
+        entry.count += 1;
+        if (entry.count > ADMIN_RATE_LIMIT) {
+          return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "300" } });
+        }
       }
     }
   }
