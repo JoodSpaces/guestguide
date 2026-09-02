@@ -371,7 +371,7 @@ export function StayHome({
 
         {/* Door code */}
         <PortraitCard
-          href={`/s/${token}`}
+          href={`/s/${token}/arrival`}
           eyebrow={isAr ? "الدخول" : "Access"}
           title={isAr ? "رمز\nالباب" : "Door\ncode"}
           icon="🗝"

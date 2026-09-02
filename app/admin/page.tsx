@@ -236,7 +236,7 @@ export default async function AdminTodayPage() {
                   {critical.length > 0 ? ` · ${critical.length} critical` : ""}
                 </span>
               </div>
-              <Link href="/admin/ops" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+              <Link href="/admin/ops/inventory" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                 View all →
               </Link>
             </div>
@@ -246,7 +246,7 @@ export default async function AdminTodayPage() {
                 return (
                   <Link
                     key={a.id}
-                    href="/admin/ops"
+                    href={`/admin/ops/inventory/${a.property_id}`}
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -280,7 +280,7 @@ export default async function AdminTodayPage() {
                 );
               })}
               {total > 5 && (
-                <Link href="/admin/ops" style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--jood-ink-ghost)", padding: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                <Link href="/admin/ops/inventory" style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--jood-ink-ghost)", padding: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                   +{total - 5} more alert{total - 5 !== 1 ? "s" : ""}
                 </Link>
               )}
