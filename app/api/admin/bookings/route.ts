@@ -117,6 +117,8 @@ export async function POST(req: NextRequest) {
   });
 
   if (tokenErr) {
+    // Compensate: remove the orphaned booking so the admin can retry cleanly.
+    await supabase.from("bookings").delete().eq("id", booking.id);
     console.error(tokenErr);
     return NextResponse.json({ error: "token_creation_failed" }, { status: 500 });
   }
