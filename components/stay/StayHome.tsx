@@ -405,7 +405,7 @@ export function StayHome({
 
       {/* ── Weather ──────────────────────────────────────────────────────── */}
       <div style={{ padding: "0 22px 24px" }}>
-        <WeatherStrip isAr={isAr} />
+        <WeatherStrip token={token} isAr={isAr} />
       </div>
 
       {/* ── Tonight note ─────────────────────────────────────────────────── */}
