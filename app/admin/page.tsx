@@ -182,7 +182,7 @@ export default async function AdminTodayPage() {
 
         function status(pid: string): "clear" | "amber" | "red" {
           if (urgentPerProp.has(pid) || criticalInvPerProp.has(pid)) return "red";
-          if (turnoversPerProp.has(pid) || pendingPerProp.has(pid) || openInvPerProp.has(pid) || openTicketPerProp.has(pid)) return "amber";
+          if (pendingPerProp.has(pid) || openTicketPerProp.has(pid)) return "amber";
           return "clear";
         }
 
