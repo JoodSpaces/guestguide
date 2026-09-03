@@ -30,22 +30,35 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 400 });
 
   const supabase = createServiceClient();
+
+  // Keep reorder_threshold_default in sync with par_level so DB triggers use the right threshold
+  const itemUpdate: Record<string, unknown> = { ...parsed.data };
+  if (parsed.data.par_level !== undefined) {
+    itemUpdate.reorder_threshold_default = parsed.data.par_level;
+  }
+
   const { error } = await supabase
     .from("inventory_items")
-    .update(parsed.data)
+    .update(itemUpdate)
     .eq("id", itemId)
     .eq("property_id", propertyId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Keep property_inventory.quantity in sync when current_stock is updated
-  if (parsed.data.current_stock !== undefined) {
+  // Sync property_inventory when stock or threshold changes
+  if (parsed.data.current_stock !== undefined || parsed.data.par_level !== undefined) {
+    const piUpdate: Record<string, unknown> = { property_id: propertyId, item_id: itemId, updated_at: new Date().toISOString() };
+    if (parsed.data.current_stock !== undefined) piUpdate.quantity = parsed.data.current_stock;
+    if (parsed.data.par_level !== undefined) piUpdate.reorder_threshold = parsed.data.par_level;
+
     await supabase
       .from("property_inventory")
-      .upsert(
-        { property_id: propertyId, item_id: itemId, quantity: parsed.data.current_stock, updated_at: new Date().toISOString() },
-        { onConflict: "property_id,item_id" }
-      );
+      .upsert(piUpdate, { onConflict: "property_id,item_id" });
+
+    // Fire low-stock check so alerts are created/resolved immediately on manual stock change
+    if (parsed.data.current_stock !== undefined) {
+      await supabase.rpc("check_low_stock", { p_property_id: propertyId, p_item_id: itemId });
+    }
   }
 
   return NextResponse.json({ ok: true });

@@ -166,7 +166,6 @@ export default async function AdminTodayPage() {
 
       {/* Property status rings */}
       {(properties?.length ?? 0) > 0 && (() => {
-        const turnoversPerProp = new Set(activeTurnovers?.map((t) => t.property_id) ?? []);
         const urgentPerProp = new Set((openTickets ?? []).filter((t) => t.priority === "urgent").map((t) => t.property_id));
         const pendingPerProp = new Set(
           (pendingServiceReqs ?? []).map((r) => {
@@ -177,13 +176,34 @@ export default async function AdminTodayPage() {
         const criticalInvPerProp = new Set(
           (invAlerts ?? []).filter((a) => a.severity === "critical").map((a) => a.property_id)
         );
-        const openInvPerProp = new Set((invAlerts ?? []).map((a) => a.property_id));
         const openTicketPerProp = new Set((openTickets ?? []).filter((t) => t.priority !== "urgent").map((t) => t.property_id));
 
         function status(pid: string): "clear" | "amber" | "red" {
           if (urgentPerProp.has(pid) || criticalInvPerProp.has(pid)) return "red";
           if (pendingPerProp.has(pid) || openTicketPerProp.has(pid)) return "amber";
           return "clear";
+        }
+
+        function tooltip(pid: string): string {
+          const parts: string[] = [];
+          const urgentTickets = (openTickets ?? []).filter((t) => t.property_id === pid && t.priority === "urgent");
+          if (urgentTickets.length > 0)
+            parts.push(`Urgent: ${urgentTickets[0].title}${urgentTickets.length > 1 ? ` +${urgentTickets.length - 1} more` : ""}`);
+          const critAlerts = (invAlerts ?? []).filter((a) => a.property_id === pid && a.severity === "critical");
+          if (critAlerts.length > 0)
+            parts.push(`Critical stock: ${critAlerts[0].message ?? "inventory alert"}`);
+          const pending = (pendingServiceReqs ?? []).filter((r) => {
+            const b = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+            return (b as { property_id: string } | null)?.property_id === pid;
+          });
+          if (pending.length > 0) {
+            const svc = Array.isArray(pending[0].services) ? pending[0].services[0] : pending[0].services;
+            parts.push(`${pending.length} pending service${pending.length > 1 ? "s" : ""}${svc ? ` (${svc.name_en})` : ""}`);
+          }
+          const normalTickets = (openTickets ?? []).filter((t) => t.property_id === pid && t.priority !== "urgent");
+          if (normalTickets.length > 0 && urgentTickets.length === 0)
+            parts.push(`${normalTickets.length} open ticket${normalTickets.length > 1 ? "s" : ""}`);
+          return parts.length > 0 ? parts.join(" · ") : "All clear";
         }
 
         const STATUS_COLOR = { clear: "#4ade80", amber: "#f59e0b", red: "#f87171" };
@@ -216,7 +236,7 @@ export default async function AdminTodayPage() {
                   <Link
                     key={p.id}
                     href={`/admin/ops/inventory/${p.id}`}
-                    title={STATUS_LABEL[s]}
+                    title={tooltip(p.id)}
                     style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}
                   >
                     <div style={{ position: "relative", width: "52px", height: "52px" }}>
@@ -276,7 +296,7 @@ export default async function AdminTodayPage() {
                   {critical.length > 0 ? ` · ${critical.length} critical` : ""}
                 </span>
               </div>
-              <Link href="/admin/ops/inventory" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+              <Link href="/admin/ops" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                 View all →
               </Link>
             </div>

@@ -58,20 +58,33 @@ export async function POST(
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("inventory_items")
-    .insert({ property_id: propertyId, ...parsed.data })
+    .insert({
+      property_id: propertyId,
+      ...parsed.data,
+      // Keep reorder_threshold_default in sync with par_level for DB trigger accuracy
+      reorder_threshold_default: parsed.data.par_level,
+    })
     .select("id")
     .single<{ id: string }>();
 
   if (error || !data) return NextResponse.json({ error: error?.message }, { status: 500 });
 
-  // Seed property_inventory so triggers and alerts have a starting quantity
-  if (parsed.data.current_stock > 0) {
-    await supabase
-      .from("property_inventory")
-      .upsert(
-        { property_id: propertyId, item_id: data.id, quantity: parsed.data.current_stock },
-        { onConflict: "property_id,item_id" }
-      );
+  // Always seed property_inventory so triggers, alerts, and threshold checks have a row to work with
+  await supabase
+    .from("property_inventory")
+    .upsert(
+      {
+        property_id: propertyId,
+        item_id: data.id,
+        quantity: parsed.data.current_stock,
+        reorder_threshold: parsed.data.par_level,
+      },
+      { onConflict: "property_id,item_id" }
+    );
+
+  // Fire initial low-stock check if starting stock is already below par
+  if (parsed.data.par_level > 0) {
+    await supabase.rpc("check_low_stock", { p_property_id: propertyId, p_item_id: data.id });
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

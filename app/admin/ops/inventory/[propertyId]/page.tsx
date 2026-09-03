@@ -10,12 +10,31 @@ export default async function InventoryPage({ params }: Props) {
   if (!/^[0-9a-f-]{36}$/.test(propertyId)) notFound();
 
   const supabase = createServiceClient();
-  const [{ data: property }, { data: items }] = await Promise.all([
+  const [{ data: property }, { data: rawItems }] = await Promise.all([
     supabase.from("properties").select("id, name").eq("id", propertyId).single<{ id: string; name: string }>(),
-    supabase.from("inventory_items").select("*").eq("property_id", propertyId).order("category").order("name").returns<InventoryItem[]>(),
+    supabase
+      .from("inventory_items")
+      .select("*, property_inventory(quantity, damaged_quantity, last_restocked_at)")
+      .eq("property_id", propertyId)
+      .order("category")
+      .order("name"),
   ]);
 
   if (!property) notFound();
 
-  return <InventoryClient propertyId={propertyId} propertyName={property.name} initialItems={items ?? []} />;
+  // Prefer trigger-maintained property_inventory.quantity over the stale inventory_items.current_stock
+  const items: InventoryItem[] = (rawItems ?? []).map((item) => {
+    const pi = Array.isArray(item.property_inventory) ? item.property_inventory[0] : item.property_inventory;
+    return {
+      id: item.id,
+      property_id: item.property_id,
+      category: item.category,
+      name: item.name,
+      unit: item.unit,
+      par_level: item.par_level,
+      current_stock: pi?.quantity ?? item.current_stock,
+    };
+  });
+
+  return <InventoryClient propertyId={propertyId} propertyName={property.name} initialItems={items} />;
 }
