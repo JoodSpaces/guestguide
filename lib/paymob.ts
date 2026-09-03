@@ -51,7 +51,7 @@ export async function createPaymentLink({
     body: JSON.stringify({
       auth_token: token,
       amount_cents: amountCents,
-      expiration: 3600,
+      expiration: 86400,
       order_id: paymobOrderId,
       billing_data: {
         apartment: "NA",
