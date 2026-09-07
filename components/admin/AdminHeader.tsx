@@ -24,7 +24,7 @@ const PRIMARY_NAV = [
   { href: "/admin",                  label: "Today",       roles: ["admin"] },
   { href: "/admin/bookings",         label: "Bookings",    roles: ["admin", "concierge"] },
   { href: "/admin/ops",              label: "Ops",         roles: ["admin", "ops"] },
-  { href: "/admin/ops",              label: "Turnovers",   roles: ["housekeeping"] },
+  { href: "/admin/ops",              label: "Cleaning",    roles: ["housekeeping"] },
   { href: "/admin/ops/maintenance",  label: "Maintenance", roles: ["maintenance"] },
   { href: "/admin/services",         label: "Services",    roles: ["admin"] },
   { href: "/admin/requests",         label: "Requests",    roles: ["admin", "concierge"] },

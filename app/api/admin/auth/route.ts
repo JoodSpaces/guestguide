@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       propertyIds: member.property_ids ?? null,
     };
     const token = await signAdminCookie(session);
-    const res = NextResponse.json({ ok: true, role: member.role, redirect: ROLE_HOME[member.role] });
+    const res = NextResponse.json({ ok: true, role: member.role, redirect: ROLE_HOME[member.role], token, session });
     setCookie(res, token);
     return res;
   }

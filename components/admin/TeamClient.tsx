@@ -7,6 +7,7 @@ interface Member {
   name: string;
   role: "admin" | "ops" | "housekeeping" | "maintenance" | "concierge";
   is_active: boolean;
+  is_owner: boolean;
   created_at: string;
 }
 
@@ -167,13 +168,18 @@ export function TeamClient({ initialMembers }: { initialMembers: Member[] }) {
         <div key={member.id} style={{ ...card, opacity: member.is_active ? 1 : 0.55 }}>
           {editingId === member.id ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                {(["admin", "ops", "housekeeping", "maintenance", "concierge"] as const).map((r) => (
-                  <button key={r} onClick={() => changeRole(member, r)} style={{ padding: "7px 14px", border: `1px solid ${member.role === r ? ROLE_COLOR[r] : "var(--jood-line)"}`, borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.8125rem", cursor: "pointer", color: member.role === r ? ROLE_COLOR[r] : "var(--jood-ink-muted)", textTransform: "capitalize" }}>
-                    {r}
-                  </button>
-                ))}
-              </div>
+              {!member.is_owner && (
+                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                  {(["admin", "ops", "housekeeping", "maintenance", "concierge"] as const).map((r) => (
+                    <button key={r} onClick={() => changeRole(member, r)} style={{ padding: "7px 14px", border: `1px solid ${member.role === r ? ROLE_COLOR[r] : "var(--jood-line)"}`, borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.8125rem", cursor: "pointer", color: member.role === r ? ROLE_COLOR[r] : "var(--jood-ink-muted)", textTransform: "capitalize" }}>
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {member.is_owner && (
+                <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>Master admin — role is fixed. You can only reset the password.</p>
+              )}
               <div style={{ display: "flex", gap: "8px" }}>
                 <input
                   type="password"
@@ -197,19 +203,32 @@ export function TeamClient({ initialMembers }: { initialMembers: Member[] }) {
           ) : (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "12px" }}>
               <div>
-                <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{member.name}</p>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+                  <p style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{member.name}</p>
+                  {member.is_owner && (
+                    <span title="Master admin — protected" style={{ fontSize: "0.65rem", fontFamily: "var(--font-label)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--jood-accent)", border: "1px solid var(--jood-accent)", borderRadius: "var(--radius-pill)", padding: "1px 6px" }}>
+                      Owner
+                    </span>
+                  )}
+                </div>
                 <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: ROLE_COLOR[member.role] }}>
                   {member.role}
                 </span>
               </div>
               <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-                <button onClick={() => setEditingId(member.id)} style={{ padding: "6px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.75rem", cursor: "pointer", color: "var(--jood-ink-muted)" }}>Edit</button>
-                <button onClick={() => toggleActive(member)} style={{ padding: "6px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.75rem", cursor: "pointer", color: member.is_active ? "var(--jood-success)" : "var(--jood-ink-muted)" }}>
-                  {member.is_active ? "Active" : "Inactive"}
+                <button onClick={() => setEditingId(member.id)} style={{ padding: "6px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.75rem", cursor: "pointer", color: "var(--jood-ink-muted)" }}>
+                  {member.is_owner ? "Password" : "Edit"}
                 </button>
-                <button onClick={() => handleDelete(member)} style={{ padding: "6px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.75rem", cursor: "pointer", color: "var(--jood-danger)" }}>
-                  Remove
-                </button>
+                {!member.is_owner && (
+                  <button onClick={() => toggleActive(member)} style={{ padding: "6px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.75rem", cursor: "pointer", color: member.is_active ? "var(--jood-success)" : "var(--jood-ink-muted)" }}>
+                    {member.is_active ? "Active" : "Inactive"}
+                  </button>
+                )}
+                {!member.is_owner && (
+                  <button onClick={() => handleDelete(member)} style={{ padding: "6px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.75rem", cursor: "pointer", color: "var(--jood-danger)" }}>
+                    Remove
+                  </button>
+                )}
               </div>
             </div>
           )}

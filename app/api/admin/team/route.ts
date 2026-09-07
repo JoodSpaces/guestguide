@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("team_members")
-    .select("id, name, role, is_active, created_at")
+    .select("id, name, role, is_active, is_owner, created_at")
     .order("created_at");
 
   return NextResponse.json(data ?? []);
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabase
     .from("team_members")
     .insert({ name: parsed.data.name, role: parsed.data.role, password_hash: passwordHash })
-    .select("id, name, role, is_active, created_at")
+    .select("id, name, role, is_active, is_owner, created_at")
     .single();
 
   if (error) {

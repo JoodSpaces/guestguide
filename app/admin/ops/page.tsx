@@ -88,7 +88,7 @@ export default async function OpsPage() {
       .order("created_at", { ascending: false })
       .limit(20),
     supabase.from("properties").select("id, name").order("name"),
-    supabase.from("team_members").select("id, name, role").eq("is_active", true).order("name"),
+    supabase.from("team_members").select("id, name, role").eq("is_active", true).in("role", ["housekeeping", "ops"]).order("name"),
   ]);
 
   type TurnoverRow = NonNullable<typeof turnovers>[number] & { approved_at?: string | null };
@@ -178,7 +178,7 @@ export default async function OpsPage() {
         <section>
           <div style={{ marginBottom: "12px" }}>
             <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
-              {myTurnovers.length > 0 ? "All other tasks" : "Active"} · {active.length + upcoming.length}
+              {myTurnovers.length > 0 ? "All other tasks" : "Cleaning tasks"} · {active.length + upcoming.length}
             </p>
           </div>
 
@@ -186,7 +186,7 @@ export default async function OpsPage() {
             <div style={{ ...card, textAlign: "center", padding: "32px 24px", marginBottom: "20px" }}>
               <div style={{ fontSize: "1.5rem", marginBottom: "10px" }}>🧹</div>
               <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>All clear</p>
-              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>No active turnovers right now</p>
+              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>No cleaning tasks right now</p>
             </div>
           )}
 

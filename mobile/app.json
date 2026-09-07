@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Jood Ops",
+    "slug": "jood-ops",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "joodops",
+    "splash": {
+      "backgroundColor": "#1C1410"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.jood.ops",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to photograph damage items during turnover inspections.",
+        "NSPhotoLibraryUsageDescription": "Used to attach photos to maintenance tickets."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1C1410"
+      },
+      "package": "com.jood.ops",
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#FF6037"
+        }
+      ]
+    ],
+    "extra": {
+      "apiBaseUrl": "https://your-app.vercel.app",
+      "eas": { "projectId": "your-eas-project-id" }
+    }
+  }
+}

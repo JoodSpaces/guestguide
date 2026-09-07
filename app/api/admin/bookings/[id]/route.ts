@@ -1,9 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { encrypt } from "@/lib/crypto";
+import { encrypt, decrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
 import { requireSession, forbidden } from "@/lib/admin-auth";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await requireSession(req, ["admin", "ops", "concierge"]);
+  if (!session) return forbidden();
+  const { id } = await params;
+  if (!/^[0-9a-f-]{36}$/.test(id)) return NextResponse.json({ error: "invalid_id" }, { status: 400 });
+
+  const supabase = createServiceClient();
+  const { data: booking, error } = await supabase
+    .from("bookings")
+    .select("id, guest_first_name, guest_last_name, guest_email, guest_phone, guest_lang, guest_count, check_in, check_out, status, source, external_ref, door_code_encrypted, created_at, property_id, dnd_active, properties(id, name, name_ar)")
+    .eq("id", id)
+    .single();
+
+  if (error || !booking) return NextResponse.json({ error: "not_found" }, { status: 404 });
+
+  let doorCode: string | null = null;
+  if (booking.door_code_encrypted) {
+    try { doorCode = decrypt(booking.door_code_encrypted as string); } catch { /* different key */ }
+  }
+  let guestPhone: string | null = null;
+  if (booking.guest_phone) {
+    try { guestPhone = decrypt(booking.guest_phone as string); } catch { guestPhone = booking.guest_phone as string; }
+  }
+
+  const [{ data: arrivalPrefs }, { data: tokens }, { data: rating }] = await Promise.all([
+    supabase.from("arrival_preferences").select("occasion, temp_pref, notes, submitted_at").eq("booking_id", id).maybeSingle(),
+    supabase.from("stay_tokens").select("id, open_count, first_opened_at, last_opened_at, revoked_at, expires_at").eq("booking_id", id).order("issued_at", { ascending: false }),
+    supabase.from("stay_ratings").select("stars, comment, created_at").eq("booking_id", id).maybeSingle(),
+  ]);
+
+  return NextResponse.json({ ...booking, door_code_encrypted: undefined, doorCode, guestPhone, arrivalPrefs, tokens, rating });
+}
 
 const schema = z
   .object({

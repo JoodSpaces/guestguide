@@ -31,6 +31,32 @@ const schema = z.object({
   externalRef: z.string().max(100).nullish(),
 });
 
+export async function GET(req: NextRequest) {
+  const session = await requireSession(req, ["admin", "ops", "concierge"]);
+  if (!session) return forbidden();
+
+  const { searchParams } = new URL(req.url);
+  const status = searchParams.get("status");
+  const q      = searchParams.get("q");
+
+  const supabase = createServiceClient();
+  let query = supabase
+    .from("bookings")
+    .select("id, guest_first_name, guest_last_name, check_in, check_out, status, source, created_at, properties(id, name)")
+    .order("check_in", { ascending: false })
+    .limit(60);
+
+  if (status) query = query.eq("status", status);
+  if (q) {
+    const like = `%${q}%`;
+    query = query.or(`guest_first_name.ilike.${like},guest_last_name.ilike.${like}`);
+  }
+
+  const { data, error } = await query;
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data ?? []);
+}
+
 export async function POST(req: NextRequest) {
   const session = await requireSession(req, ["admin"]);
   if (!session) return forbidden();

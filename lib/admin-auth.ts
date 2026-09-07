@@ -190,9 +190,13 @@ export async function requireSession(
   req: NextRequest,
   allowedRoles?: AdminSession["role"][]
 ): Promise<AdminSession | null> {
-  const cookie = req.cookies.get("jood_admin")?.value;
-  if (!cookie) return null;
-  const session = await verifyAdminCookie(cookie);
+  // Cookie (web) or Bearer token (mobile)
+  const bearer = req.headers.get("authorization");
+  const raw = bearer?.startsWith("Bearer ")
+    ? bearer.slice(7)
+    : req.cookies.get("jood_admin")?.value;
+  if (!raw) return null;
+  const session = await verifyAdminCookie(raw);
   if (!session) return null;
   if (allowedRoles && !allowedRoles.includes(session.role)) return null;
   return session;

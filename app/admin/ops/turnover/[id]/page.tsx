@@ -31,6 +31,7 @@ export default async function TurnoverPage({ params }: Props) {
       .from("team_members")
       .select("id, name, role")
       .eq("is_active", true)
+      .in("role", ["housekeeping", "ops"])
       .order("name"),
   ]);
 
