@@ -115,10 +115,12 @@ export function AdminHeader({ role, name }: Props) {
         zIndex: 40,
       }}
     >
-      {/* Logo */}
+      {/* Logo — dark logo in light mode, coral in dark mode */}
       <a href={ROLE_HOME[role] ?? "/admin"} style={{ display: "block", flexShrink: 0, lineHeight: 0 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block" }} />
+        <img className="jood-logo-light" src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block" }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="jood-logo-dark" src="/jood-logo-coral.png" alt="" style={{ height: "22px", width: "auto", display: "none" }} />
       </a>
 
       <div style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)", flexShrink: 0, margin: "0 4px" }} />
@@ -318,6 +320,14 @@ export function AdminHeader({ role, name }: Props) {
           .admin-hamburger            { display: block !important; }
           .admin-profile-desktop      { display: none !important; }
         }
+        /* Logo theme switching */
+        .jood-logo-dark { display: none; }
+        @media (prefers-color-scheme: dark) {
+          :root:not([data-theme="light"]) .jood-logo-light { display: none; }
+          :root:not([data-theme="light"]) .jood-logo-dark  { display: block; }
+        }
+        :root[data-theme="dark"] .jood-logo-light { display: none; }
+        :root[data-theme="dark"] .jood-logo-dark  { display: block; }
       `}</style>
     </header>
   );
