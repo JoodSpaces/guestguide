@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { Search, X, MessageSquare, Bell } from "lucide-react";
 
 interface ServiceReq {
   id: string;
@@ -58,10 +59,10 @@ function StatusChip({ status }: { status: string }) {
   );
 }
 
-function EmptyState({ icon, title, subtitle }: { icon: string; title: string; subtitle: string }) {
+function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
   return (
     <div style={{ textAlign: "center", padding: "56px 24px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-      <div style={{ fontSize: "1.75rem", marginBottom: "12px" }}>{icon}</div>
+      <div style={{ marginBottom: "12px", color: "var(--jood-ink-ghost)", display: "flex", justifyContent: "center" }}>{icon}</div>
       <p style={{ fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)", marginBottom: "6px" }}>{title}</p>
       <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>{subtitle}</p>
     </div>
@@ -172,7 +173,7 @@ export function RequestsListClient({
 
       {/* Search */}
       <div style={{ position: "relative", marginBottom: "16px" }}>
-        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-ghost)", fontSize: "0.85rem", pointerEvents: "none" }}>🔍</span>
+        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-ghost)", pointerEvents: "none", display: "flex" }}><Search size={14} strokeWidth={1.75} /></span>
         <input
           type="text"
           placeholder="Search by guest, property, status…"
@@ -181,7 +182,7 @@ export function RequestsListClient({
           style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px 10px 38px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", backgroundColor: "var(--jood-surface)", color: "var(--jood-ink)", fontSize: "0.875rem", fontFamily: "inherit", outline: "none" }}
         />
         {query && (
-          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", fontSize: "1rem", padding: 0 }}>×</button>
+          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", padding: 0, display: "flex" }}><X size={14} strokeWidth={1.75} /></button>
         )}
       </div>
 
@@ -189,7 +190,7 @@ export function RequestsListClient({
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {!filteredGuest.length && (
             <EmptyState
-              icon={query ? "🔍" : "💬"}
+              icon={query ? <Search size={24} strokeWidth={1.5} /> : <MessageSquare size={24} strokeWidth={1.5} />}
               title={query ? `No results for "${query}"` : "No guest requests yet"}
               subtitle={query ? "Try different keywords" : "Requests from guests will appear here"}
             />
@@ -228,7 +229,7 @@ export function RequestsListClient({
         <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {!filteredService.length && (
             <EmptyState
-              icon={query ? "🔍" : "🛎"}
+              icon={query ? <Search size={24} strokeWidth={1.5} /> : <Bell size={24} strokeWidth={1.5} />}
               title={query ? `No results for "${query}"` : "No service bookings yet"}
               subtitle={query ? "Try different keywords" : "Service bookings from guests will appear here"}
             />

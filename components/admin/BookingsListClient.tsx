@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { Search, X, CalendarX2, Plus } from "lucide-react";
 
 export interface Booking {
   id: string;
@@ -97,7 +98,7 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
 
       {/* Search */}
       <div style={{ position: "relative", marginBottom: "20px" }}>
-        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-ghost)", fontSize: "0.9rem", pointerEvents: "none" }}>🔍</span>
+        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-ghost)", pointerEvents: "none", display: "flex" }}><Search size={15} strokeWidth={1.75} /></span>
         <input
           type="text"
           placeholder="Search by guest name, property, status…"
@@ -106,14 +107,14 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
           style={{ width: "100%", boxSizing: "border-box", padding: "11px 14px 11px 40px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", backgroundColor: "var(--jood-surface)", color: "var(--jood-ink)", fontSize: "0.9375rem", fontFamily: "inherit", outline: "none" }}
         />
         {query && (
-          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", fontSize: "1rem", padding: 0 }}>×</button>
+          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", padding: 0, display: "flex" }}><X size={15} strokeWidth={1.75} /></button>
         )}
       </div>
 
       {/* Empty state */}
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "56px 24px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-          <div style={{ fontSize: "1.75rem", marginBottom: "12px" }}>{query ? "🔍" : "🏠"}</div>
+          <div style={{ marginBottom: "12px", color: "var(--jood-ink-ghost)", display: "flex", justifyContent: "center" }}>{query ? <Search size={24} strokeWidth={1.5} /> : <CalendarX2 size={24} strokeWidth={1.5} />}</div>
           <p style={{ fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)", marginBottom: "6px" }}>
             {query ? `No results for "${query}"` : "No bookings yet"}
           </p>

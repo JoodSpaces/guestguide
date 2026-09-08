@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
+import { Check, X, User, AlertTriangle, Camera, Loader, Sparkles, CheckCircle2, ChevronDown, BedDouble, Droplets, Utensils, Sofa, Leaf, CheckSquare, Home, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/admin/Toaster";
 import { ROOM_LABELS } from "@/lib/ops-checklist";
@@ -70,7 +71,7 @@ const STATUS_LABEL: Record<string, string> = {
   pending:   "Ready to start",
   in_progress: "Cleaning in progress",
   ready:     "Done — waiting for approval",
-  approved:  "Approved ✓",
+  approved:  "Approved",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -100,21 +101,21 @@ const DAMAGE_LABEL: Record<string, string> = {
   needs_cleaning: "Needs cleaning",
 };
 
-const ROOM_EMOJI_MAP: Record<string, string> = {
-  bedroom: "🛏", bathroom: "🚿", kitchen: "🍳",
-  living: "🛋", outdoor: "🌿", general: "✅",
+const ROOM_ICON_MAP: Record<string, LucideIcon> = {
+  bedroom: BedDouble, bathroom: Droplets, kitchen: Utensils,
+  living: Sofa, outdoor: Leaf, general: CheckSquare,
 };
 
-function roomEmoji(room: string): string {
+function roomIcon(room: string): LucideIcon {
   const key = room.toLowerCase();
-  if (ROOM_EMOJI_MAP[key]) return ROOM_EMOJI_MAP[key];
-  if (key.includes("bed") || key.includes("master") || key.includes("guest room")) return "🛏";
-  if (key.includes("bath") || key.includes("toilet") || key.includes("shower")) return "🚿";
-  if (key.includes("kitchen") || key.includes("kitchenette")) return "🍳";
-  if (key.includes("living") || key.includes("lounge") || key.includes("salon")) return "🛋";
-  if (key.includes("outdoor") || key.includes("terrace") || key.includes("pool") || key.includes("garden")) return "🌿";
-  if (key === "general") return "✅";
-  return "🏠";
+  if (ROOM_ICON_MAP[key]) return ROOM_ICON_MAP[key];
+  if (key.includes("bed") || key.includes("master") || key.includes("guest room")) return BedDouble;
+  if (key.includes("bath") || key.includes("toilet") || key.includes("shower")) return Droplets;
+  if (key.includes("kitchen") || key.includes("kitchenette")) return Utensils;
+  if (key.includes("living") || key.includes("lounge") || key.includes("salon")) return Sofa;
+  if (key.includes("outdoor") || key.includes("terrace") || key.includes("pool") || key.includes("garden")) return Leaf;
+  if (key === "general") return CheckSquare;
+  return Home;
 }
 
 const card: React.CSSProperties = {
@@ -237,7 +238,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
       const labels: Record<string, string> = {
         in_progress: "Started",
         ready:       "Marked as done",
-        approved:    "Approved ✓",
+        approved:    "Approved",
       };
       toast(labels[status] ?? "Updated");
     } else {
@@ -319,7 +320,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
             {/* Assignment UI — manager sees dropdown, ops sees claim/status */}
             {myRole === "admin" ? (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", flexShrink: 0 }}>👤 Assigned to:</span>
+                <span style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", flexShrink: 0, display: "flex", alignItems: "center", gap: "5px" }}><User size={13} strokeWidth={1.75} /> Assigned to:</span>
                 <select
                   value={assignTo}
                   onChange={(e) => { setAssignTo(e.target.value); saveAssign(e.target.value); }}
@@ -356,16 +357,16 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                     opacity: savingAssign ? 0.5 : 1,
                   }}
                 >
-                  {savingAssign ? "Claiming…" : "🙋 Claim this task"}
+                  {savingAssign ? "Claiming…" : "Claim this task"}
                 </button>
               </div>
             ) : task.assigned_to === myName ? (
-              <p style={{ fontSize: "0.875rem", color: "var(--jood-aqua)", marginTop: "8px", fontWeight: 500 }}>
-                👤 You&apos;re on this task
+              <p style={{ fontSize: "0.875rem", color: "var(--jood-aqua)", marginTop: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "5px" }}>
+                <User size={13} strokeWidth={1.75} /> You&apos;re on this task
               </p>
             ) : (
-              <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "8px" }}>
-                👤 Assigned to {task.assigned_to}
+              <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginTop: "8px", display: "flex", alignItems: "center", gap: "5px" }}>
+                <User size={13} strokeWidth={1.75} /> Assigned to {task.assigned_to}
               </p>
             )}
           </div>
@@ -392,8 +393,8 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
           <div style={{ height: "100%", width: `${progress}%`, backgroundColor: allDone ? "var(--jood-success)" : "var(--jood-accent)", transition: "width 300ms ease", borderRadius: "3px" }} />
         </div>
         {allDone && (
-          <p style={{ fontSize: "0.8125rem", color: "var(--jood-success)", marginTop: "8px", fontWeight: 500 }}>
-            ✓ All tasks complete — you can now mark this as done
+          <p style={{ fontSize: "0.8125rem", color: "var(--jood-success)", marginTop: "8px", fontWeight: 500, display: "flex", alignItems: "center", gap: "5px" }}>
+            <Check size={13} strokeWidth={2.5} /> All tasks complete — you can now mark this as done
           </p>
         )}
       </div>
@@ -404,7 +405,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
           onClick={() => updateStatus("in_progress")}
           disabled={savingStatus}
           style={{
-            display: "block", width: "100%",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%",
             padding: "16px 24px",
             backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
             border: "none", borderRadius: "var(--radius-lg)",
@@ -412,7 +413,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
             marginBottom: "16px", opacity: savingStatus ? 0.5 : 1,
           }}
         >
-          🧹 Start cleaning
+          <Sparkles size={18} strokeWidth={1.75} /> Start cleaning
         </button>
       )}
 
@@ -421,7 +422,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
           onClick={() => updateStatus("ready")}
           disabled={savingStatus || !allDone}
           style={{
-            display: "block", width: "100%",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", width: "100%",
             padding: "16px 24px",
             backgroundColor: allDone ? "var(--jood-success)" : "var(--jood-line)",
             color: allDone ? "white" : "var(--jood-ink-muted)",
@@ -431,14 +432,14 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
             marginBottom: "16px", opacity: savingStatus ? 0.5 : 1,
           }}
         >
-          {allDone ? "✓ I'm done — notify supervisor" : `Finish all tasks first (${progress}%)`}
+          {allDone ? <><Check size={18} strokeWidth={2.5} /> I&apos;m done — notify supervisor</> : `Finish all tasks first (${progress}%)`}
         </button>
       )}
 
       {task.status === "ready" && (myRole === "admin" || myRole === "ops") && (
         <div style={{ ...card, backgroundColor: "var(--jood-surface-raised)", marginBottom: "16px" }}>
-          <p style={{ fontSize: "0.875rem", fontWeight: 500, marginBottom: "10px", color: "var(--jood-success)" }}>
-            ✓ Cleaning done — supervisor approval needed
+          <p style={{ fontSize: "0.875rem", fontWeight: 500, marginBottom: "10px", color: "var(--jood-success)", display: "flex", alignItems: "center", gap: "6px" }}>
+            <Check size={14} strokeWidth={2.5} /> Cleaning done — supervisor approval needed
           </p>
           <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
             <input
@@ -459,7 +460,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                 opacity: savingStatus ? 0.5 : 1,
               }}
             >
-              Approve ✓
+              Approve
             </button>
           </div>
         </div>
@@ -468,7 +469,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
       {task.status === "approved" && (
         <div style={{ ...card, marginBottom: "16px", backgroundColor: "rgba(var(--jood-success-rgb, 40,167,69), 0.06)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "1.5rem" }}>✅</span>
+            <CheckCircle2 size={24} strokeWidth={1.75} style={{ color: "var(--jood-success)", flexShrink: 0 }} />
             <div>
               <p style={{ fontWeight: 600, color: "var(--jood-success)", marginBottom: "2px" }}>Approved</p>
               <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>By {task.approved_by} · {task.approved_at ? fmt(task.approved_at) : ""}</p>
@@ -485,7 +486,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
           <div key={room} style={{ ...card }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
               <span style={{ fontSize: "1rem", fontWeight: 600, color: "var(--jood-ink)", display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>{roomEmoji(room)}</span>
+                {(() => { const Icon = roomIcon(room); return <Icon size={16} strokeWidth={1.75} style={{ color: "var(--jood-ink-muted)" }} />; })()}
                 {ROOM_LABELS[room] ?? room}
               </span>
               <span style={{
@@ -515,7 +516,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                     }}
                     aria-label={item.checked ? "Uncheck" : "Check"}
                   >
-                    {item.checked ? "✓" : ""}
+                    {item.checked ? <Check size={20} strokeWidth={2.5} /> : null}
                   </button>
 
                   {/* Label */}
@@ -549,7 +550,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                       }}
                       title="Add photo proof"
                     >
-                      {uploadingFor === item.id ? "⏳" : "📷"}
+                      {uploadingFor === item.id ? <Loader size={16} strokeWidth={1.75} /> : <Camera size={16} strokeWidth={1.75} />}
                     </button>
                   </div>
                 </div>
@@ -569,7 +570,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "1.25rem" }}>⚠️</span>
+            <AlertTriangle size={18} strokeWidth={1.75} style={{ color: "var(--jood-accent)", flexShrink: 0 }} />
             <div style={{ textAlign: "left" }}>
               <p style={{ fontSize: "0.9375rem", fontWeight: 600, color: "var(--jood-ink)", marginBottom: "2px" }}>
                 Report missing or damaged item
@@ -581,7 +582,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
               )}
             </div>
           </div>
-          <span style={{ fontSize: "1rem", color: "var(--jood-ink-muted)", transform: reportOpen ? "rotate(180deg)" : "none", transition: "transform 150ms" }}>▾</span>
+          <span style={{ color: "var(--jood-ink-muted)", transform: reportOpen ? "rotate(180deg)" : "none", transition: "transform 150ms", display: "flex" }}><ChevronDown size={16} strokeWidth={1.75} /></span>
         </button>
 
         {reportOpen && (
@@ -611,10 +612,10 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                     <button
                       onClick={() => removeDamageItem(r.id)}
                       disabled={removingDamageId === r.id}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", fontSize: "1.25rem", padding: "4px 8px", flexShrink: 0 }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", padding: "4px 8px", flexShrink: 0, display: "flex", alignItems: "center" }}
                       title="Remove"
                     >
-                      ×
+                      <X size={14} strokeWidth={1.75} />
                     </button>
                   </div>
                 ))}
@@ -695,9 +696,10 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                     fontSize: "0.9375rem", fontWeight: 600,
                     cursor: selectedItemId ? "pointer" : "not-allowed",
                     opacity: addingDamage ? 0.5 : 1,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
                   }}
                 >
-                  {addingDamage ? "Reporting…" : "⚠️ Report this item"}
+                  {addingDamage ? "Reporting…" : <><AlertTriangle size={14} strokeWidth={1.75} /> Report this item</>}
                 </button>
               </div>
             ) : (

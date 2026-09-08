@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { BedDouble, Droplets, Utensils, Leaf, Package, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/admin/Toaster";
 
@@ -20,12 +21,12 @@ interface Props {
   initialItems: InventoryItem[];
 }
 
-const CATEGORY_META: Record<string, { label: string; icon: string }> = {
-  linen:       { label: "Linens",      icon: "🛏" },
-  consumables: { label: "Consumables", icon: "🧴" },
-  kitchen:     { label: "Kitchen",     icon: "🍳" },
-  amenities:   { label: "Amenities",   icon: "🌿" },
-  general:     { label: "General",     icon: "📦" },
+const CATEGORY_META: Record<string, { label: string; icon: LucideIcon }> = {
+  linen:       { label: "Linens",      icon: BedDouble },
+  consumables: { label: "Consumables", icon: Droplets },
+  kitchen:     { label: "Kitchen",     icon: Utensils },
+  amenities:   { label: "Amenities",   icon: Leaf },
+  general:     { label: "General",     icon: Package },
 };
 const CATEGORIES = ["linen", "consumables", "kitchen", "amenities", "general"];
 
@@ -159,11 +160,11 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
       {CATEGORIES.map((cat) => {
         const catItems = grouped[cat];
         if (!catItems?.length) return null;
-        const meta = CATEGORY_META[cat] ?? { label: cat, icon: "📦" };
+        const meta = CATEGORY_META[cat] ?? { label: cat, icon: Package };
         return (
           <div key={cat} style={{ marginBottom: "28px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-              <span style={{ fontSize: "0.875rem" }}>{meta.icon}</span>
+              {(() => { const Icon = meta.icon; return <Icon size={14} strokeWidth={1.75} style={{ color: "var(--jood-ink-muted)" }} />; })()}
               <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                 {meta.label}
               </span>
@@ -255,10 +256,10 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
                     {/* Delete */}
                     <button
                       onClick={() => deleteItem(item.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", fontSize: "1rem", width: "28px", height: "28px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 120ms, background 120ms" }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", width: "28px", height: "28px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 120ms, background 120ms" }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = "var(--jood-danger)"; e.currentTarget.style.background = "rgba(201,48,48,0.06)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = "var(--jood-ink-ghost)"; e.currentTarget.style.background = "none"; }}
-                    >×</button>
+                    ><X size={13} strokeWidth={1.75} /></button>
                   </div>
                 );
               })}
@@ -275,7 +276,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
             <div>
               <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Category</label>
               <select value={newItem.category} onChange={(e) => setNewItem((n) => ({ ...n, category: e.target.value }))} style={{ ...inputStyle, textTransform: "capitalize" }}>
-                {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_META[c]?.icon} {CATEGORY_META[c]?.label ?? c}</option>)}
+                {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_META[c]?.label ?? c}</option>)}
               </select>
             </div>
             <div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Check, X } from "lucide-react";
 
 interface ToastItem { id: number; message: string; type: "success" | "error"; }
 
@@ -48,7 +49,7 @@ export function Toaster() {
             fontFamily: "inherit",
           }}
         >
-          <span style={{ fontSize: "0.9rem" }}>{t.type === "error" ? "✕" : "✓"}</span>
+          {t.type === "error" ? <X size={14} strokeWidth={2} /> : <Check size={14} strokeWidth={2} />}
           {t.message}
         </div>
       ))}
