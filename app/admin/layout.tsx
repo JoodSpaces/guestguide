@@ -30,11 +30,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div dir="ltr" style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)", color: "var(--jood-ink)" }}>
       <NavigationProgress />
       <AdminHeader role={role} name={name} />
-      <main style={{ padding: "32px 24px", maxWidth: "900px", margin: "0 auto" }}>
+      <main className="admin-main">
         {children}
       </main>
       <LiveFeedPanel />
       <Toaster />
+      <style>{`
+        .admin-main {
+          padding: 20px 16px 48px;
+          max-width: 900px;
+          margin: 0 auto;
+          overflow-x: hidden;
+        }
+        @media (min-width: 640px) {
+          .admin-main { padding: 32px 24px 64px; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import { ROLE_HOME } from "@/lib/admin-auth";
+import { Package, RefreshCcw, Wrench, AlertTriangle, Check, type LucideIcon } from "lucide-react";
 
 function Section({ title, count }: { title: string; count: number }) {
   return (
@@ -287,7 +288,7 @@ export default async function AdminTodayPage() {
       {(invAlerts ?? []).length > 0 && (() => {
         const critical = (invAlerts ?? []).filter((a) => a.severity === "critical");
         const total    = (invAlerts ?? []).length;
-        const ALERT_ICON: Record<string, string> = { low_stock: "📦", recurring_damage: "🔁", out_of_service: "🔧" };
+        const ALERT_ICON: Record<string, LucideIcon> = { low_stock: Package, recurring_damage: RefreshCcw, out_of_service: Wrench };
         const SEVERITY_COLOR: Record<string, string> = { critical: "var(--jood-danger)", medium: "var(--jood-accent)", low: "var(--jood-aqua)" };
         return (
           <div style={{ marginBottom: "32px" }}>
@@ -333,7 +334,7 @@ export default async function AdminTodayPage() {
                       color: "inherit",
                     }}
                   >
-                    <span style={{ fontSize: "1rem", flexShrink: 0 }}>{ALERT_ICON[a.alert_type] ?? "⚠️"}</span>
+                    {(() => { const Icon = ALERT_ICON[a.alert_type] ?? AlertTriangle; return <Icon size={16} strokeWidth={1.75} style={{ flexShrink: 0, color: SEVERITY_COLOR[a.severity] }} />; })()}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {a.message ?? (item as { name: string } | null)?.name ?? "Inventory alert"}
@@ -362,7 +363,7 @@ export default async function AdminTodayPage() {
         );
       })()}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "32px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: "16px", marginBottom: "32px" }}>
         {/* Arrivals */}
         <div
           style={{
@@ -434,7 +435,7 @@ export default async function AdminTodayPage() {
       <Section title="Open requests" count={openCount} />
       {openCount === 0 && (
         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-          <span style={{ fontSize: "1.1rem" }}>✓</span>
+          <Check size={15} strokeWidth={2} style={{ color: "var(--jood-success)", flexShrink: 0 }} />
           <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>All clear — no open requests</p>
         </div>
       )}
@@ -488,7 +489,7 @@ export default async function AdminTodayPage() {
         <Section title="Maintenance" count={openTickets?.length ?? 0} />
         {(openTickets?.length ?? 0) === 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-            <span style={{ fontSize: "1.1rem" }}>✓</span>
+            <Check size={15} strokeWidth={2} style={{ color: "var(--jood-success)", flexShrink: 0 }} />
             <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>No open maintenance tickets</p>
           </div>
         )}
@@ -531,7 +532,7 @@ export default async function AdminTodayPage() {
         <Section title="Service requests" count={pendingServiceReqs?.length ?? 0} />
         {(pendingServiceReqs?.length ?? 0) === 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-            <span style={{ fontSize: "1.1rem" }}>✓</span>
+            <Check size={15} strokeWidth={2} style={{ color: "var(--jood-success)", flexShrink: 0 }} />
             <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>No pending service orders</p>
           </div>
         )}
@@ -564,7 +565,7 @@ export default async function AdminTodayPage() {
                 <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
               </div>
               <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-aqua)", flexShrink: 0 }}>
-                🛎 Pending
+                Pending
               </span>
             </Link>
           );

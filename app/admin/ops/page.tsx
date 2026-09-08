@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { CreateTurnoverForm } from "@/components/admin/CreateTurnoverForm";
+import { User } from "lucide-react";
 
 const STATUS_COLOR: Record<string, string> = {
   scheduled: "var(--jood-aqua)",
@@ -117,8 +118,8 @@ export default async function OpsPage() {
               </p>
             )}
             {t.assigned_to && (
-              <p style={{ fontSize: "0.8125rem", color: highlight ? "var(--jood-accent)" : "var(--jood-ink-muted)", marginTop: "3px", fontWeight: highlight ? 600 : 400 }}>
-                👤 {t.assigned_to}
+              <p style={{ fontSize: "0.8125rem", color: highlight ? "var(--jood-accent)" : "var(--jood-ink-muted)", marginTop: "3px", fontWeight: highlight ? 600 : 400, display: "flex", alignItems: "center", gap: "4px" }}>
+                <User size={11} strokeWidth={1.75} /> {t.assigned_to}
               </p>
             )}
             {t.status === "approved" && (t as TurnoverRow).approved_at && (
@@ -184,7 +185,6 @@ export default async function OpsPage() {
 
           {!active.length && !upcoming.length && !myTurnovers.length && (
             <div style={{ ...card, textAlign: "center", padding: "32px 24px", marginBottom: "20px" }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "10px" }}>🧹</div>
               <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>All clear</p>
               <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>No cleaning tasks right now</p>
             </div>
@@ -229,7 +229,6 @@ export default async function OpsPage() {
 
             {!tickets?.length && (
               <div style={{ ...card, textAlign: "center", padding: "32px 24px" }}>
-                <div style={{ fontSize: "1.5rem", marginBottom: "10px" }}>🔧</div>
                 <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>No open tickets</p>
                 <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>All maintenance issues are resolved</p>
               </div>
