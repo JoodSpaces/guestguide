@@ -84,7 +84,7 @@ const STATUS_DOT: Record<string, string> = {
 };
 
 const ROLE_META: Record<DayRole, { label: string; color: string }> = {
-  checkin:  { label: "Check-in",   color: "var(--jood-garnet)" },
+  checkin:  { label: "Check-in",   color: "var(--jood-accent)" },
   staying:  { label: "Staying",    color: "var(--jood-ink-muted)" },
   checkout: { label: "Check-out",  color: "var(--jood-ink-ghost)" },
 };
@@ -253,7 +253,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                 const cellBg = isSel
                   ? "var(--jood-ink)"
                   : isToday
-                  ? "rgba(115,54,53,0.07)"
+                  ? "rgba(255,96,55,0.08)"
                   : isWeekend
                   ? "rgba(0,0,0,0.018)"
                   : "var(--jood-surface)";
@@ -280,7 +280,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                       color: isSel
                         ? "var(--jood-ground)"
                         : isToday
-                        ? "var(--jood-garnet)"
+                        ? "var(--jood-accent)"
                         : isWeekend ? "var(--jood-ink-muted)" : "var(--jood-ink)",
                     }}>
                       {day}
@@ -290,7 +290,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                     {isToday && !isSel ? (
                       <span style={{
                         width: "4px", height: "4px", borderRadius: "50%",
-                        backgroundColor: "var(--jood-garnet)",
+                        backgroundColor: "var(--jood-accent)",
                       }} />
                     ) : (
                       <span style={{ height: "4px" }} />
@@ -446,12 +446,12 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
               style={{
                 display: "block", width: "100%",
                 padding: "11px", marginBottom: "20px",
-                border: "1px solid var(--jood-garnet)",
+                border: "1px solid var(--jood-accent)",
                 borderRadius: "var(--radius-pill)",
                 background: "transparent", cursor: "pointer",
                 fontFamily: "var(--font-label)", fontSize: "9px",
                 letterSpacing: "0.14em", textTransform: "uppercase",
-                color: "var(--jood-garnet)",
+                color: "var(--jood-accent)",
                 transition: "background-color 150ms",
               }}
             >
@@ -490,8 +490,8 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                       <span style={{
                         fontFamily: "var(--font-label)", fontSize: "8px",
                         letterSpacing: "0.1em", textTransform: "uppercase",
-                        color: rl.urgent ? "var(--jood-garnet)" : "var(--jood-ink-ghost)",
-                        border: `1px solid ${rl.urgent ? "var(--jood-garnet)" : "var(--jood-line)"}`,
+                        color: rl.urgent ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
+                        border: `1px solid ${rl.urgent ? "var(--jood-accent)" : "var(--jood-line)"}`,
                         borderRadius: "var(--radius-pill)", padding: "3px 8px",
                         flexShrink: 0,
                       }}>
@@ -591,7 +591,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                       padding: "14px 16px", textDecoration: "none", color: "inherit",
                       backgroundColor: isActive ? "var(--jood-surface-raised)" : "var(--jood-surface)",
                       border: "1px solid var(--jood-line)",
-                      borderLeft: isActive ? "3px solid var(--jood-garnet)" : "1px solid var(--jood-line)",
+                      borderLeft: isActive ? "3px solid var(--jood-accent)" : "1px solid var(--jood-line)",
                       borderRadius: "var(--radius-lg)",
                       opacity: b.status === "cancelled" ? 0.45 : 1,
                       transition: "filter 120ms",
@@ -624,8 +624,8 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                       <span style={{
                         fontFamily: "var(--font-label)", fontSize: "8px",
                         letterSpacing: "0.12em", textTransform: "uppercase",
-                        color: rl.urgent ? "var(--jood-garnet)" : "var(--jood-ink-ghost)",
-                        border: `1px solid ${rl.urgent ? "var(--jood-garnet)" : "var(--jood-line)"}`,
+                        color: rl.urgent ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
+                        border: `1px solid ${rl.urgent ? "var(--jood-accent)" : "var(--jood-line)"}`,
                         borderRadius: "var(--radius-pill)", padding: "3px 8px",
                       }}>
                         {rl.label}
@@ -696,7 +696,7 @@ const styles = {
     padding: "12px 14px", textDecoration: "none", color: "inherit",
     backgroundColor: "var(--jood-surface)",
     border: "1px solid var(--jood-line)",
-    borderLeft: urgent ? "3px solid var(--jood-garnet)" : "1px solid var(--jood-line)",
+    borderLeft: urgent ? "3px solid var(--jood-accent)" : "1px solid var(--jood-line)",
     borderRadius: "var(--radius-lg)", transition: "filter 120ms",
   }),
 };

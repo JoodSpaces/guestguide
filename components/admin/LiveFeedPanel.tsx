@@ -1,6 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+
+// Public event API — dispatched so AdminHeader can show the badge
+// without shared state or prop drilling.
+// AdminHeader fires:  new CustomEvent("live-feed-toggle")
+// LiveFeedPanel fires: new CustomEvent("live-feed-count", { detail: n })
 import type { ActivityEvent } from "@/app/api/admin/activity/route";
 
 const TYPE_ICON: Record<string, string> = {
@@ -55,9 +60,17 @@ export function LiveFeedPanel() {
     return () => clearInterval(id);
   }, [fetchEvents]);
 
-  function handleOpen() {
-    setOpen(true);
-  }
+  // Listen for toggle events fired by AdminHeader
+  useEffect(() => {
+    function onToggle() { setOpen((o) => !o); }
+    window.addEventListener("live-feed-toggle", onToggle);
+    return () => window.removeEventListener("live-feed-toggle", onToggle);
+  }, []);
+
+  // Broadcast badge count to AdminHeader whenever it changes
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("live-feed-count", { detail: newCount }));
+  }, [newCount]);
 
   function handleItemClick() {
     setNewCount(0);
@@ -65,52 +78,6 @@ export function LiveFeedPanel() {
 
   return (
     <>
-      {/* Toggle tab */}
-      <button
-        onClick={open ? () => setOpen(false) : handleOpen}
-        aria-label="Live feed"
-        className="live-feed-toggle"
-        style={{
-          position: "fixed",
-          right: open ? "min(312px, 100vw)" : 0,
-          top: "50%",
-          transform: "translateY(-50%)",
-          zIndex: 50,
-          background: "var(--jood-ink)",
-          color: "var(--jood-ground)",
-          border: "none",
-          borderRadius: "var(--radius-md) 0 0 var(--radius-md)",
-          padding: "14px 10px",
-          cursor: "pointer",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "6px",
-          transition: "right 350ms cubic-bezier(0.4,0,0.2,1)",
-          boxShadow: "-2px 0 12px rgba(0,0,0,0.12)",
-        }}
-      >
-        <span style={{ writingMode: "vertical-rl", textOrientation: "mixed", letterSpacing: "0.12em", fontFamily: "var(--font-label)", textTransform: "uppercase", fontSize: "0.6rem" }}>
-          {open ? "Close" : "Live"}
-        </span>
-        {!open && newCount > 0 && (
-          <span style={{
-            background: "var(--jood-danger)",
-            color: "white",
-            borderRadius: "50%",
-            width: "18px",
-            height: "18px",
-            fontSize: "0.6rem",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "var(--font-mono)",
-          }}>
-            {newCount > 9 ? "9+" : newCount}
-          </span>
-        )}
-        <span style={{ fontSize: "0.75rem" }}>{open ? "→" : "←"}</span>
-      </button>
 
       {/* Panel */}
       <div

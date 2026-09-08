@@ -43,12 +43,22 @@ interface Props {
 export function AdminHeader({ role, name }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const [moreOpen, setMoreOpen]       = useState(false);
+  const [moreOpen,    setMoreOpen]    = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [menuOpen, setMenuOpen]       = useState(false);
+  const [menuOpen,    setMenuOpen]    = useState(false);
+  const [liveBadge,   setLiveBadge]  = useState(0);
   const moreRef    = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
   const menuRef    = useRef<HTMLDivElement>(null);
+
+  // Receive badge count from LiveFeedPanel
+  useEffect(() => {
+    function onCount(e: Event) {
+      setLiveBadge((e as CustomEvent<number>).detail);
+    }
+    window.addEventListener("live-feed-count", onCount);
+    return () => window.removeEventListener("live-feed-count", onCount);
+  }, []);
 
   function isActive(href: string) {
     if (href === "/admin") return pathname === "/admin";
@@ -166,8 +176,42 @@ export function AdminHeader({ role, name }: Props) {
       {/* Spacer for mobile so right side stays pushed right */}
       <div className="admin-nav-mobile-spacer" style={{ flex: 1 }} />
 
-      {/* Right side: presence + profile avatar */}
+      {/* Right side: live feed + presence + profile avatar */}
       <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+        {/* Live feed trigger */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent("live-feed-toggle"))}
+          aria-label="Activity feed"
+          style={{
+            position: "relative",
+            width: "32px", height: "32px", borderRadius: "50%",
+            border: "1px solid var(--jood-line)",
+            background: "transparent", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "var(--jood-ink-muted)", fontSize: "0.9rem",
+            transition: "border-color 150ms, color 150ms",
+            flexShrink: 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "var(--jood-ink)";
+            e.currentTarget.style.color = "var(--jood-ink)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "var(--jood-line)";
+            e.currentTarget.style.color = "var(--jood-ink-muted)";
+          }}
+        >
+          ⚡
+          {liveBadge > 0 && (
+            <span style={{
+              position: "absolute", top: "-2px", right: "-2px",
+              width: "8px", height: "8px", borderRadius: "50%",
+              backgroundColor: "var(--jood-accent)",
+              border: "2px solid var(--jood-surface)",
+            }} />
+          )}
+        </button>
+
         <PresenceAvatars myName={name} myRole={role} />
 
         {/* Hamburger — mobile only */}
