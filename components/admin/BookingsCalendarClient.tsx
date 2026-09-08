@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import Link from "next/link";
 
 export interface Booking {
@@ -120,47 +120,39 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
   while (cells.length % 7 !== 0) cells.push(null);
 
   // Per-day booking dots map
-  const dotMap = useMemo(() => {
-    const m = new Map<string, Booking[]>();
-    for (let d = 1; d <= dim; d++) {
-      const iso = dayISO(yr, mo, d);
-      m.set(iso, initialBookings.filter(
-        (b) => roleOnDay(b, iso) !== null && b.status !== "cancelled"
-      ));
-    }
-    return m;
-  }, [initialBookings, yr, mo, dim]);
+  const dotMap = new Map<string, Booking[]>();
+  for (let d = 1; d <= dim; d++) {
+    const iso = dayISO(yr, mo, d);
+    dotMap.set(iso, initialBookings.filter(
+      (b) => roleOnDay(b, iso) !== null && b.status !== "cancelled"
+    ));
+  }
 
   // Bookings on selected day
   const selISO = selDay !== null ? dayISO(yr, mo, selDay) : null;
-  const selBookings = useMemo(() => {
-    if (!selISO) return [];
-    return initialBookings
-      .map((b) => ({ b, role: roleOnDay(b, selISO) }))
-      .filter((x): x is { b: Booking; role: DayRole } => x.role !== null)
-      .sort((a, b) => {
-        const o: Record<DayRole, number> = { checkin: 0, staying: 1, checkout: 2 };
-        return o[a.role] - o[b.role];
-      });
-  }, [initialBookings, selISO]);
+  const selBookings = selISO
+    ? initialBookings
+        .map((b) => ({ b, role: roleOnDay(b, selISO) }))
+        .filter((x): x is { b: Booking; role: DayRole } => x.role !== null)
+        .sort((a, b) => {
+          const o: Record<DayRole, number> = { checkin: 0, staying: 1, checkout: 2 };
+          return o[a.role] - o[b.role];
+        })
+    : [];
 
   // Upcoming for the strip / list view
-  const upcoming = useMemo(() =>
-    initialBookings
-      .filter((b) => b.check_out.slice(0, 10) >= todayISO && b.status !== "cancelled")
-      .sort((a, b) => a.check_in.localeCompare(b.check_in)),
-    [initialBookings, todayISO]
-  );
+  const upcoming = initialBookings
+    .filter((b) => b.check_out.slice(0, 10) >= todayISO && b.status !== "cancelled")
+    .sort((a, b) => a.check_in.localeCompare(b.check_in));
 
-  const searchResults = useMemo(() => {
-    const q = query.toLowerCase().trim();
-    if (!q) return initialBookings.sort((a, b) => a.check_in.localeCompare(b.check_in));
-    return initialBookings.filter((b) =>
-      `${b.guest_first_name} ${b.guest_last_name}`.toLowerCase().includes(q) ||
-      propName(b).toLowerCase().includes(q) ||
-      b.status.toLowerCase().includes(q)
-    );
-  }, [initialBookings, query]);
+  const q = query.toLowerCase().trim();
+  const searchResults = q
+    ? initialBookings.filter((b) =>
+        `${b.guest_first_name} ${b.guest_last_name}`.toLowerCase().includes(q) ||
+        propName(b).toLowerCase().includes(q) ||
+        b.status.toLowerCase().includes(q)
+      )
+    : [...initialBookings].sort((a, b) => a.check_in.localeCompare(b.check_in));
 
   function goMonth(n: number) {
     setAnchor((a) => addMonths(a, n));
