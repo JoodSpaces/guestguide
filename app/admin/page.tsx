@@ -242,16 +242,10 @@ export default async function AdminTodayPage() {
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-start" }}>
               {/* Decorative J — with the property O-rings forms "JOOOOD" */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "none", userSelect: "none" }}>
-                <div style={{ position: "relative", width: "52px", height: "52px" }}>
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                    <circle cx="26" cy="26" r={18} stroke="var(--jood-line)" strokeWidth="2.5" fill="rgba(74,222,128,0.06)" />
-                    <circle cx="26" cy="26" r={18} stroke="#4ade80" strokeWidth="2.5" fill="none" strokeLinecap="round" transform="rotate(-90 26 26)" />
-                  </svg>
+                <div style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{
-                    position: "absolute", inset: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
                     fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300,
-                    fontSize: "1.1rem", color: "#4ade80", lineHeight: 1,
+                    fontSize: "2rem", color: "#4ade80", lineHeight: 1,
                   }}>J</span>
                 </div>
                 <p style={{ fontSize: "0.6875rem", color: "transparent", lineHeight: 1.3 }}>·</p>
@@ -299,16 +293,10 @@ export default async function AdminTodayPage() {
 
               {/* Decorative D */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "none", userSelect: "none" }}>
-                <div style={{ position: "relative", width: "52px", height: "52px" }}>
-                  <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                    <circle cx="26" cy="26" r={18} stroke="var(--jood-line)" strokeWidth="2.5" fill="rgba(74,222,128,0.06)" />
-                    <circle cx="26" cy="26" r={18} stroke="#4ade80" strokeWidth="2.5" fill="none" strokeLinecap="round" transform="rotate(-90 26 26)" />
-                  </svg>
+                <div style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <span style={{
-                    position: "absolute", inset: 0,
-                    display: "flex", alignItems: "center", justifyContent: "center",
                     fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300,
-                    fontSize: "1.1rem", color: "#4ade80", lineHeight: 1,
+                    fontSize: "2rem", color: "#4ade80", lineHeight: 1,
                   }}>D</span>
                 </div>
                 <p style={{ fontSize: "0.6875rem", color: "transparent", lineHeight: 1.3 }}>·</p>
