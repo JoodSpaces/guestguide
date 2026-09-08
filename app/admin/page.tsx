@@ -297,7 +297,7 @@ export default async function AdminTodayPage() {
                   <span style={{
                     fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300,
                     fontSize: "2rem", color: "#4ade80", lineHeight: 1,
-                  }}>D</span>
+                  }}>d</span>
                 </div>
                 <p style={{ fontSize: "0.6875rem", color: "transparent", lineHeight: 1.3 }}>·</p>
               </div>
