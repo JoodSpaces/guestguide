@@ -78,6 +78,18 @@ export function LiveFeedPanel() {
 
   return (
     <>
+      {/* Backdrop — tap to dismiss on mobile */}
+      {open && (
+        <div
+          onClick={() => window.dispatchEvent(new CustomEvent("live-feed-toggle"))}
+          style={{
+            position: "fixed", inset: 0,
+            zIndex: 48,
+            backgroundColor: "rgba(0,0,0,0.35)",
+            backdropFilter: "blur(2px)",
+          }}
+        />
+      )}
 
       {/* Panel */}
       <div
@@ -117,10 +129,24 @@ export function LiveFeedPanel() {
             <span style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.16em", textTransform: "uppercase" }}>
               Activity
             </span>
+            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.7rem", fontFamily: "var(--font-mono)" }}>
+              {loading ? "…" : `${events.length}`}
+            </span>
           </div>
-          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.7rem", fontFamily: "var(--font-mono)" }}>
-            {loading ? "…" : `${events.length} events`}
-          </span>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent("live-feed-toggle"))}
+            aria-label="Close activity feed"
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "rgba(255,255,255,0.4)", fontSize: "1.2rem",
+              lineHeight: 1, padding: "4px 8px", borderRadius: "4px",
+              transition: "color 150ms",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.9)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+          >
+            ×
+          </button>
         </div>
 
         {/* Feed */}
