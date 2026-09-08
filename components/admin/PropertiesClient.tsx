@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { type PropertySpecs, type RoomSpec, type RoomType, DEFAULT_SPECS } from "@/lib/ops-checklist";
 
 export interface Property {
   id: string;
@@ -13,6 +14,7 @@ export interface Property {
   max_guests: number;
   wifi_ssid: string | null;
   hero_image_url: string | null;
+  specs?: PropertySpecs | null;
 }
 
 interface Props {
@@ -22,10 +24,18 @@ interface Props {
 const BLANK: Omit<Property, "id"> = {
   slug: "", name: "", name_ar: "", city: "", address: "",
   bedrooms: 1, max_guests: 2, wifi_ssid: "", hero_image_url: null,
+  specs: { ...DEFAULT_SPECS, rooms: DEFAULT_SPECS.rooms.map((r) => ({ ...r })) },
 };
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function newRoom(type: RoomType, index: number): RoomSpec {
+  const labels: Record<RoomType, string> = {
+    bedroom: "Bedroom", bathroom: "Bathroom", living: "Living Room", kitchen: "Kitchen",
+  };
+  return { id: `r${Date.now()}-${index}`, type, name: labels[type] };
 }
 
 export function PropertiesClient({ initialProperties }: Props) {
@@ -49,7 +59,14 @@ export function PropertiesClient({ initialProperties }: Props) {
   }
 
   function openEdit(p: Property) {
-    setForm({ slug: p.slug, name: p.name, name_ar: p.name_ar, city: p.city, address: p.address, bedrooms: p.bedrooms, max_guests: p.max_guests, wifi_ssid: p.wifi_ssid ?? "", hero_image_url: p.hero_image_url });
+    const specs: PropertySpecs = p.specs && Array.isArray(p.specs.rooms) && p.specs.rooms.length > 0
+      ? p.specs
+      : { ...DEFAULT_SPECS, rooms: DEFAULT_SPECS.rooms.map((r) => ({ ...r })) };
+    setForm({
+      slug: p.slug, name: p.name, name_ar: p.name_ar, city: p.city, address: p.address,
+      bedrooms: p.bedrooms, max_guests: p.max_guests, wifi_ssid: p.wifi_ssid ?? "",
+      hero_image_url: p.hero_image_url, specs,
+    });
     setEditing(p);
     setAdding(false);
     setError(null);
@@ -63,12 +80,34 @@ export function PropertiesClient({ initialProperties }: Props) {
     setHeroError(null);
   }
 
-  function field(key: keyof Omit<Property, "id">, value: string | number | null) {
+  function field(key: keyof Omit<Property, "id">, value: string | number | null | PropertySpecs) {
     setForm((f) => {
       const next = { ...f, [key]: value };
       if (key === "name" && !editing) next.slug = slugify(String(value));
       return next;
     });
+  }
+
+  function setSpecs(fn: (s: PropertySpecs) => PropertySpecs) {
+    setForm((f) => ({ ...f, specs: fn(f.specs ?? DEFAULT_SPECS) }));
+  }
+
+  function addRoom() {
+    setSpecs((s) => ({
+      ...s,
+      rooms: [...s.rooms, newRoom("bedroom", s.rooms.length)],
+    }));
+  }
+
+  function removeRoom(id: string) {
+    setSpecs((s) => ({ ...s, rooms: s.rooms.filter((r) => r.id !== id) }));
+  }
+
+  function updateRoom(id: string, patch: Partial<RoomSpec>) {
+    setSpecs((s) => ({
+      ...s,
+      rooms: s.rooms.map((r) => r.id === id ? { ...r, ...patch } : r),
+    }));
   }
 
   async function save() {
@@ -140,6 +179,7 @@ export function PropertiesClient({ initialProperties }: Props) {
     else { const d = await res.json(); alert(d.error ?? "Failed to delete"); }
   }
 
+  const specs = form.specs ?? DEFAULT_SPECS;
   const showForm = adding || !!editing;
 
   return (
@@ -171,6 +211,94 @@ export function PropertiesClient({ initialProperties }: Props) {
             <FormField label="Max guests" value={String(form.max_guests)} onChange={(v) => field("max_guests", Number(v))} type="number" />
             <div style={{ gridColumn: "1 / -1" }}>
               <FormField label="Wi-Fi network name (optional)" value={form.wifi_ssid ?? ""} onChange={(v) => field("wifi_ssid", v)} placeholder="JOOD_Villa" />
+            </div>
+
+            {/* ── Cleaning setup ── */}
+            <div style={{ gridColumn: "1 / -1", borderTop: "1px solid var(--jood-line)", paddingTop: "20px", marginTop: "4px" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "14px" }}>
+                Cleaning setup
+              </p>
+
+              {/* Rooms */}
+              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginBottom: "8px" }}>Rooms</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "10px" }}>
+                {specs.rooms.map((room) => (
+                  <div key={room.id} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                    <select
+                      value={room.type}
+                      onChange={(e) => updateRoom(room.id, { type: e.target.value as RoomType })}
+                      style={selectStyle}
+                    >
+                      <option value="bedroom">Bedroom</option>
+                      <option value="bathroom">Bathroom</option>
+                      <option value="living">Living Room</option>
+                      <option value="kitchen">Kitchen</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={room.name}
+                      onChange={(e) => updateRoom(room.id, { name: e.target.value })}
+                      placeholder="Room name"
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeRoom(room.id)}
+                      style={{ padding: "8px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "transparent", color: "var(--jood-danger)", cursor: "pointer", fontSize: "0.8125rem", fontFamily: "inherit", flexShrink: 0 }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={addRoom}
+                style={{ padding: "7px 14px", border: "1px dashed var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "transparent", color: "var(--jood-ink-muted)", cursor: "pointer", fontSize: "0.8125rem", fontFamily: "inherit", marginBottom: "20px" }}
+              >
+                + Add room
+              </button>
+
+              {/* Kitchen type — shown only if there is a kitchen room */}
+              {specs.rooms.some((r) => r.type === "kitchen") && (
+                <div style={{ marginBottom: "16px" }}>
+                  <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginBottom: "8px" }}>Kitchen type</p>
+                  <div style={{ display: "flex", gap: "16px" }}>
+                    {(["full", "kitchenette"] as const).map((kt) => (
+                      <label key={kt} style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.875rem", cursor: "pointer" }}>
+                        <input
+                          type="radio"
+                          name="kitchen_type"
+                          value={kt}
+                          checked={specs.kitchen_type === kt}
+                          onChange={() => setSpecs((s) => ({ ...s, kitchen_type: kt }))}
+                        />
+                        {kt === "full" ? "Full kitchen" : "Kitchenette"}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Outdoor / pool */}
+              <div style={{ display: "flex", gap: "24px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={specs.has_outdoor}
+                    onChange={(e) => setSpecs((s) => ({ ...s, has_outdoor: e.target.checked }))}
+                  />
+                  Has outdoor / terrace
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.875rem", cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={specs.has_pool}
+                    onChange={(e) => setSpecs((s) => ({ ...s, has_pool: e.target.checked }))}
+                  />
+                  Has pool
+                </label>
+              </div>
             </div>
 
             {/* Hero image — only available when editing an existing property */}
@@ -213,25 +341,14 @@ export function PropertiesClient({ initialProperties }: Props) {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={heroUploading}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                      width: "140px",
-                      height: "88px",
-                      border: "1.5px dashed var(--jood-line)",
-                      borderRadius: "var(--radius-md)",
-                      backgroundColor: "var(--jood-ground)",
-                      color: "var(--jood-ink-muted)",
-                      fontSize: "0.8125rem",
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      flexDirection: "column",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                      width: "140px", height: "88px",
+                      border: "1.5px dashed var(--jood-line)", borderRadius: "var(--radius-md)",
+                      backgroundColor: "var(--jood-ground)", color: "var(--jood-ink-muted)",
+                      fontSize: "0.8125rem", cursor: "pointer", fontFamily: "inherit", flexDirection: "column",
                     }}
                   >
-                    {heroUploading ? (
-                      <span>Uploading…</span>
-                    ) : (
+                    {heroUploading ? <span>Uploading…</span> : (
                       <>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                           <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
@@ -294,7 +411,6 @@ export function PropertiesClient({ initialProperties }: Props) {
         {properties.map((p) => (
           <div key={p.id} style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: 0 }}>
-              {/* Hero thumbnail */}
               {p.hero_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -315,10 +431,13 @@ export function PropertiesClient({ initialProperties }: Props) {
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--jood-ink-ghost)", letterSpacing: "0.06em" }}>{p.slug}</span>
                 </div>
                 <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginTop: "2px" }}>{p.city} · {p.address}</p>
-                <div style={{ display: "flex", gap: "16px", marginTop: "6px" }}>
+                <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
                   <Chip label={`${p.bedrooms} bed${p.bedrooms !== 1 ? "s" : ""}`} />
                   <Chip label={`${p.max_guests} guests max`} />
                   {p.wifi_ssid && <Chip label={`Wi-Fi: ${p.wifi_ssid}`} />}
+                  {p.specs?.rooms?.length ? (
+                    <Chip label={`${p.specs.rooms.filter((r) => r.type === "bedroom").length} bedrooms · ${p.specs.rooms.filter((r) => r.type === "bathroom").length} bathrooms`} />
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -339,6 +458,24 @@ export function PropertiesClient({ initialProperties }: Props) {
     </div>
   );
 }
+
+const inputStyle: React.CSSProperties = {
+  padding: "8px 12px",
+  border: "1px solid var(--jood-line)",
+  borderRadius: "var(--radius-md)",
+  backgroundColor: "var(--jood-ground)",
+  color: "var(--jood-ink)",
+  fontSize: "0.875rem",
+  fontFamily: "inherit",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
+const selectStyle: React.CSSProperties = {
+  ...inputStyle,
+  width: "140px",
+  flexShrink: 0,
+};
 
 function Chip({ label }: { label: string }) {
   return (

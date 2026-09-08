@@ -100,15 +100,22 @@ const DAMAGE_LABEL: Record<string, string> = {
   needs_cleaning: "Needs cleaning",
 };
 
-// Room emoji icons for easy recognition
-const ROOM_EMOJI: Record<string, string> = {
-  bedroom:  "🛏",
-  bathroom: "🚿",
-  kitchen:  "🍳",
-  living:   "🛋",
-  outdoor:  "🌿",
-  general:  "✅",
+const ROOM_EMOJI_MAP: Record<string, string> = {
+  bedroom: "🛏", bathroom: "🚿", kitchen: "🍳",
+  living: "🛋", outdoor: "🌿", general: "✅",
 };
+
+function roomEmoji(room: string): string {
+  const key = room.toLowerCase();
+  if (ROOM_EMOJI_MAP[key]) return ROOM_EMOJI_MAP[key];
+  if (key.includes("bed") || key.includes("master") || key.includes("guest room")) return "🛏";
+  if (key.includes("bath") || key.includes("toilet") || key.includes("shower")) return "🚿";
+  if (key.includes("kitchen") || key.includes("kitchenette")) return "🍳";
+  if (key.includes("living") || key.includes("lounge") || key.includes("salon")) return "🛋";
+  if (key.includes("outdoor") || key.includes("terrace") || key.includes("pool") || key.includes("garden")) return "🌿";
+  if (key === "general") return "✅";
+  return "🏠";
+}
 
 const card: React.CSSProperties = {
   backgroundColor: "var(--jood-surface)",
@@ -478,7 +485,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
           <div key={room} style={{ ...card }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
               <span style={{ fontSize: "1rem", fontWeight: 600, color: "var(--jood-ink)", display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>{ROOM_EMOJI[room] ?? "🏠"}</span>
+                <span>{roomEmoji(room)}</span>
                 {ROOM_LABELS[room] ?? room}
               </span>
               <span style={{

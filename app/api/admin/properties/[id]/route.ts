@@ -3,6 +3,19 @@ import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireSession, forbidden } from "@/lib/admin-auth";
 
+const roomSpecSchema = z.object({
+  id: z.string(),
+  type: z.enum(["bedroom", "bathroom", "living", "kitchen"]),
+  name: z.string().min(1).max(100),
+});
+
+const specsSchema = z.object({
+  rooms: z.array(roomSpecSchema),
+  has_pool: z.boolean(),
+  has_outdoor: z.boolean(),
+  kitchen_type: z.enum(["full", "kitchenette", "none"]),
+});
+
 const updateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   name_ar: z.string().min(1).max(200).optional(),
@@ -12,6 +25,7 @@ const updateSchema = z.object({
   bedrooms: z.coerce.number().int().min(1).max(50).optional(),
   max_guests: z.coerce.number().int().min(1).max(100).optional(),
   wifi_ssid: z.string().max(100).optional(),
+  specs: specsSchema.optional(),
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -27,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .from("properties")
     .update(parsed.data)
     .eq("id", id)
-    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid, hero_image_url")
+    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid, hero_image_url, specs")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

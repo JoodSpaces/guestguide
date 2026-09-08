@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
-import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
+import { buildChecklist, DEFAULT_CHECKLIST, type PropertySpecs } from "@/lib/ops-checklist";
 import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const createSchema = z.object({
@@ -36,6 +36,19 @@ export async function POST(req: NextRequest) {
   const { propertyId, bookingId, assignedTo } = parsed.data;
   const supabase = createServiceClient();
 
+  // Fetch property specs to build a unit-specific checklist
+  const { data: property } = await supabase
+    .from("properties")
+    .select("specs")
+    .eq("id", propertyId)
+    .single<{ specs: PropertySpecs | null }>();
+
+  const specs = property?.specs;
+  const checklist =
+    specs && Array.isArray(specs.rooms) && specs.rooms.length > 0
+      ? buildChecklist(specs)
+      : DEFAULT_CHECKLIST;
+
   const { data: task, error } = await supabase
     .from("turnover_tasks")
     .insert({
@@ -50,7 +63,7 @@ export async function POST(req: NextRequest) {
   if (error || !task) return NextResponse.json({ error: error?.message }, { status: 500 });
 
   await supabase.from("turnover_items").insert(
-    DEFAULT_CHECKLIST.map((item) => ({
+    checklist.map((item) => ({
       task_id: task.id,
       room: item.room,
       label: item.label,
