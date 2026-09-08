@@ -100,6 +100,7 @@ export function AdminHeader({ role, name }: Props) {
 
   return (
     <header
+      className="jood-header-glass"
       style={{
         padding: "0 12px",
         height: "56px",
@@ -109,7 +110,6 @@ export function AdminHeader({ role, name }: Props) {
         borderBottom: "1px solid var(--jood-line)",
         position: "sticky",
         top: 0,
-        backgroundColor: "rgba(245,244,237,0.92)",
         backdropFilter: "blur(16px)",
         WebkitBackdropFilter: "blur(16px)",
         zIndex: 40,
