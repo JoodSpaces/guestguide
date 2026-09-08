@@ -435,7 +435,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
         </button>
       )}
 
-      {task.status === "ready" && (
+      {task.status === "ready" && (myRole === "admin" || myRole === "ops") && (
         <div style={{ ...card, backgroundColor: "var(--jood-surface-raised)", marginBottom: "16px" }}>
           <p style={{ fontSize: "0.875rem", fontWeight: 500, marginBottom: "10px", color: "var(--jood-success)" }}>
             ✓ Cleaning done — supervisor approval needed

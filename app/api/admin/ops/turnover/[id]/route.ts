@@ -53,6 +53,10 @@ export async function PATCH(
   const parsed = patchSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "validation_error" }, { status: 400 });
 
+  if (parsed.data.status === "approved" && session.role === "housekeeping") {
+    return NextResponse.json({ error: "Only admin or ops can approve a cleaning task" }, { status: 403 });
+  }
+
   const supabase = createServiceClient();
 
   // Verify the task exists and this session can access its property

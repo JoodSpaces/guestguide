@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
-import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
+import { buildChecklist, DEFAULT_CHECKLIST, type PropertySpecs } from "@/lib/ops-checklist";
 import { requireSession, forbidden } from "@/lib/admin-auth";
 
 export async function GET(
@@ -77,6 +77,24 @@ export async function PATCH(
     updates.status = parsed.data.status;
   }
 
+  // Fix 5: prevent completing a booking more than 24 h before checkout
+  if (parsed.data.status === "completed") {
+    const { data: cur } = await supabase
+      .from("bookings")
+      .select("check_out")
+      .eq("id", id)
+      .single<{ check_out: string }>();
+    if (cur) {
+      const msUntilCheckout = new Date(cur.check_out).getTime() - Date.now();
+      if (msUntilCheckout > 24 * 60 * 60 * 1000) {
+        return NextResponse.json(
+          { error: "Cannot mark a booking completed more than 24 h before checkout" },
+          { status: 422 }
+        );
+      }
+    }
+  }
+
   const { data: booking, error } = await supabase
     .from("bookings")
     .update(updates)
@@ -107,8 +125,18 @@ export async function PATCH(
         .single<{ id: string }>();
 
       if (task) {
+        const { data: propData } = await supabase
+          .from("properties")
+          .select("specs")
+          .eq("id", booking.property_id)
+          .single<{ specs: PropertySpecs | null }>();
+        const specs = propData?.specs;
+        const checklist =
+          specs && Array.isArray(specs.rooms) && specs.rooms.length > 0
+            ? buildChecklist(specs)
+            : DEFAULT_CHECKLIST;
         await supabase.from("turnover_items").insert(
-          DEFAULT_CHECKLIST.map((item) => ({
+          checklist.map((item) => ({
             task_id: task.id,
             room: item.room,
             label: item.label,

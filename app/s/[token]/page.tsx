@@ -57,6 +57,11 @@ export default async function StayPage({ params }: Props) {
 
   if (!booking) notFound();
 
+  // Fix 3: check expiry BEFORE recording the open so expired visits don't inflate open_count
+  if (isTokenExpired(booking.check_out)) {
+    redirect(`/s/${token}/expired`);
+  }
+
   // Sync the UI locale to the booking's recorded guest language.
   // If they differ, redirect through sync-locale (one-shot, sets the cookie,
   // redirects back) so next-intl serves the correct language on reload.
@@ -80,10 +85,6 @@ export default async function StayPage({ params }: Props) {
   const property = Array.isArray(booking.properties)
     ? booking.properties[0]
     : booking.properties;
-
-  if (isTokenExpired(booking.check_out)) {
-    redirect(`/s/${token}/expired`);
-  }
 
   const payload: TokenPayload = {
     bookingId: booking.id,

@@ -145,7 +145,7 @@ export default async function OpsPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Operations</h1>
         <div style={{ display: "flex", gap: "10px" }}>
-          {role === "admin" && (
+          {(role === "admin" || role === "ops") && (
             <Link href="/admin/ops/maintenance/new" style={{ padding: "9px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem" }}>
               + Ticket
             </Link>

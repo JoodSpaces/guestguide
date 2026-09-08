@@ -28,6 +28,7 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
   const [assignTo, setAssignTo] = useState("");
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
+  const [conflictTaskId, setConflictTaskId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = "create-turnover-title";
 
@@ -61,6 +62,7 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
     } else {
       const body = await res.json().catch(() => ({}));
       setError(body.error ?? "Failed to create");
+      setConflictTaskId(res.status === 409 ? (body.existingId ?? null) : null);
     }
   }
 
@@ -140,7 +142,16 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
             )}
           </div>
 
-          {error && <p style={{ fontSize: "0.875rem", color: "var(--jood-danger)" }}>{error}</p>}
+          {error && (
+            <div>
+              <p style={{ fontSize: "0.875rem", color: "var(--jood-danger)" }}>{error}</p>
+              {conflictTaskId && (
+                <Link href={`/admin/ops/turnover/${conflictTaskId}`} style={{ fontSize: "0.8rem", color: "var(--jood-accent)" }}>
+                  View existing task →
+                </Link>
+              )}
+            </div>
+          )}
 
           <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
             <button

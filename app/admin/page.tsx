@@ -210,6 +210,19 @@ export default async function AdminTodayPage() {
         const STATUS_BG = { clear: "rgba(74,222,128,0.08)", amber: "rgba(245,158,11,0.08)", red: "rgba(248,113,113,0.08)" };
         const STATUS_LABEL = { clear: "All clear", amber: "Needs attention", red: "Urgent" };
 
+        function linkFor(pid: string, s: "clear" | "amber" | "red"): string {
+          if (s === "red") {
+            const urgentTicket = (openTickets ?? []).find((t) => t.property_id === pid && t.priority === "urgent");
+            if (urgentTicket) return `/admin/ops/maintenance/${urgentTicket.id}`;
+            if ((invAlerts ?? []).some((a) => a.property_id === pid && a.severity === "critical")) return `/admin/ops/inventory/${pid}`;
+          }
+          if (s === "amber") {
+            const ticket = (openTickets ?? []).find((t) => t.property_id === pid);
+            if (ticket) return `/admin/ops/maintenance/${ticket.id}`;
+          }
+          return `/admin/ops/inventory/${pid}`;
+        }
+
         return (
           <div style={{ marginBottom: "32px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "14px", flexWrap: "wrap" }}>
@@ -235,7 +248,7 @@ export default async function AdminTodayPage() {
                 return (
                   <Link
                     key={p.id}
-                    href={`/admin/ops/inventory/${p.id}`}
+                    href={linkFor(p.id, s)}
                     title={tooltip(p.id)}
                     style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}
                   >

@@ -18,22 +18,20 @@ export async function getBookingFromToken(token: string): Promise<GuestBooking |
 
   const { data } = await supabase
     .from("stay_tokens")
-    .select("booking_id, revoked_at, bookings(id, property_id, guest_first_name, guest_last_name, guest_email, check_in, check_out)")
+    .select("booking_id, revoked_at, expires_at, bookings(id, property_id, guest_first_name, guest_last_name, guest_email, check_in, check_out)")
     .eq("token_hash", hash)
     .single<{
       booking_id: string;
       revoked_at: string | null;
+      expires_at: string;
       bookings: GuestBooking | GuestBooking[];
     }>();
 
   if (!data || data.revoked_at) return null;
+  if (data.expires_at && new Date() > new Date(data.expires_at)) return null;
 
   const booking = Array.isArray(data.bookings) ? data.bookings[0] : data.bookings;
   if (!booking) return null;
-
-  // 48h after checkout grace period (matches isTokenExpired in lib/token.ts)
-  const expiry = new Date(new Date(booking.check_out).getTime() + 48 * 60 * 60 * 1000);
-  if (new Date() > expiry) return null;
 
   return booking;
 }

@@ -156,6 +156,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
   }
 
   async function generateLink() {
+    if (!confirm("This will revoke all existing guest links for this booking. Continue?")) return;
     setGeneratingLink(true);
     const res = await fetch(`/api/admin/bookings/${booking.id}/token`, { method: "POST" });
     setGeneratingLink(false);

@@ -36,6 +36,21 @@ export async function POST(req: NextRequest) {
   const { propertyId, bookingId, assignedTo } = parsed.data;
   const supabase = createServiceClient();
 
+  // Fix 6: reject if an active (non-scheduled) cleaning task already exists for this property
+  const { data: existingActive } = await supabase
+    .from("turnover_tasks")
+    .select("id")
+    .eq("property_id", propertyId)
+    .in("status", ["pending", "in_progress", "ready"])
+    .maybeSingle<{ id: string }>();
+
+  if (existingActive) {
+    return NextResponse.json(
+      { error: "An active cleaning task already exists for this property", existingId: existingActive.id },
+      { status: 409 }
+    );
+  }
+
   // Fetch property specs to build a unit-specific checklist
   const { data: property } = await supabase
     .from("properties")

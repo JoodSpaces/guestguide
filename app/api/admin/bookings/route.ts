@@ -3,7 +3,7 @@ import { z } from "zod";
 import { generateToken, hashToken } from "@/lib/token";
 import { encrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
-import { DEFAULT_CHECKLIST } from "@/lib/ops-checklist";
+import { buildChecklist, DEFAULT_CHECKLIST, type PropertySpecs } from "@/lib/ops-checklist";
 import { requireSession, forbidden } from "@/lib/admin-auth";
 
 function resolveAppUrl(): string {
@@ -73,12 +73,12 @@ export async function POST(req: NextRequest) {
   const d = parsed.data;
   const supabase = createServiceClient();
 
-  // Validate property exists
+  // Validate property exists and fetch specs for checklist
   const { data: property } = await supabase
     .from("properties")
-    .select("id")
+    .select("id, specs")
     .eq("id", d.propertyId)
-    .single<{ id: string }>();
+    .single<{ id: string; specs: PropertySpecs | null }>();
 
   if (!property) {
     return NextResponse.json({ error: "property_not_found" }, { status: 404 });
@@ -178,8 +178,13 @@ export async function POST(req: NextRequest) {
     .single<{ id: string }>();
 
   if (turnoverTask) {
+    const specs = property?.specs;
+    const checklist =
+      specs && Array.isArray(specs.rooms) && specs.rooms.length > 0
+        ? buildChecklist(specs)
+        : DEFAULT_CHECKLIST;
     await supabase.from("turnover_items").insert(
-      DEFAULT_CHECKLIST.map((item) => ({
+      checklist.map((item) => ({
         task_id: turnoverTask.id,
         room: item.room,
         label: item.label,
