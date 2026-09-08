@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, type CSSProperties } from "react";
+import { useState, useMemo, type CSSProperties } from "react";
 import Link from "next/link";
 
 export interface Booking {
@@ -20,564 +20,624 @@ interface Props {
   properties: { id: string; name: string }[];
 }
 
-// ── Status palette ────────────────────────────────────────────────────────────
-const BAR: Record<string, { bg: string; text: string; border: string }> = {
-  confirmed: { bg: "var(--jood-ink)",            text: "var(--jood-ground)",    border: "transparent" },
-  paid:      { bg: "var(--jood-info-surface)",   text: "var(--jood-info)",      border: "var(--jood-info)" },
-  pending:   { bg: "rgba(255,96,55,0.12)",       text: "var(--jood-accent)",    border: "var(--jood-accent)" },
-  completed: { bg: "var(--jood-surface-raised)", text: "var(--jood-ink-muted)", border: "var(--jood-line)" },
-  cancelled: { bg: "var(--jood-surface)",        text: "var(--jood-ink-ghost)", border: "var(--jood-line)" },
-};
-function barStyle(status: string) { return BAR[status] ?? BAR.confirmed; }
-
-// ── Source colours (dots only — no new accent hues) ───────────────────────────
-const SOURCE_COLOR: Record<string, string> = {
-  airbnb:  "#FF5A5F",
-  booking: "#003580",
-  direct:  "var(--jood-garnet)",
-  other:   "var(--jood-ink-ghost)",
-};
-
-// ── Date helpers ──────────────────────────────────────────────────────────────
-function startOfMonth(year: number, month: number) { return new Date(year, month, 1); }
-function daysInMonth(year: number, month: number)  { return new Date(year, month + 1, 0).getDate(); }
-function toDateStr(d: Date) { return d.toISOString().slice(0, 10); }
-function addMonths(d: Date, n: number) { return new Date(d.getFullYear(), d.getMonth() + n, 1); }
-function nightCount(ci: string, co: string) {
-  return Math.round((new Date(co).getTime() - new Date(ci).getTime()) / 86400000);
-}
-
-// ── Relative-time label for list view ─────────────────────────────────────────
-function relativeLabel(checkIn: string, checkOut: string): { label: string; color: string } {
-  const now   = new Date();
-  const inMs  = new Date(checkIn).getTime();
-  const outMs = new Date(checkOut).getTime();
-  if (now.getTime() >= inMs && now.getTime() <= outMs)
-    return { label: "Active",    color: "var(--jood-garnet)" };
-  const diff = inMs - now.getTime();
-  if (diff > 0) {
-    const days = Math.ceil(diff / 86400000);
-    return {
-      label: days === 1 ? "Tomorrow" : `In ${days}d`,
-      color: days <= 3 ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
-    };
-  }
-  const past = Math.ceil((now.getTime() - outMs) / 86400000);
-  return { label: `${past}d ago`, color: "var(--jood-ink-ghost)" };
-}
-
-const MONTH_NAMES = ["January","February","March","April","May","June",
-                     "July","August","September","October","November","December"];
-const DAY_ABBR = ["Su","Mo","Tu","We","Th","Fr","Sa"];
-
-function propName(b: Booking) {
+// ── Helpers ───────────────────────────────────────────────────────────────
+function propName(b: Booking): string {
   const p = Array.isArray(b.properties) ? b.properties[0] : b.properties;
   return p?.name ?? "";
 }
-function fmtShort(iso: string) {
+
+function addMonths(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth() + n, 1);
+}
+
+function daysInMonth(y: number, m: number): number {
+  return new Date(y, m + 1, 0).getDate();
+}
+
+function dayISO(y: number, m: number, d: number): string {
+  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+}
+
+function nightCount(ci: string, co: string): number {
+  return Math.round((new Date(co).getTime() - new Date(ci).getTime()) / 86400000);
+}
+
+function fmtShort(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-// ── Layout constants ──────────────────────────────────────────────────────────
-const PROP_COL = 148;  // property label column width (px)
-const DAY_W    = 36;   // day cell width (px)
-const BAR_H    = 26;   // booking bar height (px)
-const LANE_H   = 34;   // vertical space per lane (px)
-const ROW_MIN  = 60;   // minimum row height (px)
+function fmtFull(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+}
 
-export function BookingsCalendarClient({ initialBookings, properties }: Props) {
-  const today    = new Date();
-  const todayStr = toDateStr(today);
+// Does a booking touch a given ISO date?
+type DayRole = "checkin" | "staying" | "checkout";
 
-  const [view, setView]     = useState<"calendar" | "list">("calendar");
-  const [anchor, setAnchor] = useState(() => startOfMonth(today.getFullYear(), today.getMonth()));
-  const [query, setQuery]   = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+function roleOnDay(b: Booking, iso: string): DayRole | null {
+  const ci = b.check_in.slice(0, 10);
+  const co = b.check_out.slice(0, 10);
+  if (iso < ci || iso > co) return null;
+  if (iso === ci) return "checkin";
+  if (iso === co) return "checkout";
+  return "staying";
+}
 
-  // Scroll today into view on mount / view change
-  useEffect(() => {
-    if (view !== "calendar" || !scrollRef.current) return;
-    const dom = scrollRef.current;
-    if (today.getFullYear() === anchor.getFullYear() && today.getMonth() === anchor.getMonth()) {
-      const offset = PROP_COL + (today.getDate() - 1) * DAY_W - dom.clientWidth / 2 + DAY_W / 2;
-      dom.scrollLeft = Math.max(0, offset);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, anchor.toISOString()]);
-
-  const days       = daysInMonth(anchor.getFullYear(), anchor.getMonth());
-  const monthLabel = `${MONTH_NAMES[anchor.getMonth()]} ${anchor.getFullYear()}`;
-  const monthStart = toDateStr(anchor);
-  const monthEnd   = toDateStr(new Date(anchor.getFullYear(), anchor.getMonth(), days));
-  const totalW     = PROP_COL + days * DAY_W;
-
-  const todayCol = today.getFullYear() === anchor.getFullYear() &&
-                   today.getMonth()    === anchor.getMonth()
-    ? today.getDate() : null;
-
-  // Group bookings by property for calendar view
-  const byPropEntries: [string, Booking[]][] = [];
-  {
-    const map = new Map<string, Booking[]>();
-    for (const p of properties) map.set(p.id, []);
-    for (const b of initialBookings) {
-      if (b.check_in > monthEnd || b.check_out < monthStart) continue;
-      if (!map.has(b.property_id)) map.set(b.property_id, []);
-      map.get(b.property_id)!.push(b);
-    }
-    map.forEach((v, k) => byPropEntries.push([k, v]));
+// Relative label for list view
+function relLabel(ci: string, co: string, todayISO: string): { label: string; urgent: boolean } {
+  if (ci.slice(0, 10) <= todayISO && co.slice(0, 10) >= todayISO)
+    return { label: "Active", urgent: true };
+  const diff = new Date(ci).getTime() - new Date(todayISO).getTime();
+  if (diff > 0) {
+    const days = Math.ceil(diff / 86400000);
+    return { label: days === 1 ? "Tomorrow" : `In ${days}d`, urgent: days <= 2 };
   }
-  const byProp = new Map(byPropEntries);
+  return { label: `${Math.ceil((new Date(todayISO).getTime() - new Date(co).getTime()) / 86400000)}d ago`, urgent: false };
+}
 
-  // Filtered bookings for list view
-  const q = query.toLowerCase().trim();
-  const filtered = q
-    ? initialBookings.filter((b) =>
-        `${b.guest_first_name} ${b.guest_last_name}`.toLowerCase().includes(q) ||
-        propName(b).toLowerCase().includes(q) ||
-        b.status.toLowerCase().includes(q)
-      )
-    : initialBookings;
+// ── Design tokens ─────────────────────────────────────────────────────────
+const STATUS_DOT: Record<string, string> = {
+  confirmed: "var(--jood-ink)",
+  paid:      "var(--jood-info)",
+  pending:   "var(--jood-accent)",
+  completed: "var(--jood-ink-ghost)",
+  cancelled: "var(--jood-line)",
+};
 
+const ROLE_META: Record<DayRole, { label: string; color: string }> = {
+  checkin:  { label: "Check-in",   color: "var(--jood-garnet)" },
+  staying:  { label: "Staying",    color: "var(--jood-ink-muted)" },
+  checkout: { label: "Check-out",  color: "var(--jood-ink-ghost)" },
+};
+
+const MONTH_NAMES = [
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December",
+];
+const DOW = ["S","M","T","W","T","F","S"];
+
+// ── Component ─────────────────────────────────────────────────────────────
+export function BookingsCalendarClient({ initialBookings }: Props) {
+  const now       = new Date();
+  const todayISO  = now.toISOString().slice(0, 10);
+  const todayDate = now.getDate();
+
+  const [anchor,  setAnchor]  = useState(() => new Date(now.getFullYear(), now.getMonth(), 1));
+  const [selDay,  setSelDay]  = useState<number | null>(todayDate);
+  const [view,    setView]    = useState<"calendar" | "list">("calendar");
+  const [query,   setQuery]   = useState("");
+
+  const yr  = anchor.getFullYear();
+  const mo  = anchor.getMonth();
+  const dim = daysInMonth(yr, mo);
+  const isCurMonth = yr === now.getFullYear() && mo === now.getMonth();
+
+  // Grid cells: padding cells for first-week offset, then actual days
+  const firstDow = new Date(yr, mo, 1).getDay(); // 0=Sun
+  const cells: (number | null)[] = [
+    ...Array<null>(firstDow).fill(null),
+    ...Array.from({ length: dim }, (_, i) => i + 1),
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  // Per-day booking dots map
+  const dotMap = useMemo(() => {
+    const m = new Map<string, Booking[]>();
+    for (let d = 1; d <= dim; d++) {
+      const iso = dayISO(yr, mo, d);
+      m.set(iso, initialBookings.filter(
+        (b) => roleOnDay(b, iso) !== null && b.status !== "cancelled"
+      ));
+    }
+    return m;
+  }, [initialBookings, yr, mo, dim]);
+
+  // Bookings on selected day
+  const selISO = selDay !== null ? dayISO(yr, mo, selDay) : null;
+  const selBookings = useMemo(() => {
+    if (!selISO) return [];
+    return initialBookings
+      .map((b) => ({ b, role: roleOnDay(b, selISO) }))
+      .filter((x): x is { b: Booking; role: DayRole } => x.role !== null)
+      .sort((a, b) => {
+        const o: Record<DayRole, number> = { checkin: 0, staying: 1, checkout: 2 };
+        return o[a.role] - o[b.role];
+      });
+  }, [initialBookings, selISO]);
+
+  // Upcoming for the strip / list view
+  const upcoming = useMemo(() =>
+    initialBookings
+      .filter((b) => b.check_out.slice(0, 10) >= todayISO && b.status !== "cancelled")
+      .sort((a, b) => a.check_in.localeCompare(b.check_in)),
+    [initialBookings, todayISO]
+  );
+
+  const searchResults = useMemo(() => {
+    const q = query.toLowerCase().trim();
+    if (!q) return initialBookings.sort((a, b) => a.check_in.localeCompare(b.check_in));
+    return initialBookings.filter((b) =>
+      `${b.guest_first_name} ${b.guest_last_name}`.toLowerCase().includes(q) ||
+      propName(b).toLowerCase().includes(q) ||
+      b.status.toLowerCase().includes(q)
+    );
+  }, [initialBookings, query]);
+
+  function goMonth(n: number) {
+    setAnchor((a) => addMonths(a, n));
+    setSelDay(null);
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────
   return (
-    <div>
-      {/* ── Toolbar ──────────────────────────────────────────────────────── */}
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        marginBottom: "24px", gap: "12px", flexWrap: "wrap",
-      }}>
+    <div style={{ maxWidth: "520px", margin: "0 auto" }}>
+
+      {/* ── Top bar ────────────────────────────────────────────────── */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
         <div>
-          <p style={{
-            fontFamily: "var(--font-label)", fontSize: "8.5px", letterSpacing: "0.2em",
-            textTransform: "uppercase", color: "var(--jood-ink-faint)", marginBottom: "4px",
-          }}>
-            Admin · Reservations
-          </p>
-          <h1 style={{
-            fontFamily: "var(--font-display)", fontSize: "2rem", fontWeight: 400,
-            fontStyle: "italic", color: "var(--jood-ink)", lineHeight: 1,
-          }}>
-            Bookings
-          </h1>
+          <p style={styles.eyebrow}>Admin · Reservations</p>
+          <h1 style={styles.displayTitle}>Bookings</h1>
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-          {/* View toggle */}
-          <div style={{
-            display: "flex", border: "1px solid var(--jood-line)",
-            borderRadius: "var(--radius-pill)", overflow: "hidden",
-          }}>
-            {(["calendar", "list"] as const).map((v) => (
-              <button key={v} onClick={() => setView(v)} style={{
-                padding: "7px 18px",
-                background: view === v ? "var(--jood-ink)" : "transparent",
-                color: view === v ? "var(--jood-ground)" : "var(--jood-ink-muted)",
-                border: "none", cursor: "pointer", fontFamily: "var(--font-label)",
-                fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase",
-                transition: "background 180ms, color 180ms",
-              }}>
-                {v === "calendar" ? "Timeline" : "List"}
-              </button>
-            ))}
-          </div>
-
-          <Link href="/admin/bookings/new" style={{
-            padding: "10px 22px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
-            borderRadius: "var(--radius-pill)", textDecoration: "none",
-            fontFamily: "var(--font-label)", fontSize: "9px",
-            letterSpacing: "0.14em", textTransform: "uppercase", flexShrink: 0,
-          }}>
-            + New booking
-          </Link>
-        </div>
+        <Link href="/admin/bookings/new" style={styles.fab}>+</Link>
       </div>
 
-      {/* ── Calendar / Timeline view ──────────────────────────────────────── */}
+      {/* ── View toggle ────────────────────────────────────────────── */}
+      <div style={styles.segmentedControl}>
+        {(["calendar", "list"] as const).map((v) => (
+          <button key={v} onClick={() => setView(v)} style={{
+            ...styles.segmentBtn,
+            backgroundColor: view === v ? "var(--jood-surface)" : "transparent",
+            color: view === v ? "var(--jood-ink)" : "var(--jood-ink-ghost)",
+            boxShadow: view === v ? "0 1px 4px rgba(37,20,19,0.10)" : "none",
+          }}>
+            {v === "calendar" ? "Calendar" : "All bookings"}
+          </button>
+        ))}
+      </div>
+
+      {/* ════════════ CALENDAR VIEW ════════════════════════════════════ */}
       {view === "calendar" && (
-        <>
-          {/* Month nav */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-            <button onClick={() => setAnchor((a) => addMonths(a, -1))} style={navBtn}>‹</button>
-            <span style={{
-              fontFamily: "var(--font-display)", fontSize: "1.15rem", fontStyle: "italic",
-              fontWeight: 400, minWidth: "170px", textAlign: "center", color: "var(--jood-ink)",
-            }}>
-              {monthLabel}
-            </span>
-            <button onClick={() => setAnchor((a) => addMonths(a, 1))} style={navBtn}>›</button>
-            {(anchor.getMonth() !== today.getMonth() || anchor.getFullYear() !== today.getFullYear()) && (
-              <button onClick={() => setAnchor(startOfMonth(today.getFullYear(), today.getMonth()))} style={{
-                padding: "6px 14px", border: "1px solid var(--jood-garnet)",
-                borderRadius: "var(--radius-pill)", background: "transparent", cursor: "pointer",
-                fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase",
-                fontFamily: "var(--font-label)", color: "var(--jood-garnet)",
-                transition: "background 150ms, color 150ms",
-              }}>
-                Today
-              </button>
-            )}
+        <div>
+          {/* Month navigation */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+            <button onClick={() => goMonth(-1)} style={styles.navBtn}>‹</button>
+
+            <div style={{ textAlign: "center" }}>
+              <p style={styles.monthLabel}>{MONTH_NAMES[mo]}</p>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-ghost)", marginTop: "2px" }}>
+                {yr}
+              </p>
+            </div>
+
+            <button onClick={() => goMonth(1)} style={styles.navBtn}>›</button>
           </div>
 
-          {/* Scrollable grid */}
-          <div ref={scrollRef} style={{
-            overflowX: "auto",
+          {/* Calendar grid */}
+          <div style={{
             border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)",
+            overflow: "hidden", marginBottom: "20px",
           }}>
-            <div style={{ minWidth: `${totalW}px` }}>
-
-              {/* ── Day header ─────────────────────────────────────────── */}
-              <div style={{
-                display: "flex", borderBottom: "1px solid var(--jood-line)",
-                position: "sticky", top: 0, zIndex: 10,
-                backgroundColor: "var(--jood-surface)",
-              }}>
-                {/* Property label header */}
-                <div style={{
-                  width: `${PROP_COL}px`, flexShrink: 0, padding: "10px 14px",
-                  borderRight: "1px solid var(--jood-line)",
-                  display: "flex", alignItems: "center",
+            {/* Day-of-week header */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(7, 1fr)",
+              backgroundColor: "var(--jood-surface-raised)",
+              borderBottom: "1px solid var(--jood-line)",
+            }}>
+              {DOW.map((d, i) => (
+                <div key={i} style={{
+                  textAlign: "center", padding: "10px 0",
+                  fontFamily: "var(--font-label)", fontSize: "9px",
+                  letterSpacing: "0.12em", textTransform: "uppercase",
+                  color: i === 0 || i === 6 ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
                 }}>
-                  <span style={eyebrow}>Property</span>
+                  {d}
                 </div>
+              ))}
+            </div>
 
-                {Array.from({ length: days }, (_, i) => {
-                  const d        = new Date(anchor.getFullYear(), anchor.getMonth(), i + 1);
-                  const dow      = d.getDay();
-                  const isToday  = todayCol === i + 1;
-                  const isWeekend = dow === 0 || dow === 6;
+            {/* Day cells — gap technique for crisp grid lines */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "repeat(7, 1fr)",
+              gap: "1px", backgroundColor: "var(--jood-line)",
+            }}>
+              {cells.map((day, idx) => {
+                if (day === null) {
                   return (
-                    <div key={i} style={{
-                      width: `${DAY_W}px`, flexShrink: 0, textAlign: "center",
-                      padding: "7px 0 6px",
-                      backgroundColor: isToday
+                    <div key={`e-${idx}`} style={{
+                      minHeight: "58px",
+                      backgroundColor: "var(--jood-surface)",
+                      opacity: 0.4,
+                    }} />
+                  );
+                }
+
+                const iso       = dayISO(yr, mo, day);
+                const isToday   = isCurMonth && day === todayDate;
+                const isSel     = selDay === day;
+                const dow       = (firstDow + day - 1) % 7;
+                const isWeekend = dow === 0 || dow === 6;
+                const dots      = dotMap.get(iso) ?? [];
+
+                // Cell background priority: selected > today > weekend > default
+                const cellBg = isSel
+                  ? "var(--jood-ink)"
+                  : isToday
+                  ? "rgba(115,54,53,0.07)"
+                  : isWeekend
+                  ? "rgba(0,0,0,0.018)"
+                  : "var(--jood-surface)";
+
+                return (
+                  <button
+                    key={day}
+                    onClick={() => setSelDay(isSel ? null : day)}
+                    style={{
+                      display: "flex", flexDirection: "column",
+                      alignItems: "center", justifyContent: "space-between",
+                      minHeight: "58px", padding: "8px 0 6px",
+                      backgroundColor: cellBg,
+                      border: "none", cursor: "pointer",
+                      transition: "background-color 120ms",
+                      WebkitTapHighlightColor: "transparent",
+                    }}
+                  >
+                    {/* Day number */}
+                    <span style={{
+                      fontFamily: "var(--font-mono)", fontSize: "13px",
+                      fontVariantNumeric: "tabular-nums",
+                      fontWeight: isToday ? 700 : 400,
+                      color: isSel
+                        ? "var(--jood-ground)"
+                        : isToday
                         ? "var(--jood-garnet)"
-                        : isWeekend ? "var(--jood-surface-raised)" : "transparent",
-                      borderLeft: i > 0 ? "1px solid var(--jood-line)" : "none",
+                        : isWeekend ? "var(--jood-ink-muted)" : "var(--jood-ink)",
                     }}>
-                      <div style={{
-                        fontFamily: "var(--font-label)", fontSize: "7px", letterSpacing: "0.1em",
-                        color: isToday ? "rgba(245,244,237,0.65)" : "var(--jood-ink-ghost)",
-                        textTransform: "uppercase", marginBottom: "2px",
-                      }}>
-                        {DAY_ABBR[dow]}
-                      </div>
-                      <div style={{
-                        fontFamily: "var(--font-mono)", fontSize: "11px", fontVariantNumeric: "tabular-nums",
-                        color: isToday ? "var(--jood-ground)" : isWeekend ? "var(--jood-ink-muted)" : "var(--jood-ink)",
-                        fontWeight: isToday ? 700 : 400,
-                      }}>
-                        {i + 1}
-                      </div>
+                      {day}
+                    </span>
+
+                    {/* Middle spacer / today pip */}
+                    {isToday && !isSel ? (
+                      <span style={{
+                        width: "4px", height: "4px", borderRadius: "50%",
+                        backgroundColor: "var(--jood-garnet)",
+                      }} />
+                    ) : (
+                      <span style={{ height: "4px" }} />
+                    )}
+
+                    {/* Booking dots */}
+                    <div style={{ display: "flex", gap: "2px", alignItems: "center", minHeight: "7px" }}>
+                      {dots.slice(0, 3).map((b, i) => (
+                        <span key={b.id + i} style={{
+                          width: "5px", height: "5px", borderRadius: "50%",
+                          backgroundColor: isSel
+                            ? "rgba(245,244,237,0.55)"
+                            : STATUS_DOT[b.status] ?? "var(--jood-ink)",
+                          flexShrink: 0,
+                        }} />
+                      ))}
+                      {dots.length > 3 && (
+                        <span style={{
+                          fontSize: "8px", lineHeight: 1,
+                          color: isSel ? "rgba(245,244,237,0.55)" : "var(--jood-ink-ghost)",
+                          fontFamily: "var(--font-mono)",
+                        }}>
+                          +{dots.length - 3}
+                        </span>
+                      )}
                     </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Selected day panel ─────────────────────────────────── */}
+          {selISO && (
+            <div style={{
+              border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)",
+              overflow: "hidden", marginBottom: "24px",
+              backgroundColor: "var(--jood-surface)",
+            }}>
+              {/* Panel header */}
+              <div style={{
+                display: "flex", alignItems: "flex-start",
+                justifyContent: "space-between",
+                padding: "14px 16px",
+                borderBottom: selBookings.length > 0 ? "1px solid var(--jood-line)" : "none",
+              }}>
+                <div>
+                  <p style={{ ...styles.eyebrow, marginBottom: "3px" }}>
+                    {new Date(yr, mo, selDay!).toLocaleDateString("en-GB", { weekday: "long" })}
+                  </p>
+                  <p style={{
+                    fontFamily: "var(--font-body)", fontSize: "1rem",
+                    fontWeight: 500, color: "var(--jood-ink)",
+                  }}>
+                    {new Date(yr, mo, selDay!).toLocaleDateString("en-GB", { day: "numeric", month: "long" })}
+                  </p>
+                </div>
+                <span style={{
+                  fontFamily: "var(--font-mono)", fontSize: "11px",
+                  color: selBookings.length > 0 ? "var(--jood-ink-muted)" : "var(--jood-line)",
+                  paddingTop: "2px",
+                }}>
+                  {selBookings.length > 0
+                    ? `${selBookings.length} booking${selBookings.length > 1 ? "s" : ""}`
+                    : "Vacant"}
+                </span>
+              </div>
+
+              {selBookings.length === 0 && (
+                <div style={{ padding: "20px 16px" }}>
+                  <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-ghost)" }}>
+                    No bookings on this date.
+                  </p>
+                </div>
+              )}
+
+              {/* Booking cards for selected day */}
+              {selBookings.map(({ b, role }, i) => {
+                const nights = nightCount(b.check_in, b.check_out);
+                const meta   = ROLE_META[role];
+                return (
+                  <Link
+                    key={b.id}
+                    href={`/admin/bookings/${b.id}`}
+                    style={{
+                      display: "block", padding: "14px 16px", textDecoration: "none",
+                      borderTop: i > 0 ? "1px solid var(--jood-line)" : "none",
+                      transition: "background-color 100ms",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--jood-surface-raised)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
+                  >
+                    {/* Role + status row */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{
+                          width: "6px", height: "6px", borderRadius: "50%",
+                          backgroundColor: meta.color, flexShrink: 0,
+                        }} />
+                        <span style={{
+                          fontFamily: "var(--font-label)", fontSize: "8.5px",
+                          letterSpacing: "0.16em", textTransform: "uppercase",
+                          color: meta.color,
+                        }}>
+                          {meta.label}
+                        </span>
+                      </div>
+                      <span style={{
+                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        letterSpacing: "0.1em", textTransform: "uppercase",
+                        color: STATUS_DOT[b.status] ?? "var(--jood-ink)",
+                        border: `1px solid ${STATUS_DOT[b.status] ?? "var(--jood-ink)"}`,
+                        borderRadius: "var(--radius-pill)", padding: "2px 7px",
+                        opacity: 0.75,
+                      }}>
+                        {b.status}
+                      </span>
+                    </div>
+
+                    {/* Guest name */}
+                    <p style={{
+                      fontFamily: "var(--font-body)", fontSize: "1rem",
+                      fontWeight: 600, color: "var(--jood-ink)", marginBottom: "3px",
+                    }}>
+                      {b.guest_first_name} {b.guest_last_name}
+                    </p>
+
+                    {/* Property + meta */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
+                        {propName(b)}
+                      </p>
+                      <p style={{
+                        fontFamily: "var(--font-mono)", fontSize: "10px",
+                        color: "var(--jood-ink-ghost)",
+                      }}>
+                        {fmtShort(b.check_in)} → {fmtShort(b.check_out)} · {nights}n
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Today shortcut (when on a different month) ──────────── */}
+          {!isCurMonth && (
+            <button
+              onClick={() => {
+                setAnchor(new Date(now.getFullYear(), now.getMonth(), 1));
+                setSelDay(todayDate);
+              }}
+              style={{
+                display: "block", width: "100%",
+                padding: "11px", marginBottom: "20px",
+                border: "1px solid var(--jood-garnet)",
+                borderRadius: "var(--radius-pill)",
+                background: "transparent", cursor: "pointer",
+                fontFamily: "var(--font-label)", fontSize: "9px",
+                letterSpacing: "0.14em", textTransform: "uppercase",
+                color: "var(--jood-garnet)",
+                transition: "background-color 150ms",
+              }}
+            >
+              Back to today
+            </button>
+          )}
+
+          {/* ── Upcoming strip ──────────────────────────────────────── */}
+          {upcoming.length > 0 && (
+            <>
+              <p style={{ ...styles.eyebrow, marginBottom: "10px" }}>Upcoming</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {upcoming.slice(0, 5).map((b) => {
+                  const rl = relLabel(b.check_in, b.check_out, todayISO);
+                  return (
+                    <Link
+                      key={b.id}
+                      href={`/admin/bookings/${b.id}`}
+                      style={styles.upcomingCard(rl.urgent)}
+                      onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(0.97)")}
+                      onMouseLeave={(e) => (e.currentTarget.style.filter = "")}
+                    >
+                      <div style={{
+                        width: "8px", height: "8px", borderRadius: "50%",
+                        backgroundColor: STATUS_DOT[b.status] ?? "var(--jood-ink)",
+                        flexShrink: 0,
+                      }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontWeight: 500, fontSize: "0.9rem", color: "var(--jood-ink)", lineHeight: 1.3 }}>
+                          {b.guest_first_name} {b.guest_last_name}
+                        </p>
+                        <p style={{ fontSize: "0.8rem", color: "var(--jood-ink-muted)", marginTop: "1px" }}>
+                          {propName(b)} · {fmtShort(b.check_in)}–{fmtShort(b.check_out)}
+                        </p>
+                      </div>
+                      <span style={{
+                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        letterSpacing: "0.1em", textTransform: "uppercase",
+                        color: rl.urgent ? "var(--jood-garnet)" : "var(--jood-ink-ghost)",
+                        border: `1px solid ${rl.urgent ? "var(--jood-garnet)" : "var(--jood-line)"}`,
+                        borderRadius: "var(--radius-pill)", padding: "3px 8px",
+                        flexShrink: 0,
+                      }}>
+                        {rl.label}
+                      </span>
+                    </Link>
                   );
                 })}
               </div>
-
-              {/* ── Property rows ───────────────────────────────────────── */}
-              {properties.length === 0 ? (
-                <div style={{ padding: "48px", textAlign: "center", color: "var(--jood-ink-ghost)", fontSize: "0.875rem" }}>
-                  No properties yet
-                </div>
-              ) : properties.map((prop, pi) => {
-                const bks   = byProp.get(prop.id) ?? [];
-                const lanes = packLanes(bks);
-                const rowH  = Math.max(ROW_MIN, lanes.length * LANE_H + 14);
-
-                return (
-                  <div key={prop.id} style={{
-                    display: "flex",
-                    borderTop: pi === 0 ? "none" : "1px solid var(--jood-line)",
-                    minHeight: `${rowH}px`,
-                    // Alternating rows: very subtle tint
-                    backgroundColor: pi % 2 === 1 ? "var(--jood-surface-raised)" : "var(--jood-surface)",
-                  }}>
-                    {/* Property label — sticky on horizontal scroll */}
-                    <div style={{
-                      width: `${PROP_COL}px`, flexShrink: 0, padding: "12px 14px",
-                      borderRight: "1px solid var(--jood-line)",
-                      display: "flex", alignItems: "flex-start", justifyContent: "space-between",
-                      position: "sticky", left: 0, zIndex: 5,
-                      backgroundColor: pi % 2 === 1 ? "var(--jood-surface-raised)" : "var(--jood-surface)",
-                    }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1, minWidth: 0 }}>
-                        <span style={{
-                          fontFamily: "var(--font-body)", fontSize: "0.8125rem", fontWeight: 500,
-                          color: "var(--jood-ink)", wordBreak: "break-word", lineHeight: 1.3,
-                        }}>
-                          {prop.name}
-                        </span>
-                        {bks.length > 0 && (
-                          <span style={{
-                            fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
-                            color: "var(--jood-ink-ghost)", textTransform: "uppercase",
-                          }}>
-                            {bks.length} this month
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Bars area */}
-                    <div style={{ flex: 1, position: "relative", minHeight: `${rowH}px` }}>
-                      {/* Weekend column shading */}
-                      {Array.from({ length: days }, (_, i) => {
-                        const dow = new Date(anchor.getFullYear(), anchor.getMonth(), i + 1).getDay();
-                        if (dow !== 0 && dow !== 6) return null;
-                        return (
-                          <div key={i} style={{
-                            position: "absolute", top: 0, bottom: 0,
-                            left: `${i * DAY_W}px`, width: `${DAY_W}px`,
-                            backgroundColor: "rgba(0,0,0,0.025)", pointerEvents: "none",
-                          }} />
-                        );
-                      })}
-
-                      {/* Today column highlight — runs full row height */}
-                      {todayCol !== null && (
-                        <div style={{
-                          position: "absolute", top: 0, bottom: 0,
-                          left: `${(todayCol - 1) * DAY_W}px`, width: `${DAY_W}px`,
-                          backgroundColor: "rgba(115,54,53,0.06)", pointerEvents: "none", zIndex: 1,
-                        }} />
-                      )}
-
-                      {/* Today vertical rule — sharp, prominent */}
-                      {todayCol !== null && (
-                        <div style={{
-                          position: "absolute", top: 0, bottom: 0,
-                          left: `${(todayCol - 0.5) * DAY_W}px`,
-                          width: "1.5px", backgroundColor: "var(--jood-garnet)",
-                          opacity: 0.7, pointerEvents: "none", zIndex: 4,
-                        }} />
-                      )}
-
-                      {/* Booking bars */}
-                      {lanes.map((lane, li) =>
-                        lane.map((b) => {
-                          const clampedStart = b.check_in  < monthStart ? monthStart : b.check_in;
-                          const clampedEnd   = b.check_out > monthEnd   ? monthEnd   : b.check_out;
-                          const startDay = new Date(clampedStart).getDate();
-                          const endDay   = new Date(clampedEnd).getDate();
-                          const spanDays = b.check_out > monthEnd
-                            ? endDay - startDay + 1
-                            : Math.max(1, endDay - startDay);
-                          const barW  = spanDays * DAY_W - 4;
-                          const left  = (startDay - 1) * DAY_W + 2;
-                          const top   = li * LANE_H + Math.round((LANE_H - BAR_H) / 2);
-                          const { bg, text, border } = barStyle(b.status);
-                          const isCancelled = b.status === "cancelled";
-                          const nights      = nightCount(b.check_in, b.check_out);
-                          const showNights  = barW > 60 && nights > 1;
-                          const showSource  = barW > 88;
-
-                          return (
-                            <Link
-                              key={b.id}
-                              href={`/admin/bookings/${b.id}`}
-                              title={`${b.guest_first_name} ${b.guest_last_name} · ${fmtShort(b.check_in)} → ${fmtShort(b.check_out)} · ${nights}n`}
-                              style={{
-                                position: "absolute", top: `${top}px`, left: `${left}px`,
-                                width: `${barW}px`, height: `${BAR_H}px`,
-                                backgroundColor: bg, border: `1px solid ${border}`,
-                                borderRadius: "var(--radius-pill)",
-                                display: "flex", alignItems: "center",
-                                padding: `0 ${showSource ? 20 : 8}px 0 8px`,
-                                textDecoration: "none", overflow: "hidden",
-                                zIndex: 3,
-                                opacity: isCancelled ? 0.4 : 1,
-                                transition: "filter 150ms, opacity 150ms",
-                              }}
-                              onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
-                              onMouseLeave={(e) => (e.currentTarget.style.filter = "")}
-                            >
-                              <span style={{
-                                fontFamily: "var(--font-body)", fontSize: "11px", color: text,
-                                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                                textDecoration: isCancelled ? "line-through" : "none",
-                                flex: 1, minWidth: 0,
-                              }}>
-                                {b.guest_first_name} {b.guest_last_name}
-                              </span>
-                              {showNights && (
-                                <span style={{
-                                  fontFamily: "var(--font-mono)", fontSize: "9px",
-                                  color: text, opacity: 0.55, marginLeft: "4px", flexShrink: 0,
-                                }}>
-                                  {nights}n
-                                </span>
-                              )}
-                              {showSource && (
-                                <span style={{
-                                  position: "absolute", right: "8px", top: "50%",
-                                  transform: "translateY(-50%)",
-                                  width: "5px", height: "5px", borderRadius: "50%",
-                                  backgroundColor: SOURCE_COLOR[b.source] ?? SOURCE_COLOR.other,
-                                  flexShrink: 0, opacity: 0.65,
-                                }} />
-                              )}
-                            </Link>
-                          );
-                        })
-                      )}
-
-                      {bks.length === 0 && (
-                        <div style={{
-                          position: "absolute", inset: 0,
-                          display: "flex", alignItems: "center",
-                          paddingLeft: "16px",
-                        }}>
-                          <span style={{ fontSize: "0.75rem", color: "var(--jood-line)", letterSpacing: "0.08em" }}>—</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* ── Legend ─────────────────────────────────────────────── */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: "10px",
-                padding: "10px 16px", borderTop: "1px solid var(--jood-line)",
-                backgroundColor: "var(--jood-surface)", flexWrap: "wrap",
-              }}>
-                <span style={{ ...eyebrow, marginRight: "2px" }}>Status</span>
-                {Object.entries(BAR).map(([status, { bg, text, border }]) => (
-                  <span key={status} style={{
-                    display: "inline-flex", alignItems: "center",
-                    height: "18px", padding: "0 8px",
-                    backgroundColor: bg,
-                    border: `1px solid ${border === "transparent" ? "rgba(0,0,0,0.08)" : border}`,
-                    borderRadius: "var(--radius-pill)",
-                    fontFamily: "var(--font-label)", fontSize: "8px",
-                    letterSpacing: "0.1em", textTransform: "uppercase", color: text,
-                  }}>
-                    {status}
-                  </span>
-                ))}
-                {/* Source key — right-aligned */}
-                <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-                  <span style={{ ...eyebrow, marginRight: "2px" }}>Source</span>
-                  {Object.entries(SOURCE_COLOR).map(([src, col]) => (
-                    <span key={src} style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <span style={{
-                        width: "6px", height: "6px", borderRadius: "50%",
-                        backgroundColor: col, display: "inline-block", opacity: 0.7,
-                      }} />
-                      <span style={{
-                        fontFamily: "var(--font-label)", fontSize: "8px",
-                        letterSpacing: "0.08em", textTransform: "uppercase",
-                        color: "var(--jood-ink-ghost)",
-                      }}>
-                        {src}
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
+              {upcoming.length > 5 && (
+                <button
+                  onClick={() => setView("list")}
+                  style={{
+                    display: "block", width: "100%", marginTop: "8px",
+                    padding: "11px", border: "1px dashed var(--jood-line)",
+                    borderRadius: "var(--radius-lg)", background: "none",
+                    cursor: "pointer", fontFamily: "var(--font-label)",
+                    fontSize: "9px", letterSpacing: "0.14em",
+                    textTransform: "uppercase", color: "var(--jood-ink-ghost)",
+                    transition: "border-color 150ms, color 150ms",
+                  }}
+                >
+                  View all {upcoming.length} bookings
+                </button>
+              )}
+            </>
+          )}
+        </div>
       )}
 
-      {/* ── List view ────────────────────────────────────────────────────── */}
+      {/* ════════════ LIST VIEW ════════════════════════════════════════ */}
       {view === "list" && (
         <>
+          {/* Search bar */}
           <div style={{ position: "relative", marginBottom: "16px" }}>
             <span style={{
-              position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)",
-              color: "var(--jood-ink-ghost)", fontSize: "0.875rem", pointerEvents: "none",
-            }}>⌕</span>
+              position: "absolute", left: "14px", top: "50%",
+              transform: "translateY(-50%)", color: "var(--jood-ink-ghost)",
+              fontSize: "1rem", pointerEvents: "none",
+            }}>
+              ⌕
+            </span>
             <input
               type="text"
-              placeholder="Search guest, property, status…"
+              placeholder="Guest, property, status…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               style={{
                 width: "100%", boxSizing: "border-box",
-                padding: "11px 14px 11px 38px",
-                border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)",
-                backgroundColor: "var(--jood-surface)", color: "var(--jood-ink)",
-                fontSize: "0.9375rem", fontFamily: "inherit", outline: "none",
+                padding: "12px 40px 12px 40px",
+                border: "1px solid var(--jood-line)",
+                borderRadius: "var(--radius-pill)",
+                backgroundColor: "var(--jood-surface)",
+                color: "var(--jood-ink)", fontSize: "1rem",
+                fontFamily: "inherit", outline: "none",
               }}
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
                 style={{
-                  position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)",
-                  background: "none", border: "none", cursor: "pointer",
-                  color: "var(--jood-ink-ghost)", fontSize: "1rem", padding: 0,
+                  position: "absolute", right: "14px", top: "50%",
+                  transform: "translateY(-50%)", background: "none",
+                  border: "none", cursor: "pointer",
+                  color: "var(--jood-ink-ghost)", fontSize: "1.1rem", padding: 0,
                 }}
-              >×</button>
+              >
+                ×
+              </button>
             )}
           </div>
 
-          {filtered.length === 0 ? (
+          {searchResults.length === 0 ? (
             <div style={{
               textAlign: "center", padding: "56px 24px",
-              backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)",
+              backgroundColor: "var(--jood-surface)",
+              border: "1px solid var(--jood-line)",
               borderRadius: "var(--radius-lg)",
             }}>
-              <p style={{ fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)", marginBottom: "4px" }}>
+              <p style={{ fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)" }}>
                 {query ? `No results for "${query}"` : "No bookings yet"}
               </p>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-              {filtered.map((b) => {
-                const isActive = b.check_in <= todayStr && b.check_out >= todayStr;
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {searchResults.map((b) => {
+                const isActive = b.check_in.slice(0, 10) <= todayISO && b.check_out.slice(0, 10) >= todayISO;
                 const nights   = nightCount(b.check_in, b.check_out);
-                const { bg, border } = barStyle(b.status);
-                const rel      = relativeLabel(b.check_in, b.check_out);
+                const rl       = relLabel(b.check_in, b.check_out, todayISO);
+
                 return (
-                  <Link key={b.id} href={`/admin/bookings/${b.id}`} style={{
-                    display: "flex", alignItems: "center", gap: "14px", padding: "13px 16px",
-                    backgroundColor: isActive ? "var(--jood-surface-raised)" : "var(--jood-surface)",
-                    border: "1px solid var(--jood-line)",
-                    borderLeft: isActive ? "3px solid var(--jood-garnet)" : "1px solid var(--jood-line)",
-                    borderRadius: "var(--radius-lg)", textDecoration: "none", color: "inherit",
-                    opacity: b.status === "cancelled" ? 0.45 : 1,
-                    transition: "filter 120ms",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(0.97)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.filter = "")}
+                  <Link
+                    key={b.id}
+                    href={`/admin/bookings/${b.id}`}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "14px",
+                      padding: "14px 16px", textDecoration: "none", color: "inherit",
+                      backgroundColor: isActive ? "var(--jood-surface-raised)" : "var(--jood-surface)",
+                      border: "1px solid var(--jood-line)",
+                      borderLeft: isActive ? "3px solid var(--jood-garnet)" : "1px solid var(--jood-line)",
+                      borderRadius: "var(--radius-lg)",
+                      opacity: b.status === "cancelled" ? 0.45 : 1,
+                      transition: "filter 120ms",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(0.97)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.filter = "")}
                   >
-                    {/* Status dot */}
                     <div style={{
                       width: "10px", height: "10px", borderRadius: "50%",
-                      backgroundColor: bg, flexShrink: 0,
-                      border: `1.5px solid ${border === "transparent" ? "rgba(0,0,0,0.12)" : border}`,
+                      backgroundColor: STATUS_DOT[b.status] ?? "var(--jood-ink)",
+                      flexShrink: 0,
                     }} />
 
-                    {/* Guest + property */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontWeight: 500, fontSize: "0.9375rem", color: "var(--jood-ink)" }}>
                         {b.guest_first_name} {b.guest_last_name}
                       </p>
-                      <p style={{ fontSize: "0.8rem", color: "var(--jood-ink-muted)", marginTop: "1px" }}>
+                      <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginTop: "2px" }}>
                         {propName(b)}
+                      </p>
+                      <p style={{
+                        fontFamily: "var(--font-mono)", fontSize: "10px",
+                        color: "var(--jood-ink-ghost)", marginTop: "3px",
+                      }}>
+                        {fmtShort(b.check_in)} → {fmtShort(b.check_out)} · {nights}n · {b.source}
                       </p>
                     </div>
 
-                    {/* Dates + meta */}
-                    <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "3px" }}>
-                      <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-muted)", fontVariantNumeric: "tabular-nums" }}>
-                        {fmtShort(b.check_in)} → {fmtShort(b.check_out)}
-                      </p>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--jood-ink-ghost)" }}>
-                          {nights}n · {b.source}
-                        </span>
-                        {/* Relative time chip */}
-                        <span style={{
-                          fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.1em",
-                          textTransform: "uppercase", color: rel.color,
-                          border: `1px solid ${rel.color}`, borderRadius: "var(--radius-pill)",
-                          padding: "1px 6px", lineHeight: "1.6",
-                        }}>
-                          {rel.label}
-                        </span>
-                      </div>
+                    <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-end" }}>
+                      <span style={{
+                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        letterSpacing: "0.12em", textTransform: "uppercase",
+                        color: rl.urgent ? "var(--jood-garnet)" : "var(--jood-ink-ghost)",
+                        border: `1px solid ${rl.urgent ? "var(--jood-garnet)" : "var(--jood-line)"}`,
+                        borderRadius: "var(--radius-pill)", padding: "3px 8px",
+                      }}>
+                        {rl.label}
+                      </span>
                     </div>
                   </Link>
                 );
@@ -590,36 +650,61 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
   );
 }
 
-// ── Lane packing ─────────────────────────────────────────────────────────────
-// Greedy interval packing — assigns overlapping bookings to separate vertical lanes
-function packLanes(bookings: Booking[]): Booking[][] {
-  const sorted = [...bookings].sort((a, b) => a.check_in.localeCompare(b.check_in));
-  const lanes: Booking[][] = [];
-  for (const b of sorted) {
-    let placed = false;
-    for (const lane of lanes) {
-      const last = lane[lane.length - 1];
-      if (last.check_out <= b.check_in) {
-        lane.push(b);
-        placed = true;
-        break;
-      }
-    }
-    if (!placed) lanes.push([b]);
-  }
-  return lanes;
-}
+// ── Shared styles ─────────────────────────────────────────────────────────
+const styles = {
+  eyebrow: {
+    fontFamily: "var(--font-label)", fontSize: "8.5px",
+    letterSpacing: "0.2em", textTransform: "uppercase",
+    color: "var(--jood-ink-ghost)",
+  } satisfies CSSProperties,
 
-// ── Shared micro-styles ───────────────────────────────────────────────────────
-const navBtn: CSSProperties = {
-  width: "34px", height: "34px", border: "1px solid var(--jood-line)",
-  borderRadius: "var(--radius-md)", background: "transparent", cursor: "pointer",
-  fontSize: "1.2rem", color: "var(--jood-ink-muted)", display: "flex",
-  alignItems: "center", justifyContent: "center",
-  transition: "border-color 150ms, color 150ms",
-};
+  displayTitle: {
+    fontFamily: "var(--font-display)", fontSize: "1.875rem",
+    fontStyle: "italic", fontWeight: 400, color: "var(--jood-ink)",
+    lineHeight: 1, marginTop: "4px",
+  } satisfies CSSProperties,
 
-const eyebrow: CSSProperties = {
-  fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em",
-  textTransform: "uppercase", color: "var(--jood-ink-ghost)",
+  fab: {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "42px", height: "42px", borderRadius: "50%",
+    backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
+    textDecoration: "none", fontSize: "1.375rem", lineHeight: 1,
+    flexShrink: 0, fontWeight: 300,
+  } satisfies CSSProperties,
+
+  segmentedControl: {
+    display: "flex", gap: "3px", padding: "3px",
+    backgroundColor: "var(--jood-surface-raised)",
+    borderRadius: "var(--radius-pill)", marginBottom: "24px",
+  } satisfies CSSProperties,
+
+  segmentBtn: {
+    flex: 1, padding: "9px 12px",
+    border: "none", borderRadius: "var(--radius-pill)",
+    cursor: "pointer", fontFamily: "var(--font-label)",
+    fontSize: "9px", letterSpacing: "0.14em",
+    textTransform: "uppercase", transition: "all 160ms",
+  } satisfies CSSProperties,
+
+  navBtn: {
+    width: "38px", height: "38px", borderRadius: "50%",
+    border: "1px solid var(--jood-line)", background: "transparent",
+    cursor: "pointer", fontSize: "1.15rem", color: "var(--jood-ink-muted)",
+    display: "flex", alignItems: "center", justifyContent: "center",
+    flexShrink: 0,
+  } satisfies CSSProperties,
+
+  monthLabel: {
+    fontFamily: "var(--font-display)", fontSize: "1.35rem",
+    fontStyle: "italic", fontWeight: 400, color: "var(--jood-ink)", lineHeight: 1,
+  } satisfies CSSProperties,
+
+  upcomingCard: (urgent: boolean): CSSProperties => ({
+    display: "flex", alignItems: "center", gap: "12px",
+    padding: "12px 14px", textDecoration: "none", color: "inherit",
+    backgroundColor: "var(--jood-surface)",
+    border: "1px solid var(--jood-line)",
+    borderLeft: urgent ? "3px solid var(--jood-garnet)" : "1px solid var(--jood-line)",
+    borderRadius: "var(--radius-lg)", transition: "filter 120ms",
+  }),
 };
