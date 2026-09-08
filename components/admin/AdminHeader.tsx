@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { Activity, ChevronDown, ChevronUp, Menu } from "lucide-react";
 
 const ROLE_HOME: Record<string, string> = {
   admin:        "/admin",
@@ -146,7 +147,7 @@ export function AdminHeader({ role, name }: Props) {
               }}
             >
               More
-              <span style={{ fontSize: "0.6rem", opacity: 0.7 }}>{moreOpen ? "▲" : "▼"}</span>
+              {moreOpen ? <ChevronUp size={11} strokeWidth={2} style={{ opacity: 0.6 }} /> : <ChevronDown size={11} strokeWidth={2} style={{ opacity: 0.6 }} />}
             </button>
             {moreOpen && (
               <div style={{
@@ -201,7 +202,7 @@ export function AdminHeader({ role, name }: Props) {
             e.currentTarget.style.color = "var(--jood-ink-muted)";
           }}
         >
-          ⚡
+          <Activity size={14} strokeWidth={1.75} />
           {liveBadge > 0 && (
             <span style={{
               position: "absolute", top: "-2px", right: "-2px",
@@ -223,13 +224,11 @@ export function AdminHeader({ role, name }: Props) {
               width: "36px", height: "36px",
               background: "none", border: "1px solid var(--jood-line)",
               borderRadius: "var(--radius-md)", cursor: "pointer",
-              display: "flex", flexDirection: "column",
-              alignItems: "center", justifyContent: "center", gap: "5px",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "var(--jood-ink)",
             }}
           >
-            <span style={{ width: "16px", height: "1.5px", backgroundColor: "#351E1C", borderRadius: "2px", display: "block" }} />
-            <span style={{ width: "16px", height: "1.5px", backgroundColor: "#351E1C", borderRadius: "2px", display: "block" }} />
-            <span style={{ width: "16px", height: "1.5px", backgroundColor: "#351E1C", borderRadius: "2px", display: "block" }} />
+            <Menu size={16} strokeWidth={1.75} />
           </button>
           {menuOpen && (
             <div style={{

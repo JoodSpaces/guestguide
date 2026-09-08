@@ -1,21 +1,23 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-
-// Public event API — dispatched so AdminHeader can show the badge
-// without shared state or prop drilling.
-// AdminHeader fires:  new CustomEvent("live-feed-toggle")
-// LiveFeedPanel fires: new CustomEvent("live-feed-count", { detail: n })
+import {
+  Bell, MessageSquare, Wrench, UserCheck,
+  LogOut, LogIn, Package, X, type LucideIcon,
+} from "lucide-react";
 import type { ActivityEvent } from "@/app/api/admin/activity/route";
 
-const TYPE_ICON: Record<string, string> = {
-  service_request:  "🛎",
-  guest_request:    "💬",
-  maintenance:      "🔧",
-  guest_arrived:    "👁",
-  checkout:         "🚪",
-  arrival:          "🏠",
-  inventory_alert:  "📦",
+// AdminHeader fires:  new CustomEvent("live-feed-toggle")
+// LiveFeedPanel fires: new CustomEvent("live-feed-count", { detail: n })
+
+const TYPE_ICON: Record<string, LucideIcon> = {
+  service_request: Bell,
+  guest_request:   MessageSquare,
+  maintenance:     Wrench,
+  guest_arrived:   UserCheck,
+  checkout:        LogOut,
+  arrival:         LogIn,
+  inventory_alert: Package,
 };
 
 function timeAgo(iso: string) {
@@ -145,7 +147,7 @@ export function LiveFeedPanel() {
             onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.9)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
           >
-            ×
+            <X size={16} strokeWidth={1.75} />
           </button>
         </div>
 
@@ -172,7 +174,9 @@ export function LiveFeedPanel() {
               onMouseLeave={(el) => (el.currentTarget.style.background = "transparent")}
             >
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                <span style={{ fontSize: "1rem", flexShrink: 0, marginTop: "1px" }}>{TYPE_ICON[e.type] ?? "·"}</span>
+                <span style={{ flexShrink: 0, marginTop: "1px", color: "rgba(255,255,255,0.45)", display: "flex" }}>
+                  {(() => { const Icon = TYPE_ICON[e.type]; return Icon ? <Icon size={14} strokeWidth={1.75} /> : <Bell size={14} strokeWidth={1.75} />; })()}
+                </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "8px" }}>
                     <p style={{

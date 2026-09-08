@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight, Plus, Search, X } from "lucide-react";
 
 export interface Booking {
   id: string;
@@ -169,7 +170,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
           <p style={styles.eyebrow}>Admin · Reservations</p>
           <h1 style={styles.displayTitle}>Bookings</h1>
         </div>
-        <Link href="/admin/bookings/new" style={styles.fab}>+</Link>
+        <Link href="/admin/bookings/new" style={styles.fab} aria-label="New booking"><Plus size={18} strokeWidth={2} /></Link>
       </div>
 
       {/* ── View toggle ────────────────────────────────────────────── */}
@@ -191,7 +192,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
         <div>
           {/* Month navigation */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-            <button onClick={() => goMonth(-1)} style={styles.navBtn}>‹</button>
+            <button onClick={() => goMonth(-1)} style={styles.navBtn}><ChevronLeft size={16} strokeWidth={1.75} /></button>
 
             <div style={{ textAlign: "center" }}>
               <p style={styles.monthLabel}>{MONTH_NAMES[mo]}</p>
@@ -200,7 +201,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
               </p>
             </div>
 
-            <button onClick={() => goMonth(1)} style={styles.navBtn}>›</button>
+            <button onClick={() => goMonth(1)} style={styles.navBtn}><ChevronRight size={16} strokeWidth={1.75} /></button>
           </div>
 
           {/* Calendar grid */}
@@ -530,9 +531,9 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
             <span style={{
               position: "absolute", left: "14px", top: "50%",
               transform: "translateY(-50%)", color: "var(--jood-ink-ghost)",
-              fontSize: "1rem", pointerEvents: "none",
+              pointerEvents: "none", display: "flex",
             }}>
-              ⌕
+              <Search size={15} strokeWidth={1.75} />
             </span>
             <input
               type="text"
@@ -556,10 +557,11 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                   position: "absolute", right: "14px", top: "50%",
                   transform: "translateY(-50%)", background: "none",
                   border: "none", cursor: "pointer",
-                  color: "var(--jood-ink-ghost)", fontSize: "1.1rem", padding: 0,
+                  color: "var(--jood-ink-ghost)", padding: 0,
+                  display: "flex", alignItems: "center",
                 }}
               >
-                ×
+                <X size={15} strokeWidth={1.75} />
               </button>
             )}
           </div>
@@ -660,8 +662,7 @@ const styles = {
     display: "flex", alignItems: "center", justifyContent: "center",
     width: "42px", height: "42px", borderRadius: "50%",
     backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
-    textDecoration: "none", fontSize: "1.375rem", lineHeight: 1,
-    flexShrink: 0, fontWeight: 300,
+    textDecoration: "none", flexShrink: 0,
   } satisfies CSSProperties,
 
   segmentedControl: {
