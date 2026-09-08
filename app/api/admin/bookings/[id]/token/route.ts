@@ -29,12 +29,16 @@ export async function POST(
 
   const { data: booking } = await supabase
     .from("bookings")
-    .select("id, check_out")
+    .select("id, check_out, status")
     .eq("id", id)
-    .single<{ id: string; check_out: string }>();
+    .single<{ id: string; check_out: string; status: string }>();
 
   if (!booking) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
+
+  if (booking.status === "cancelled") {
+    return NextResponse.json({ error: "Cannot generate a guest link for a cancelled booking" }, { status: 422 });
   }
 
   // Revoke any previously issued tokens for this booking

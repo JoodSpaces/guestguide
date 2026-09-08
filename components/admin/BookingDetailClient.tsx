@@ -151,7 +151,8 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
       setStatus(newStatus);
       setStatusMsg("Updated");
     } else {
-      setStatusMsg("Update failed");
+      const body = await res.json().catch(() => ({}));
+      setStatusMsg(body.error ?? "Update failed");
     }
   }
 
@@ -357,10 +358,16 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
       <div style={card}>
         <p style={eyebrow}>Status</p>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          {(["confirmed", "completed", "cancelled"] as Status[]).map((s) => (
+          {(["confirmed", "completed", "cancelled"] as Status[])
+            .filter((s) => !(s === "confirmed" && status === "cancelled"))
+            .map((s) => (
             <button
               key={s}
-              onClick={() => status !== s && saveStatus(s)}
+              onClick={() => {
+                if (status === s || savingStatus) return;
+                if (s === "cancelled" && !confirm("Cancel this booking? This is difficult to undo.")) return;
+                saveStatus(s);
+              }}
               disabled={savingStatus}
               style={{
                 padding: "8px 18px",

@@ -29,6 +29,9 @@ const schema = z.object({
   doorCode: z.string().max(20).nullish(),
   source: z.enum(["airbnb", "booking", "direct", "other"]),
   externalRef: z.string().max(100).nullish(),
+}).refine((d) => new Date(d.checkOut) > new Date(d.checkIn), {
+  message: "Check-out must be after check-in",
+  path: ["checkOut"],
 });
 
 export async function GET(req: NextRequest) {

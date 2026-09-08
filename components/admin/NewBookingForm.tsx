@@ -101,7 +101,7 @@ export function NewBookingForm({ properties }: Props) {
           >
             {result.link}
           </p>
-          <div style={{ display: "flex", gap: "10px" }}>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             <button
               onClick={() => navigator.clipboard.writeText(result.link)}
               style={{
@@ -130,6 +130,19 @@ export function NewBookingForm({ properties }: Props) {
               }}
             >
               Open as guest
+            </a>
+            <a
+              href={`/admin/bookings/${result.bookingId}`}
+              style={{
+                padding: "10px 20px",
+                border: "1px solid var(--jood-line)",
+                borderRadius: "var(--radius-pill)",
+                textDecoration: "none",
+                fontSize: "0.875rem",
+                color: "var(--jood-ink)",
+              }}
+            >
+              View booking →
             </a>
           </div>
         </div>

@@ -279,7 +279,8 @@ export function BookingsCalendarClient({ initialBookings, properties }: Props) {
                           const clampedEnd   = b.check_out > monthEnd   ? monthEnd   : b.check_out;
                           const startDay = new Date(clampedStart).getDate();
                           const endDay   = new Date(clampedEnd).getDate();
-                          const spanDays = endDay - startDay + 1;
+                          // Checkout day is departure — bar is exclusive of it unless clamped at month end
+                          const spanDays = b.check_out > monthEnd ? endDay - startDay + 1 : Math.max(1, endDay - startDay);
                           const left     = (startDay - 1) * DAY_W;
                           const width    = spanDays * DAY_W - 4;
                           const top      = li * 30 + 9;
@@ -396,7 +397,7 @@ function packLanes(bookings: Booking[]): Booking[][] {
     let placed = false;
     for (const lane of lanes) {
       const last = lane[lane.length - 1];
-      if (last.check_out < b.check_in) {
+      if (last.check_out <= b.check_in) {
         lane.push(b);
         placed = true;
         break;

@@ -77,20 +77,28 @@ export async function PATCH(
     updates.status = parsed.data.status;
   }
 
-  // Fix 5: prevent completing a booking more than 24 h before checkout
-  if (parsed.data.status === "completed") {
+  // Pre-fetch current booking state for status-transition guards
+  if (parsed.data.status === "completed" || parsed.data.status === "confirmed") {
     const { data: cur } = await supabase
       .from("bookings")
-      .select("check_out")
+      .select("status, check_out")
       .eq("id", id)
-      .single<{ check_out: string }>();
+      .single<{ status: string; check_out: string }>();
     if (cur) {
-      const msUntilCheckout = new Date(cur.check_out).getTime() - Date.now();
-      if (msUntilCheckout > 24 * 60 * 60 * 1000) {
+      if (parsed.data.status === "confirmed" && cur.status === "cancelled") {
         return NextResponse.json(
-          { error: "Cannot mark a booking completed more than 24 h before checkout" },
+          { error: "Cannot reactivate a cancelled booking" },
           { status: 422 }
         );
+      }
+      if (parsed.data.status === "completed") {
+        const msUntilCheckout = new Date(cur.check_out).getTime() - Date.now();
+        if (msUntilCheckout > 24 * 60 * 60 * 1000) {
+          return NextResponse.json(
+            { error: "Cannot mark a booking completed more than 24 h before checkout" },
+            { status: 422 }
+          );
+        }
       }
     }
   }
