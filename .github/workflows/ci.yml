@@ -35,7 +35,7 @@ jobs:
         env:
           # Required by lib/token.ts and lib/crypto.ts in test environment
           TOKEN_PEPPER: test-pepper-ci
-          ENCRYPTION_KEY: ${{ '0'.repeat(64) }}
+          ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
           ADMIN_SECRET: test-admin-secret-32-chars-long!!
           PAYMOB_HMAC_SECRET: test-paymob-hmac-secret
 
