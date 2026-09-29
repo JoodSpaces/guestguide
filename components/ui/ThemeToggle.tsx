@@ -13,6 +13,10 @@ function applyTheme(t: Theme) {
 
 export function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>("system");
+  // The server cannot know the visitor's colour scheme, so the first render (server and browser alike)
+  // assumes light and the real answer is read after mount. Asking matchMedia during render made the
+  // server and browser disagree about this button's label (React hydration error #418).
+  const [systemDark, setSystemDark] = useState(false);
 
   useEffect(() => {
     try {
@@ -21,6 +25,8 @@ export function ThemeToggle() {
       setTheme(stored);
       applyTheme(stored);
     } catch {}
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSystemDark(window.matchMedia("(prefers-color-scheme: dark)").matches);
   }, []);
 
   function toggle() {
@@ -32,7 +38,7 @@ export function ThemeToggle() {
     try { localStorage.setItem("jood-theme", next); } catch {}
   }
 
-  const isDark = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark = theme === "dark" || (theme === "system" && systemDark);
 
   return (
     <button
