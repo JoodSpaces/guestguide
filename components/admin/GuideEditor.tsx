@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
+import { BackLink } from "@/components/admin/BackLink";
 
 const SECTION_OPTIONS = [
   { value: "wifi",       label: "Wi-Fi" },
@@ -258,12 +259,7 @@ export function GuideEditor({ propertyId, propertyName, initialSections }: Props
     <div>
       {/* Header */}
       <div style={{ marginBottom: "28px" }}>
-        <Link
-          href="/admin/bookings"
-          style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}
-        >
-          ← Bookings
-        </Link>
+        <BackLink fallbackHref={`/admin/properties/${propertyId}/guide`} style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }} />
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
           <div>
             <p style={{ fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>

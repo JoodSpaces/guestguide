@@ -442,6 +442,9 @@ export function PropertiesClient({ initialProperties }: Props) {
               </div>
             </div>
             <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+              <a href={`/admin/ops/inventory/${p.id}`} style={{ padding: "6px 14px", borderRadius: "var(--radius-pill)", border: "1px solid var(--jood-line)", fontSize: "0.8rem", color: "var(--jood-ink-muted)", textDecoration: "none" }}>
+                Inventory
+              </a>
               <a href={`/admin/properties/${p.id}/guide`} style={{ padding: "6px 14px", borderRadius: "var(--radius-pill)", border: "1px solid var(--jood-line)", fontSize: "0.8rem", color: "var(--jood-ink-muted)", textDecoration: "none", fontFamily: "inherit" }}>
                 Guide
               </a>
