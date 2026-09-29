@@ -1,11 +1,18 @@
 import webPush from "web-push";
 import * as Sentry from "@sentry/nextjs";
 
-webPush.setVapidDetails(
-  "mailto:team@jood.com",
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-);
+// Configured on first use, not at import: a build (or a preview deployment) without the
+// VAPID keys must not fail — it just cannot send push notifications.
+let vapidReady = false;
+function ensureVapid(): boolean {
+  if (vapidReady) return true;
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !priv) return false;
+  webPush.setVapidDetails("mailto:team@jood.com", pub, priv);
+  vapidReady = true;
+  return true;
+}
 
 export interface PushPayload {
   title: string;
@@ -17,6 +24,10 @@ export interface PushPayload {
 type Sub = { endpoint: string; p256dh: string; auth: string };
 
 export async function sendPush(sub: Sub, payload: PushPayload): Promise<"ok" | "expired" | "error"> {
+  if (!ensureVapid()) {
+    console.error("[push] VAPID keys are not configured — notification not sent");
+    return "error";
+  }
   try {
     await webPush.sendNotification(
       { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
