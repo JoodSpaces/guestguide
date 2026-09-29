@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getBookingFromToken } from "@/lib/guest-auth";
 import { computePhase } from "@/lib/token";
 import Anthropic from "@anthropic-ai/sdk";
+import { hhmm } from "@/lib/time";
 
 const DAILY_CALL_LIMIT = 100;
 
@@ -119,8 +120,8 @@ export async function POST(req: NextRequest) {
     ? `أنت "كونسيرج جود"، مساعد ذكاء اصطناعي للضيوف في ${propertyName}. أجب دائماً بالعربية.
 
 ## تفاصيل الإقامة
-- الوصول: ${fmt(booking.check_in)} في ${property.checkin_time}
-- المغادرة: ${fmt(booking.check_out)} في ${property.checkout_time}
+- الوصول: ${fmt(booking.check_in)} في ${hhmm(property.checkin_time)}
+- المغادرة: ${fmt(booking.check_out)} في ${hhmm(property.checkout_time)}
 - الحالة: ${phaseNote[phase] ?? ""}
 ${wifiLine}
 
@@ -134,8 +135,8 @@ ${manualText}
     : `You are JOOD Concierge, an AI assistant for guests staying at ${propertyName}. Always respond in English.
 
 ## Stay Details
-- Check-in: ${fmt(booking.check_in)} at ${property.checkin_time}
-- Check-out: ${fmt(booking.check_out)} at ${property.checkout_time}
+- Check-in: ${fmt(booking.check_in)} at ${hhmm(property.checkin_time)}
+- Check-out: ${fmt(booking.check_out)} at ${hhmm(property.checkout_time)}
 - Status: ${phaseNote[phase] ?? ""}
 ${wifiLine}
 

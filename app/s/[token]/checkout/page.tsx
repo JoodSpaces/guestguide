@@ -4,6 +4,7 @@ import { hashToken, isTokenExpired } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import { StayShell } from "@/components/stay/StayShell";
 import { CheckoutClient } from "@/components/stay/CheckoutClient";
+import { hhmm } from "@/lib/time";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -48,7 +49,7 @@ export default async function CheckoutPage({ params }: Props) {
     ? booking.properties[0]
     : booking.properties;
 
-  const checkoutTime = property?.checkout_time ?? "11:00";
+  const checkoutTime = hhmm(property?.checkout_time, "11:00");
   const checkInDate = new Date(booking.check_in);
   const checkoutDate = new Date(booking.check_out);
   const nightsCount = Math.round(

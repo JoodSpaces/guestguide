@@ -61,7 +61,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short", year: "numeric" });
 }
 
 export function ServiceRequestDetail({ request: initial }: { request: ServiceRequest }) {

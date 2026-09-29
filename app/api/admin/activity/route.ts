@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       .eq("status", "confirmed"),
     supabase
       .from("stay_tokens")
-      .select("id, last_opened_at, bookings(guest_first_name, properties(name))")
+      .select("id, booking_id, last_opened_at, bookings(guest_first_name, properties(name))")
       .gte("last_opened_at", since)
       .not("last_opened_at", "is", null)
       .order("last_opened_at", { ascending: false })
@@ -126,6 +126,7 @@ export async function GET(req: NextRequest) {
       title: `${b.guest_first_name} ${b.guest_last_name}`,
       subtitle: `Arriving today · ${p?.name ?? ""}`,
       timestamp: b.check_in,
+      href: `/admin/bookings/${b.id}`,
     });
   }
 
@@ -137,6 +138,7 @@ export async function GET(req: NextRequest) {
       title: `${b.guest_first_name} ${b.guest_last_name}`,
       subtitle: `Checking out today · ${p?.name ?? ""}`,
       timestamp: b.check_out,
+      href: `/admin/bookings/${b.id}`,
     });
   }
 
@@ -150,6 +152,7 @@ export async function GET(req: NextRequest) {
       title: `${b?.guest_first_name ?? "Guest"} opened their guide`,
       subtitle: p?.name ?? "",
       timestamp: t.last_opened_at,
+      href: `/admin/bookings/${t.booking_id}`,
     });
   }
 

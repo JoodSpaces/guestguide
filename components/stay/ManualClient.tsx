@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 interface Entry {
@@ -312,6 +313,26 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
           {displayEntries.map((entry, idx) => (
             <EntryRow key={entry.id} entry={entry} isAr={isAr} isOpen={expandedIds.has(entry.id)} onToggle={() => toggleEntry(entry.id)} isAiMatch={!!aiResult?.entryIds.includes(entry.id)} isLast={idx === displayEntries.length - 1} />
           ))}
+        </div>
+      )}
+
+      {/* ── Nothing written yet ── */}
+      {!isSearching && entries.length === 0 && (
+        <div style={{ padding: "32px 0", display: "flex", flexDirection: "column", gap: "14px" }}>
+          <p style={{ color: "var(--jood-ink)", fontSize: "1rem", lineHeight: 1.6 }}>
+            {isAr ? "دليل البيت قيد الإعداد." : "The house guide is still being written."}
+          </p>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>
+            {isAr ? "اسأل المساعد أو راسل الفريق وسنساعدك فوراً." : "Ask the concierge or message the team and we'll help right away."}
+          </p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Link href={`/s/${token}/concierge`} style={{ padding: "10px 20px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", color: "var(--jood-ink)", textDecoration: "none", fontSize: "0.875rem" }}>
+              {isAr ? "اسأل المساعد" : "Ask the concierge"}
+            </Link>
+            <Link href={`/s/${token}/requests`} style={{ padding: "10px 20px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", color: "var(--jood-ink)", textDecoration: "none", fontSize: "0.875rem" }}>
+              {isAr ? "تواصل مع الفريق" : "Contact the team"}
+            </Link>
+          </div>
         </div>
       )}
 

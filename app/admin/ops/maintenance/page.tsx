@@ -14,7 +14,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short" });
 }
 
 const card: React.CSSProperties = {

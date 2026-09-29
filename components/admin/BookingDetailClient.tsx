@@ -89,7 +89,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
+  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo",
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -238,7 +238,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
               ))}
             </div>
             <span style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)" }}>
-              {rating.stars}/5 · {new Date(rating.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+              {rating.stars}/5 · {new Date(rating.created_at).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short", year: "numeric" })}
             </span>
           </div>
           {rating.comment && (

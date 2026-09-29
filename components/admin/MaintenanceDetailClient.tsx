@@ -36,7 +36,7 @@ const PRIORITY_COLOR: Record<string, string> = {
 };
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short", year: "numeric" });
 }
 
 const inputStyle: React.CSSProperties = {

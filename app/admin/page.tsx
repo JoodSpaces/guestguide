@@ -145,7 +145,7 @@ export default async function AdminTodayPage() {
       }}>
         <div>
           <p style={{ fontFamily: "var(--font-label)", fontSize: "8.5px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-faint)", marginBottom: "6px" }}>
-            {today.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}
+            {today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}
           </p>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.7rem", fontWeight: 400, fontStyle: "italic", color: "var(--jood-ink)", marginBottom: "10px", lineHeight: 1 }}>
             {greetWord}.

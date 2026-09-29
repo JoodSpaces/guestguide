@@ -44,11 +44,11 @@ function nightCount(ci: string, co: string): number {
 }
 
 function fmtShort(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short" });
 }
 
 function fmtFull(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" });
 }
 
 // Does a booking touch a given ISO date?
