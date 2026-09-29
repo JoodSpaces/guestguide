@@ -14,6 +14,7 @@ import { useTimeAmbience } from "@/components/ui/TimeAmbience";
 import { IntentSelector } from "@/components/stay/IntentSelector";
 import { WeatherStrip } from "@/components/stay/WeatherStrip";
 import { TonightCard } from "@/components/stay/TonightCard";
+import { cairoHour } from "@/lib/cairo-time";
 
 /* ── Time helpers (unchanged) ───────────────────────────────────────────── */
 function getTimeKicker(h: number) {
@@ -28,7 +29,7 @@ function getTimeKicker(h: number) {
 function getContextNudge(phase: string, hour: number, checkOut: string, isAr: boolean, token: string) {
   const checkOutDate = new Date(checkOut);
   const hoursUntilCheckout = (checkOutDate.getTime() - Date.now()) / (1000 * 60 * 60);
-  const checkOutTime = checkOutDate.toLocaleTimeString(isAr ? "ar-EG" : "en-US", { hour: "numeric", minute: "2-digit" });
+  const checkOutTime = checkOutDate.toLocaleTimeString(isAr ? "ar-EG" : "en-US", { timeZone: "Africa/Cairo", hour: "numeric", minute: "2-digit" });
 
   if (phase === "living") {
     if (hour >= 5 && hour < 11)  return isAr
@@ -172,14 +173,14 @@ export function StayHome({
   const guestName = isAr ? (payload.guestFirstNameAr ?? payload.guestFirstName) : payload.guestFirstName;
   const ambience = useTimeAmbience();
 
-  const [hour, setHour] = useState(() => new Date().getHours());
+  const [hour, setHour] = useState(() => cairoHour());
   const [now, setNow] = useState(() => Date.now());
   const [dnd, setDnd] = useState(initialDnd);
   const [dndSaving, setDndSaving] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => {
-      setHour(new Date().getHours());
+      setHour(cairoHour());
       setNow(Date.now());
     }, 60_000);
     return () => clearInterval(id);

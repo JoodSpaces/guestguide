@@ -101,3 +101,19 @@ describe("cairoToUtcIso", () => {
     expect(() => cairoToUtcIso("2026-11-10", "3pm")).toThrow();
   });
 });
+
+import { cairoHour, cairoDay } from "@/lib/cairo-time";
+
+describe("cairoHour / cairoDay", () => {
+  it("reads the hour in Cairo, not in the server's zone", () => {
+    expect(cairoHour(Date.parse("2026-11-10T22:30:00Z"))).toBe(0);   // 00:30 next day, UTC+2
+    expect(cairoHour(Date.parse("2026-07-10T21:30:00Z"))).toBe(0);   // 00:30 next day, UTC+3 (summer)
+    expect(cairoHour(Date.parse("2026-11-10T09:00:00Z"))).toBe(11);
+  });
+  it("'today' is the Cairo day: just after Cairo midnight it is already tomorrow (UTC still says yesterday)", () => {
+    const d = cairoDay(Date.parse("2026-09-29T21:37:00Z"));           // 00:37 on 30 Sep in Cairo (UTC+3)
+    expect(d.date).toBe("2026-09-30");
+    expect(d.startIso).toBe("2026-09-29T21:00:00.000Z");
+    expect(d.endIso).toBe("2026-09-30T20:59:59.000Z");
+  });
+});

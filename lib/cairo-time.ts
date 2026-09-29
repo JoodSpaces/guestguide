@@ -25,3 +25,17 @@ export function cairoToUtcIso(date: string, time: string): string {
   utc = asIfUtc - offsetMinutes(utc) * 60_000;
   return new Date(utc).toISOString();
 }
+
+/** The hour (0–23) it is in Cairo. Servers run in UTC and guests' phones in any zone, so anything that
+ *  renders a time of day (a greeting, "golden hour") must pick one zone or server and browser disagree. */
+export function cairoHour(ms: number = Date.now()): number {
+  return Number(new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", hourCycle: "h23" }).format(new Date(ms)));
+}
+
+/** Today in Cairo as YYYY-MM-DD, and the UTC instants at which that Cairo day starts and ends. */
+export function cairoDay(ms: number = Date.now()): { date: string; startIso: string; endIso: string } {
+  const date = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(ms));
+  const start = cairoToUtcIso(date, "00:00");
+  const end = new Date(new Date(start).getTime() + 24 * 60 * 60 * 1000 - 1000).toISOString();
+  return { date, startIso: start, endIso: end };
+}

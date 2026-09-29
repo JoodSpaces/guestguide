@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import { ROLE_HOME } from "@/lib/admin-auth";
 import { Package, RefreshCcw, Wrench, AlertTriangle, Check, type LucideIcon } from "lucide-react";
+import { cairoDay, cairoHour } from "@/lib/cairo-time";
 
 function Section({ title, count }: { title: string; count: number }) {
   return (
@@ -33,8 +34,8 @@ export default async function AdminTodayPage() {
 
   const supabase = createServiceClient();
   const now = new Date().toISOString();
-  const todayStart = now.slice(0, 10) + "T00:00:00Z";
-  const todayEnd = now.slice(0, 10) + "T23:59:59Z";
+  // "Today" is the Cairo day (the server runs in UTC, which is a day behind for the first hours after midnight).
+  const { startIso: todayStart, endIso: todayEnd } = cairoDay();
 
   const [
     { data: arrivals },
@@ -129,7 +130,7 @@ export default async function AdminTodayPage() {
     ? "All clear — no open items today."
     : briefParts.join(" · ") + ".";
 
-  const greetHour = today.getHours();
+  const greetHour = cairoHour();
   const greetWord = greetHour < 12 ? "Good morning" : greetHour < 17 ? "Good afternoon" : "Good evening";
 
   return (
