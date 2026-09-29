@@ -9,6 +9,7 @@ export interface GuestBooking {
   guest_email: string | null;
   check_in: string;
   check_out: string;
+  status: string;
 }
 
 export async function getBookingFromToken(token: string): Promise<GuestBooking | null> {
@@ -18,7 +19,7 @@ export async function getBookingFromToken(token: string): Promise<GuestBooking |
 
   const { data } = await supabase
     .from("stay_tokens")
-    .select("booking_id, revoked_at, expires_at, bookings(id, property_id, guest_first_name, guest_last_name, guest_email, check_in, check_out)")
+    .select("booking_id, revoked_at, expires_at, bookings(id, property_id, guest_first_name, guest_last_name, guest_email, check_in, check_out, status)")
     .eq("token_hash", hash)
     .single<{
       booking_id: string;
@@ -32,6 +33,9 @@ export async function getBookingFromToken(token: string): Promise<GuestBooking |
 
   const booking = Array.isArray(data.bookings) ? data.bookings[0] : data.bookings;
   if (!booking) return null;
+  // A cancelled booking must not keep working: the link would otherwise still
+  // open the door code, take requests and send emails until it is revoked by hand.
+  if (booking.status === "cancelled") return null;
 
   return booking;
 }

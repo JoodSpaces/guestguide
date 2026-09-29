@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateToken, hashToken, computePhase, isArrivalUnlocked, isTokenExpired } from "@/lib/token";
+import { generateToken, hashToken, computePhase, isArrivalUnlocked, isTokenExpired, doorCodeWindow } from "@/lib/token";
 
 describe("generateToken", () => {
   it("produces a 22-character string", () => {
@@ -98,5 +98,32 @@ describe("isTokenExpired", () => {
 
   it("is true after the 48h grace period", () => {
     expect(isTokenExpired(new Date(Date.now() - 3 * 86400_000).toISOString())).toBe(true);
+  });
+});
+
+describe("doorCodeWindow", () => {
+  const H = 60 * 60 * 1000;
+  const now = Date.parse("2026-10-10T12:00:00Z");
+  const iso = (offsetH: number) => new Date(now + offsetH * H).toISOString();
+
+  it("is locked more than 48h before check-in", () => {
+    expect(doorCodeWindow(iso(72), iso(120), now)).toBe("locked");
+  });
+
+  it("is open from 48h before check-in", () => {
+    expect(doorCodeWindow(iso(47), iso(100), now)).toBe("open");
+  });
+
+  it("is open during the stay", () => {
+    expect(doorCodeWindow(iso(-48), iso(24), now)).toBe("open");
+  });
+
+  it("stays open for a short grace after check-out", () => {
+    expect(doorCodeWindow(iso(-72), iso(-1), now)).toBe("open");
+  });
+
+  it("is closed once the grace after check-out has passed (unlike the stay link, which lives 48h)", () => {
+    expect(doorCodeWindow(iso(-72), iso(-3), now)).toBe("closed");
+    expect(doorCodeWindow(iso(-72), iso(-24), now)).toBe("closed");
   });
 });

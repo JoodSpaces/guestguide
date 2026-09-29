@@ -19,6 +19,15 @@ export function checkPropertyAccess(session: AdminSession, propertyId: string): 
   return session.propertyIds.includes(propertyId);
 }
 
+/**
+ * The property ids this session is limited to, or null when it may see all of
+ * them. Same rule as checkPropertyAccess, in a form a list query can use.
+ */
+export function scopedPropertyIds(session: AdminSession): string[] | null {
+  if (session.role === "admin") return null;
+  return session.propertyIds ?? null;
+}
+
 // ─── JTI revocation store (Redis-backed, no-op when Redis is not configured) ─
 
 let _redis: Redis | null = null;
@@ -154,6 +163,54 @@ export async function verifyAdminCookie(cookie: string): Promise<AdminSession | 
   }
 }
 
+// ─── Live re-check of the team member ───────────────────────────────────────
+// The cookie is signed and lasts 7 days, so on its own it would keep working
+// after someone is deactivated, demoted or re-scoped. Re-read the member row
+// (cached for a minute) and let the database win over what the cookie claims.
+
+interface MemberRow {
+  is_active: boolean;
+  role: AdminSession["role"];
+  property_ids: string[] | null;
+}
+
+const MEMBER_TTL_MS = 60_000;
+const memberCache = new Map<string, { at: number; row: MemberRow | null }>();
+
+/** Test hook. */
+export function _resetMemberCache() {
+  memberCache.clear();
+}
+
+export async function refreshSession(session: AdminSession): Promise<AdminSession | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // No database configured (unit tests, local UI work): nothing to check against.
+  if (!url || !key) return session;
+  if (!/^[0-9a-f-]{36}$/i.test(session.id)) return null;
+
+  const now = Date.now();
+  let hit = memberCache.get(session.id);
+  if (!hit || now - hit.at > MEMBER_TTL_MS) {
+    try {
+      const res = await fetch(
+        `${url}/rest/v1/team_members?id=eq.${session.id}&select=is_active,role,property_ids&limit=1`,
+        { headers: { apikey: key, Authorization: `Bearer ${key}` }, cache: "no-store" },
+      );
+      if (!res.ok) return null; // fail closed
+      const rows = (await res.json()) as MemberRow[];
+      hit = { at: now, row: rows[0] ?? null };
+      memberCache.set(session.id, hit);
+    } catch {
+      return null; // fail closed
+    }
+  }
+
+  const row = hit.row;
+  if (!row || !row.is_active) return null;
+  return { ...session, role: row.role, propertyIds: row.property_ids ?? null };
+}
+
 export const ROLE_HOME: Record<string, string> = {
   admin:        "/admin",
   ops:          "/admin/ops",
@@ -196,7 +253,9 @@ export async function requireSession(
     ? bearer.slice(7)
     : req.cookies.get("jood_admin")?.value;
   if (!raw) return null;
-  const session = await verifyAdminCookie(raw);
+  const verified = await verifyAdminCookie(raw);
+  if (!verified) return null;
+  const session = await refreshSession(verified);
   if (!session) return null;
   if (allowedRoles && !allowedRoles.includes(session.role)) return null;
   return session;

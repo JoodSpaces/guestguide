@@ -49,7 +49,10 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single<{ id: string }>();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[guest/service-requests] db error", error);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
 
   const guestName = `${booking.guest_first_name} ${booking.guest_last_name}`;
   const propertyName = property?.name ?? "the property";

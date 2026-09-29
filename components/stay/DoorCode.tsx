@@ -204,9 +204,13 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
             ? "Door code hasn't been set yet — contact your host."
             : state.message === "arrival_locked"
             ? "Arrival details haven't unlocked yet."
+            : state.message === "door_code_expired"
+            ? "Your stay has ended, so the door code is no longer shown."
+            : state.message === "too_many_attempts"
+            ? "Too many wrong attempts. Please wait 15 minutes or contact your host."
             : "Couldn't load the code. Please try again."}
         </p>
-        {state.message !== "code_not_set" && (
+        {state.message !== "code_not_set" && state.message !== "door_code_expired" && (
           <button
             onClick={() => setState({ kind: "hidden" })}
             style={{ padding: "10px 20px", backgroundColor: "#351E1C", color: "#F5F4ED", border: "none", borderRadius: "var(--radius-pill)", cursor: "pointer", fontSize: "0.875rem" }}

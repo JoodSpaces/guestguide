@@ -3,7 +3,7 @@ import { z } from "zod";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
 import { buildChecklist, DEFAULT_CHECKLIST, type PropertySpecs } from "@/lib/ops-checklist";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 
 export async function GET(
   req: NextRequest,
@@ -22,6 +22,8 @@ export async function GET(
     .single();
 
   if (error || !booking) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  // A scoped member must not read another property's guest details or door code.
+  if (!checkPropertyAccess(session, booking.property_id as string)) return forbidden();
 
   let doorCode: string | null = null;
   if (booking.door_code_encrypted) {
@@ -70,6 +72,14 @@ export async function PATCH(
   const supabase = createServiceClient();
   const updates: Record<string, unknown> = {};
 
+  const { data: target } = await supabase
+    .from("bookings")
+    .select("property_id")
+    .eq("id", id)
+    .single<{ property_id: string }>();
+  if (!target) return NextResponse.json({ error: "not_found" }, { status: 404 });
+  if (!checkPropertyAccess(session, target.property_id)) return forbidden();
+
   if (parsed.data.doorCode !== undefined) {
     updates.door_code_encrypted = parsed.data.doorCode ? encrypt(parsed.data.doorCode) : null;
   }
@@ -112,6 +122,16 @@ export async function PATCH(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // A cancelled stay must stop working at once: revoke its guest links so the
+  // door code, requests and everything else behind the link go dark.
+  if (parsed.data.status === "cancelled") {
+    await supabase
+      .from("stay_tokens")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("booking_id", id)
+      .is("revoked_at", null);
   }
 
   // When booking is completed, activate the scheduled turnover (or create one if missing)

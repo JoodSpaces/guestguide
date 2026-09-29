@@ -75,3 +75,20 @@ export function isArrivalUnlocked(checkIn: string): boolean {
 export function isTokenExpired(checkOut: string): boolean {
   return Date.now() > new Date(checkOut).getTime() + 48 * 60 * 60 * 1000;
 }
+
+/** How long after check-out a guest can still fetch the door code (late departures, a forgotten bag). */
+export const DOOR_CODE_GRACE_AFTER_CHECKOUT_MS = 2 * 60 * 60 * 1000;
+
+export type DoorCodeWindow = "locked" | "open" | "closed";
+
+/**
+ * When may the door code be shown? From 48 h before check-in until a short
+ * grace after check-out. The stay link itself outlives check-out (48 h, for
+ * the memory card and rating), but the door code must not: the next guest may
+ * already be arriving.
+ */
+export function doorCodeWindow(checkIn: string, checkOut: string, now: number = Date.now()): DoorCodeWindow {
+  if (now < new Date(checkIn).getTime() - 48 * 60 * 60 * 1000) return "locked";
+  if (now > new Date(checkOut).getTime() + DOOR_CODE_GRACE_AFTER_CHECKOUT_MS) return "closed";
+  return "open";
+}

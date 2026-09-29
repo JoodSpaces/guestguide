@@ -80,4 +80,27 @@ describe("verifyPaymobHmac", async () => {
   it("rejects empty HMAC", () => {
     expect(verifyPaymobHmac(payload, "")).toBe(false);
   });
+
+  it("rejects an HMAC of the wrong length without throwing", () => {
+    expect(verifyPaymobHmac(payload, "abc")).toBe(false);
+  });
+
+  it("rejects everything when the secret is not configured", () => {
+    const saved = process.env.PAYMOB_HMAC_SECRET;
+    // A signature made with an empty key is computable by anyone, so it must not validate.
+    const emptyKeyHmac = createHmac("sha512", "").update("x").digest("hex");
+    process.env.PAYMOB_HMAC_SECRET = "";
+    expect(verifyPaymobHmac(payload, emptyKeyHmac)).toBe(false);
+    process.env.PAYMOB_HMAC_SECRET = saved;
+  });
+});
+
+describe("toCents", async () => {
+  const { toCents } = await import("@/lib/paymob");
+
+  it("converts whole and fractional EGP exactly", () => {
+    expect(toCents(50)).toBe(5000);
+    expect(toCents(12.3)).toBe(1230); // 12.3 * 100 === 1230.0000000000002
+    expect(toCents(0.29)).toBe(29);   // 0.29 * 100 === 28.999999999999996
+  });
 });

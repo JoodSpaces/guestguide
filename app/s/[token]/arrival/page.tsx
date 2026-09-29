@@ -30,7 +30,7 @@ export default async function ArrivalPage({ params }: Props) {
   const { data: booking } = await supabase
     .from("bookings")
     .select(`
-      check_in, check_out,
+      status, check_in, check_out,
       properties (
         name, name_ar, map_pin_lat, map_pin_lng, on_call_phone,
         requires_code_second_factor, wifi_ssid, wifi_password_encrypted
@@ -38,6 +38,7 @@ export default async function ArrivalPage({ params }: Props) {
     `)
     .eq("id", tokenRow.booking_id)
     .single<{
+      status: string;
       check_in: string;
       check_out: string;
       properties: {
@@ -52,7 +53,7 @@ export default async function ArrivalPage({ params }: Props) {
       };
     }>();
 
-  if (!booking) notFound();
+  if (!booking || booking.status === "cancelled") notFound();
   if (isTokenExpired(booking.check_out)) notFound();
 
   const property = Array.isArray(booking.properties)

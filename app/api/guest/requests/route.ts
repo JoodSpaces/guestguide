@@ -71,7 +71,10 @@ export async function POST(req: NextRequest) {
     .select("id")
     .single<{ id: string }>();
 
-  if (insertResult.error) return NextResponse.json({ error: insertResult.error.message }, { status: 500 });
+  if (insertResult.error) {
+    console.error("[guest/requests] insert failed", insertResult.error);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
 
   const guestName = `${booking.guest_first_name} ${booking.guest_last_name}`;
   const propertyName = property?.name ?? "the property";

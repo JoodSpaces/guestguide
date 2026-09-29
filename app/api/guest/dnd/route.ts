@@ -22,6 +22,9 @@ export async function PATCH(req: NextRequest) {
     .update({ dnd_active: parsed.data.active })
     .eq("id", booking.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[guest/dnd] db error", error);
+    return NextResponse.json({ error: "server_error" }, { status: 500 });
+  }
   return NextResponse.json({ ok: true, active: parsed.data.active });
 }

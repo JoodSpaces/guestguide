@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { generateToken, hashToken } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import QRCode from "qrcode";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
 
 function resolveAppUrl(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -19,7 +19,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!(await requireSession(req, ["admin"]))) return forbidden();
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) {
     return NextResponse.json({ error: "invalid_id" }, { status: 400 });
@@ -29,13 +30,14 @@ export async function POST(
 
   const { data: booking } = await supabase
     .from("bookings")
-    .select("id, check_out, status")
+    .select("id, check_out, status, property_id")
     .eq("id", id)
-    .single<{ id: string; check_out: string; status: string }>();
+    .single<{ id: string; check_out: string; status: string; property_id: string }>();
 
   if (!booking) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  if (!checkPropertyAccess(session, booking.property_id)) return forbidden();
 
   if (booking.status === "cancelled") {
     return NextResponse.json({ error: "Cannot generate a guest link for a cancelled booking" }, { status: 422 });

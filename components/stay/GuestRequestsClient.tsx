@@ -104,10 +104,10 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
     }
     classifyTimer.current = setTimeout(async () => {
       try {
-        const res = await fetch("/api/guest/classify-request", {
+        const res = await fetch("/api/guest/classify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body }),
+          body: JSON.stringify({ token, body }),
         });
         if (res.ok) {
           const { category } = await res.json();
@@ -116,7 +116,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
       } catch {}
     }, 800);
     return () => { if (classifyTimer.current) clearTimeout(classifyTimer.current); };
-  }, [body]);
+  }, [body, token]);
 
   async function submitRequest() {
     if (!body.trim() || inFlight.current) return;

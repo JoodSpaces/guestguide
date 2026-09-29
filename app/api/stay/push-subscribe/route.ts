@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { hashToken, isTokenExpired } from "@/lib/token";
+import { isAllowedPushEndpoint } from "@/lib/push-endpoint";
 
 const schema = z.object({
   token: z.string().regex(/^[A-Za-z0-9_-]{22}$/),
@@ -16,6 +17,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
 
   const { token, endpoint, p256dh, auth } = parsed.data;
+  if (!isAllowedPushEndpoint(endpoint)) return NextResponse.json({ error: "invalid" }, { status: 400 });
   const supabase = createServiceClient();
 
   const { data: tokenRow } = await supabase

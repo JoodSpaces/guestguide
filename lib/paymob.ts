@@ -1,6 +1,11 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 const BASE = "https://accept.paymob.com/api";
+
+/** EGP → piastres as an integer. `12.3 * 100` is 1230.0000000000002, which Paymob rejects and a strict comparison misses. */
+export function toCents(amountEgp: number): number {
+  return Math.round(amountEgp * 100);
+}
 
 async function getAuthToken(): Promise<string> {
   const res = await fetch(`${BASE}/auth/tokens`, {
@@ -27,7 +32,7 @@ export async function createPaymentLink({
   guestEmail?: string | null;
 }): Promise<{ paymobOrderId: string; paymentUrl: string }> {
   const token = await getAuthToken();
-  const amountCents = amountEgp * 100;
+  const amountCents = toCents(amountEgp);
 
   const orderRes = await fetch(`${BASE}/ecommerce/orders`, {
     method: "POST",
@@ -70,8 +75,10 @@ export async function createPaymentLink({
       },
       currency: "EGP",
       integration_id: (() => {
-        const id = parseInt(process.env.PAYMOB_INTEGRATION_ID ?? "0");
-        if (!id) throw new Error("PAYMOB_INTEGRATION_ID env var is not configured");
+        // .env.example documents the card / wallet ids; accept the single-id name too.
+        const raw = process.env.PAYMOB_INTEGRATION_ID ?? process.env.PAYMOB_INTEGRATION_ID_CARD ?? "0";
+        const id = parseInt(raw);
+        if (!id) throw new Error("PAYMOB_INTEGRATION_ID (or PAYMOB_INTEGRATION_ID_CARD) is not configured");
         return id;
       })(),
       lock_order_when_paid: true,
@@ -81,6 +88,7 @@ export async function createPaymentLink({
   if (!keyData.token) throw new Error("Paymob payment key creation failed");
 
   const iframeId = process.env.PAYMOB_IFRAME_ID;
+  if (!iframeId) throw new Error("PAYMOB_IFRAME_ID is not configured");
   const paymentUrl = `https://accept.paymob.com/api/acceptance/iframes/${iframeId}?payment_token=${keyData.token}`;
 
   return { paymobOrderId, paymentUrl };
@@ -115,6 +123,9 @@ export function verifyPaymobHmac(obj: Record<string, unknown>, hmac: string): bo
     String(obj.success ?? ""),
   ];
 
+  // An unset secret must never validate anything (HMAC with an empty key is computable by anyone).
+  if (!secret) return false;
   const computed = createHmac("sha512", secret).update(fields.join("")).digest("hex");
-  return computed === hmac;
+  if (hmac.length !== computed.length) return false;
+  return timingSafeEqual(Buffer.from(computed), Buffer.from(hmac));
 }

@@ -1,67 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminCookie, isPathAllowed, ROLE_HOME } from "@/lib/admin-auth";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
+import { verifyAdminCookie, refreshSession, isPathAllowed, ROLE_HOME } from "@/lib/admin-auth";
+import { allow, type RateRule } from "@/lib/rate-limit";
 
-// ── Rate limiting ────────────────────────────────────────────────────────────
-// Uses Upstash Redis when UPSTASH_REDIS_REST_URL is configured (cross-isolate,
-// accurate across Vercel edge nodes). Falls back to in-memory per-isolate
-// counting when the env var is absent (dev / preview without Upstash).
+// ── Rate limits ──────────────────────────────────────────────────────────────
+// Each rule has its own counter (see lib/rate-limit.ts). Upstash Redis is used
+// when configured; without it the counters are per server instance, which only
+// slows an attacker down — configure Upstash in production.
+const DEV = process.env.NODE_ENV === "development";
+const rule = (name: string, limit: number, windowSec: number): RateRule => ({
+  name,
+  limit: DEV ? 120 : limit,
+  windowSec,
+});
 
-let upstashLimiter: Ratelimit | null = null;
-let upstashApiLimiter: Ratelimit | null = null;
+const RULES = {
+  adminLogin:   rule("admin-login", 10, 300),
+  revealCode:   rule("reveal-code", 10, 300),
+  concierge:    rule("concierge", 30, 300),
+  pushSub:      rule("push-subscribe", 10, 300),
+  resolve:      rule("resolve", 30, 60),
+  // Both send an email to the office (and to the guest) and one calls the AI classifier.
+  guestWrites:  rule("guest-writes", 10, 300),
+  stayPages:    rule("stay-pages", 10, 60),
+};
 
-function getRedis() {
-  return new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL!,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-  });
+function ruleFor(pathname: string, method: string): RateRule | null {
+  if (pathname === "/api/admin/auth" && method === "POST") return RULES.adminLogin;
+  if (pathname === "/api/stay/reveal-code") return RULES.revealCode;
+  if (pathname === "/api/guest/concierge") return RULES.concierge;
+  if (pathname === "/api/stay/push-subscribe") return RULES.pushSub;
+  if (pathname === "/api/stay/resolve") return RULES.resolve;
+  if (
+    (pathname === "/api/guest/requests" || pathname === "/api/guest/service-requests") &&
+    method === "POST"
+  ) return RULES.guestWrites;
+  if (pathname.startsWith("/s/")) return RULES.stayPages;
+  return null;
 }
-
-function hasUpstash() {
-  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
-}
-
-function getUpstashLimiter(): Ratelimit | null {
-  if (!hasUpstash()) return null;
-  if (!upstashLimiter) {
-    upstashLimiter = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(
-        process.env.NODE_ENV === "development" ? 120 : 10,
-        "60 s"
-      ),
-      prefix: "jood:rl",
-    });
-  }
-  return upstashLimiter;
-}
-
-// Stricter limiter for auth/sensitive API endpoints: 10 req / 5 min per IP
-function getApiLimiter(): Ratelimit | null {
-  if (!hasUpstash()) return null;
-  if (!upstashApiLimiter) {
-    upstashApiLimiter = new Ratelimit({
-      redis: getRedis(),
-      limiter: Ratelimit.slidingWindow(
-        process.env.NODE_ENV === "development" ? 120 : 10,
-        "300 s"
-      ),
-      prefix: "jood:api-rl",
-    });
-  }
-  return upstashApiLimiter;
-}
-
-// In-memory fallback (per-isolate — not shared across Vercel edge instances)
-const tokenRequestMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = process.env.NODE_ENV === "development" ? 120 : 10;
-const RATE_WINDOW_MS = 60_000;
-
-// Separate fallback for admin login: 10 attempts per 5 minutes per IP
-const adminLoginMap = new Map<string, { count: number; resetAt: number }>();
-const ADMIN_RATE_LIMIT = process.env.NODE_ENV === "development" ? 120 : 10;
-const ADMIN_RATE_WINDOW_MS = 5 * 60_000;
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -69,7 +44,10 @@ export async function middleware(req: NextRequest) {
   // ── Admin auth + role gate ──────────────────────────────────────────────
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
     const cookieVal = req.cookies.get("jood_admin")?.value;
-    const session = cookieVal ? await verifyAdminCookie(cookieVal) : null;
+    const verified = cookieVal ? await verifyAdminCookie(cookieVal) : null;
+    // Re-read the member: a deactivated, demoted or re-scoped account must not
+    // keep the access its (7-day) cookie was issued with.
+    const session = verified ? await refreshSession(verified) : null;
 
     if (!session) {
       const url = req.nextUrl.clone();
@@ -83,64 +61,27 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Forward role + name to server components via request headers
+    // Forward role, name and property scope to server components. `set` (never
+    // "only if absent") so a client cannot smuggle its own values in.
+    // x-admin-props: "" = all properties, otherwise a JSON array of property ids.
     const requestHeaders = new Headers(req.headers);
     requestHeaders.set("x-admin-role", session.role);
     requestHeaders.set("x-admin-name", session.name);
+    requestHeaders.set(
+      "x-admin-props",
+      session.role !== "admin" && session.propertyIds ? JSON.stringify(session.propertyIds) : "",
+    );
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-
-  // ── Rate-limit sensitive API endpoints (auth, reveal-code, concierge) ──
-  const isSensitiveApi =
-    pathname === "/api/admin/auth" ||
-    pathname === "/api/stay/reveal-code" ||
-    pathname === "/api/guest/concierge" ||
-    pathname.startsWith("/api/stay/subscribe-push");
-
-  if (isSensitiveApi) {
-    const limiter = getApiLimiter();
-    if (limiter) {
-      const { success } = await limiter.limit(ip);
-      if (!success) {
-        return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "300" } });
-      }
-    } else if (pathname === "/api/admin/auth") {
-      // In-memory fallback for admin login when Upstash is not configured
-      const now = Date.now();
-      const entry = adminLoginMap.get(ip);
-      if (!entry || now > entry.resetAt) {
-        adminLoginMap.set(ip, { count: 1, resetAt: now + ADMIN_RATE_WINDOW_MS });
-      } else {
-        entry.count += 1;
-        if (entry.count > ADMIN_RATE_LIMIT) {
-          return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "300" } });
-        }
-      }
-    }
-  }
-
-  // ── Rate-limit guest token page routes ─────────────────────────────────
-  if (pathname.startsWith("/s/")) {
-    const limiter = getUpstashLimiter();
-
-    if (limiter) {
-      const { success } = await limiter.limit(ip);
-      if (!success) {
-        return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "60" } });
-      }
-    } else {
-      const now = Date.now();
-      const entry = tokenRequestMap.get(ip);
-      if (!entry || now > entry.resetAt) {
-        tokenRequestMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-      } else {
-        entry.count += 1;
-        if (entry.count > RATE_LIMIT) {
-          return new NextResponse("Too many requests", { status: 429, headers: { "Retry-After": "60" } });
-        }
-      }
+  const limited = ruleFor(pathname, req.method);
+  if (limited) {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    if (!(await allow(limited, ip))) {
+      return new NextResponse("Too many requests", {
+        status: 429,
+        headers: { "Retry-After": String(Math.min(limited.windowSec, 300)) },
+      });
     }
   }
 

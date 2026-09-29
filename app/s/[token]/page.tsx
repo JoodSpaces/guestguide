@@ -28,12 +28,13 @@ export default async function StayPage({ params }: Props) {
   const [{ data: booking }, { data: serviceRequests }, { data: arrivalPrefs }] = await Promise.all([
     supabase
       .from("bookings")
-      .select(`id, property_id, guest_first_name, guest_lang, check_in, check_out, dnd_active,
+      .select(`id, property_id, status, guest_first_name, guest_lang, check_in, check_out, dnd_active,
                properties (name, name_ar, tonight_note, tonight_note_ar, host_pick, host_pick_ar)`)
       .eq("id", tokenRow.booking_id)
       .single<{
         id: string;
         property_id: string;
+        status: string;
         guest_first_name: string;
         guest_lang: "en" | "ar";
         check_in: string;
@@ -55,7 +56,7 @@ export default async function StayPage({ params }: Props) {
       .maybeSingle<{ occasion: string | null }>(),
   ]);
 
-  if (!booking) notFound();
+  if (!booking || booking.status === "cancelled") notFound();
 
   // Fix 3: check expiry BEFORE recording the open so expired visits don't inflate open_count
   if (isTokenExpired(booking.check_out)) {

@@ -3,8 +3,9 @@ import { z } from "zod";
 import { generateToken, hashToken } from "@/lib/token";
 import { encrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
-import { buildChecklist, DEFAULT_CHECKLIST, type PropertySpecs } from "@/lib/ops-checklist";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import type { PropertySpecs } from "@/lib/ops-checklist";
+import { createScheduledTurnover } from "@/lib/ops-turnover";
+import { requireSession, forbidden, scopedPropertyIds } from "@/lib/admin-auth";
 
 function resolveAppUrl(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -45,10 +46,12 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceClient();
   let query = supabase
     .from("bookings")
-    .select("id, guest_first_name, guest_last_name, check_in, check_out, status, source, created_at, properties(id, name)")
+    .select("id, guest_first_name, guest_last_name, check_in, check_out, status, source, created_at, property_id, properties(id, name)")
     .order("check_in", { ascending: false })
     .limit(60);
 
+  const scope = scopedPropertyIds(session);
+  if (scope) query = query.in("property_id", scope);
   if (status) query = query.eq("status", status);
   if (q) {
     const like = `%${q}%`;
@@ -174,27 +177,7 @@ export async function POST(req: NextRequest) {
   });
 
   // Auto-create a scheduled turnover so ops team can plan ahead
-  const { data: turnoverTask } = await supabase
-    .from("turnover_tasks")
-    .insert({ booking_id: booking.id, property_id: d.propertyId, status: "scheduled" })
-    .select("id")
-    .single<{ id: string }>();
-
-  if (turnoverTask) {
-    const specs = property?.specs;
-    const checklist =
-      specs && Array.isArray(specs.rooms) && specs.rooms.length > 0
-        ? buildChecklist(specs)
-        : DEFAULT_CHECKLIST;
-    await supabase.from("turnover_items").insert(
-      checklist.map((item) => ({
-        task_id: turnoverTask.id,
-        room: item.room,
-        label: item.label,
-        sort_order: item.sort_order,
-      }))
-    );
-  }
+  await createScheduledTurnover(supabase, booking.id, d.propertyId, property?.specs);
 
   return NextResponse.json({ bookingId: booking.id, link });
 }

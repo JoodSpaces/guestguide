@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashToken, isArrivalUnlocked } from "@/lib/token";
+import { timingSafeEqual } from "crypto";
+import { hashToken, doorCodeWindow } from "@/lib/token";
 import { decrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
+
+// The second factor is the last 4 digits of the guest's phone: 10,000 values.
+// Rate limiting by IP is not enough (and needs Redis), so cap wrong guesses per
+// booking in the database, where every failure is already audited.
+const MAX_SECOND_FACTOR_FAILURES = 5;
+const FAILURE_WINDOW_MS = 15 * 60 * 1000;
+
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -27,9 +40,10 @@ export async function POST(req: NextRequest) {
 
   const { data: booking } = await supabase
     .from("bookings")
-    .select("check_in, check_out, door_code_encrypted, guest_phone, properties(requires_code_second_factor)")
+    .select("status, check_in, check_out, door_code_encrypted, guest_phone, properties(requires_code_second_factor)")
     .eq("id", tokenRow.booking_id)
     .single<{
+      status: string;
       check_in: string;
       check_out: string;
       door_code_encrypted: string | null;
@@ -37,12 +51,14 @@ export async function POST(req: NextRequest) {
       properties: { requires_code_second_factor: boolean } | { requires_code_second_factor: boolean }[];
     }>();
 
-  if (!booking) {
+  // A cancelled booking looks exactly like an unknown link.
+  if (!booking || booking.status === "cancelled") {
     return NextResponse.json({ error: "invalid_token" }, { status: 404 });
   }
 
-  // Hard security gate — checked server-side, code never leaves before this
-  if (!isArrivalUnlocked(booking.check_in)) {
+  // Hard security gate — checked server-side, the code never leaves before this
+  const window = doorCodeWindow(booking.check_in, booking.check_out);
+  if (window === "locked") {
     await supabase.from("audit_log").insert({
       actor_type: "guest",
       actor_id: null,
@@ -53,11 +69,8 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json({ error: "arrival_locked" }, { status: 403 });
   }
-
-  // Check that token hasn't expired
-  const now = Date.now();
-  if (now > new Date(booking.check_out).getTime() + 48 * 60 * 60 * 1000) {
-    return NextResponse.json({ error: "token_expired" }, { status: 403 });
+  if (window === "closed") {
+    return NextResponse.json({ error: "door_code_expired" }, { status: 403 });
   }
 
   if (!booking.door_code_encrypted) {
@@ -73,9 +86,26 @@ export async function POST(req: NextRequest) {
     if (!secondFactor || typeof secondFactor !== "string") {
       return NextResponse.json({ error: "second_factor_required" }, { status: 403 });
     }
-    const phone = booking.guest_phone ? decrypt(booking.guest_phone) : "";
+
+    const since = new Date(Date.now() - FAILURE_WINDOW_MS).toISOString();
+    const { count: recentFailures } = await supabase
+      .from("audit_log")
+      .select("id", { count: "exact", head: true })
+      .eq("action", "door_code_second_factor_failed")
+      .eq("entity_id", tokenRow.booking_id)
+      .gte("created_at", since);
+    if ((recentFailures ?? 0) >= MAX_SECOND_FACTOR_FAILURES) {
+      return NextResponse.json({ error: "too_many_attempts" }, { status: 429, headers: { "Retry-After": "900" } });
+    }
+
+    let phone = "";
+    try {
+      phone = booking.guest_phone ? decrypt(booking.guest_phone) : "";
+    } catch {
+      phone = "";
+    }
     const last4 = phone.replace(/\D/g, "").slice(-4);
-    if (!last4 || secondFactor.trim() !== last4) {
+    if (!last4 || !safeEqual(secondFactor.trim(), last4)) {
       await supabase.from("audit_log").insert({
         actor_type: "guest",
         actor_id: null,

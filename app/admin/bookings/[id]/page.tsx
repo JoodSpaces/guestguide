@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { scopeFromHeaders } from "@/lib/admin-scope";
 import { createServiceClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
 import { BookingDetailClient } from "@/components/admin/BookingDetailClient";
@@ -47,6 +49,9 @@ export default async function BookingDetailPage({ params }: Props) {
   ]);
 
   if (!booking) notFound();
+  // A scoped member must not open another property's booking (guest phone, door code).
+  const scope = scopeFromHeaders(await headers());
+  if (scope && !scope.includes(booking.property_id)) notFound();
 
   const { data: rating } = await supabase
     .from("stay_ratings")
