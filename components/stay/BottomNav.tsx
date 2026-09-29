@@ -43,10 +43,10 @@ const IconAI = () => (
 
 interface BottomNavProps {
   token: string;
-  active?: "home" | "discover" | "services" | "concierge" | "help";
+  active?: "home" | "discover" | "services" | "concierge" | "help" | "none";
 }
 
-export function BottomNav({ token, active = "home" }: BottomNavProps) {
+export function BottomNav({ token, active = "none" }: BottomNavProps) {
   const locale = useLocale();
   const isRtl = locale === "ar";
 

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { hashToken } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
+import { WEBSITE_URL } from "@/lib/site";
 
 interface Props { params: Promise<{ token: string }> }
 
@@ -51,21 +52,7 @@ export default async function ExpiredPage({ params }: Props) {
         style={{ maxWidth: "320px", animationDelay: "160ms" }}
       >
         <a
-          href="#review"
-          style={{
-            display: "block",
-            padding: "14px 24px",
-            border: "1px solid var(--jood-line)",
-            borderRadius: "var(--radius-pill)",
-            color: "var(--jood-ink)",
-            textDecoration: "none",
-            fontSize: "0.9375rem",
-          }}
-        >
-          {t("review_cta")}
-        </a>
-        <a
-          href="#book-direct"
+          href={`${WEBSITE_URL}/stays`}
           style={{
             display: "block",
             padding: "14px 24px",

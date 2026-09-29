@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { hashToken, isTokenExpired, computePhase } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -38,7 +38,7 @@ export default async function ConciergePage({ params }: Props) {
     }>();
 
   if (!booking) notFound();
-  if (isTokenExpired(booking.check_out)) notFound();
+  if (isTokenExpired(booking.check_out)) redirect(`/s/${token}/expired`);
 
   const property = Array.isArray(booking.properties)
     ? booking.properties[0]
@@ -48,7 +48,7 @@ export default async function ConciergePage({ params }: Props) {
   const propertyName = isAr ? property?.name_ar : property?.name;
 
   return (
-    <StayShell token={token} back title={isAr ? "كونسيرج جود" : "JOOD Concierge"}>
+    <StayShell token={token} back title={isAr ? "كونسيرج جود" : "JOOD Concierge"} activeTab="concierge">
       <ConciergeClient
         token={token}
         locale={locale}

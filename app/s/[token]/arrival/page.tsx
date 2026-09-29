@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { hashToken, isArrivalUnlocked, isTokenExpired } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -54,7 +54,7 @@ export default async function ArrivalPage({ params }: Props) {
     }>();
 
   if (!booking || booking.status === "cancelled") notFound();
-  if (isTokenExpired(booking.check_out)) notFound();
+  if (isTokenExpired(booking.check_out)) redirect(`/s/${token}/expired`);
 
   const property = Array.isArray(booking.properties)
     ? booking.properties[0]

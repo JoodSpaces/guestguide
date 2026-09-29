@@ -514,6 +514,15 @@ export function StayHome({
           arrow={isAr ? "عرض →" : "View →"}
         />
 
+        {/* House guide: wifi, appliances, house rules */}
+        <PortraitCard
+          href={`/s/${token}/manual`}
+          eyebrow={isAr ? "الدليل" : "Guide"}
+          title={isAr ? "دليل\nالبيت" : "House\nguide"}
+          icon="📖"
+          arrow={isAr ? "عرض →" : "View →"}
+        />
+
         {/* Help */}
         <PortraitCard
           href={`/s/${token}/requests`}

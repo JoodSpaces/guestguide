@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 const t = {
   en: {
@@ -12,6 +12,7 @@ const t = {
     failed_body: "The payment could not be processed. Please return to your stay portal and try again.",
     ref: "REF",
     return_prompt: "Return to your stay portal using the original link sent to you.",
+    back: "Back to your stay",
   },
   ar: {
     success_title: "تم استلام الدفع",
@@ -21,6 +22,7 @@ const t = {
     failed_body: "لم نتمكن من معالجة الدفع. يرجى العودة إلى بوابة إقامتك والمحاولة مجدداً.",
     ref: "المرجع",
     return_prompt: "عُد إلى بوابة إقامتك عبر الرابط الأصلي الذي أُرسل إليك.",
+    back: "العودة إلى إقامتك",
   },
 } as const;
 
@@ -34,6 +36,14 @@ function ResultContent() {
   const locale = (localeParam === "ar" || (!localeParam && browserAr)) ? "ar" : "en";
   const tr = t[locale];
   const isRtl = locale === "ar";
+  // The provider sends the guest back here with no stay link; the stay screens remember it in this browser.
+  const [stayToken, setStayToken] = useState<string | null>(null);
+  useEffect(() => {
+    try {
+      const t = localStorage.getItem("jood_stay_token");
+      if (t && /^[A-Za-z0-9_-]{22}$/.test(t)) setStayToken(t);
+    } catch {}
+  }, []);
 
   return (
     <main
@@ -90,9 +100,21 @@ function ResultContent() {
         </p>
       )}
 
-      <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
-        {tr.return_prompt}
-      </p>
+      {stayToken ? (
+        <a
+          href={`/s/${stayToken}`}
+          style={{
+            display: "inline-block", padding: "12px 28px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
+            borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.9375rem",
+          }}
+        >
+          {tr.back}
+        </a>
+      ) : (
+        <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
+          {tr.return_prompt}
+        </p>
+      )}
     </main>
   );
 }

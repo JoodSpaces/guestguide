@@ -15,18 +15,19 @@ interface StayShellProps {
   eyebrow?: string;
   children: ReactNode;
   back?: boolean;
-  activeTab?: "home" | "discover" | "services" | "help";
+  activeTab?: "home" | "discover" | "services" | "concierge" | "help" | "none";
 }
 
 const PUSH_KEY = "BLj7itobprKLwVWBzI0oBqK0VSnzN-16naPiHeS45dKH_NJ4NUWTVMF9aBv5mDBA20SsTaG0TFne8FzzovBcKC4";
 
-export function StayShell({ token, title, eyebrow, children, back, activeTab = "home" }: StayShellProps) {
+export function StayShell({ token, title, eyebrow, children, back, activeTab = "none" }: StayShellProps) {
   const locale = useLocale();
   const isRtl = locale === "ar";
   const [showBell, setShowBell] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
+    try { localStorage.setItem("jood_stay_token", token); } catch {}
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
@@ -49,7 +50,7 @@ export function StayShell({ token, title, eyebrow, children, back, activeTab = "
       await fetch("/api/stay/push-subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, endpoint: json.endpoint, keys: json.keys }),
+        body: JSON.stringify({ token, endpoint: json.endpoint, p256dh: json.keys?.p256dh ?? "", auth: json.keys?.auth ?? "" }),
       });
     } catch {}
     setShowBell(false);
