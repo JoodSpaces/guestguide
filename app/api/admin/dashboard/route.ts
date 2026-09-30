@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
-import { requireSession, forbidden } from "@/lib/admin-auth";
+import { requireSession, forbidden, scopedPropertyIds } from "@/lib/admin-auth";
+import { sortAlerts } from "@/lib/inventory";
 
 export async function GET(req: NextRequest) {
   const session = await requireSession(req, ["admin", "ops", "housekeeping", "maintenance", "concierge"]);
@@ -54,12 +55,17 @@ export async function GET(req: NextRequest) {
       .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(20),
-    supabase
-      .from("inventory_alerts")
-      .select("id, alert_type, severity, message, property_id")
-      .is("resolved_at", null)
-      .order("severity", { ascending: false })
-      .limit(20),
+    (() => {
+      // Only the properties this member may see; most urgent first is decided below (alphabetical SQL order put
+      // "critical" last, and the limit then cut the critical ones off).
+      const q = supabase
+        .from("inventory_alerts")
+        .select("id, alert_type, severity, message, property_id, created_at")
+        .is("resolved_at", null)
+        .limit(200);
+      const scope = scopedPropertyIds(session);
+      return scope ? q.in("property_id", scope) : q;
+    })(),
   ]);
 
   return NextResponse.json({
@@ -69,6 +75,6 @@ export async function GET(req: NextRequest) {
     activeTurnovers: activeTurnovers ?? [],
     openTickets:     openTickets     ?? [],
     pendingServices: pendingServices ?? [],
-    invAlerts:       invAlerts       ?? [],
+    invAlerts:       sortAlerts(invAlerts ?? []).slice(0, 20),
   });
 }

@@ -1,4 +1,6 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
+import { scopeFromHeaders } from "@/lib/admin-scope";
 import { createServiceClient } from "@/lib/supabase/server";
 import { InventoryClient } from "@/components/admin/InventoryClient";
 import type { InventoryItem } from "@/components/admin/InventoryClient";
@@ -8,6 +10,9 @@ interface Props { params: Promise<{ propertyId: string }> }
 export default async function InventoryPage({ params }: Props) {
   const { propertyId } = await params;
   if (!/^[0-9a-f-]{36}$/.test(propertyId)) notFound();
+  // A member limited to some properties must not reach another property's stock by typing its address.
+  const scope = scopeFromHeaders(await headers());
+  if (scope && !scope.includes(propertyId)) notFound();
 
   const supabase = createServiceClient();
   const [{ data: property }, { data: rawItems }] = await Promise.all([
@@ -16,6 +21,7 @@ export default async function InventoryPage({ params }: Props) {
       .from("inventory_items")
       .select("*, property_inventory(quantity, damaged_quantity, last_restocked_at)")
       .eq("property_id", propertyId)
+      .is("archived_at", null)
       .order("category")
       .order("name"),
   ]);

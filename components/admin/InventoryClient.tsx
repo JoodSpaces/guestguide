@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { BedDouble, Droplets, Utensils, Leaf, Package, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/admin/Toaster";
+import { stockStatus, type StockStatus } from "@/lib/inventory";
 
 export interface InventoryItem {
   id: string;
@@ -30,15 +31,6 @@ const CATEGORY_META: Record<string, { label: string; icon: LucideIcon }> = {
 };
 const CATEGORIES = ["linen", "consumables", "kitchen", "amenities", "general"];
 
-type StockStatus = "critical" | "low" | "ok" | "unset";
-
-function stockStatus(current: number, par: number): StockStatus {
-  if (par === 0) return "unset";
-  if (current === 0) return "critical";
-  if (current < par) return "low";
-  return "ok";
-}
-
 const STATUS_COLOR: Record<StockStatus, string> = {
   critical: "var(--jood-danger)",
   low:      "var(--jood-accent)",
@@ -61,8 +53,8 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
   const [items, setItems]               = useState(initialItems);
   const [adding, setAdding]             = useState(false);
   const [addingPending, setAddingPending] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
   const [newItem, setNewItem]           = useState({ category: "linen", name: "", unit: "pcs", par_level: 0, current_stock: 0 });
-  const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const grouped = CATEGORIES.reduce<Record<string, InventoryItem[]>>((acc, cat) => {
     acc[cat] = items.filter((i) => i.category === cat);
@@ -72,52 +64,88 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
   const outOfStock = items.filter((i) => i.par_level > 0 && i.current_stock === 0);
   const lowStock   = items.filter((i) => i.par_level > 0 && i.current_stock > 0 && i.current_stock < i.par_level);
 
-  const patchStock = useCallback((itemId: string, field: "current_stock" | "par_level", value: number) => {
-    const key = itemId + field;
-    clearTimeout(debounceRef.current[key]);
-    debounceRef.current[key] = setTimeout(() => {
-      fetch(`/api/admin/ops/inventory/${propertyId}/${itemId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ [field]: value }),
-      }).then((r) => { if (r.ok) toast("Stock updated"); else toast("Failed to save", "error"); });
-    }, 600);
-  }, [propertyId]);
+  const base = `/api/admin/ops/inventory/${propertyId}`;
+  const pendingDelta = useRef<Record<string, number>>({});
+  const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
+  // Put the screen back in step with the server (after a failed save, or a change made elsewhere).
+  const reload = useCallback(async () => {
+    const res = await fetch(base).catch(() => null);
+    if (!res?.ok) return;
+    const rows = (await res.json()) as InventoryItem[];
+    setItems(rows.map((r) => ({ id: r.id, property_id: r.property_id, category: r.category, name: r.name, unit: r.unit, par_level: r.par_level, current_stock: r.current_stock })));
+  }, [base]);
+
+  // Taps add up into ONE relative change ("+3"), sent a moment after the last tap. A relative change cannot overwrite
+  // what a turnover or a service did to the same item meanwhile, which an absolute number would.
   function step(itemId: string, delta: number) {
-    setItems((prev) => prev.map((i) => {
-      if (i.id !== itemId) return i;
-      const next = Math.max(0, i.current_stock + delta);
-      patchStock(itemId, "current_stock", next);
-      return { ...i, current_stock: next };
-    }));
+    const current = items.find((i) => i.id === itemId);
+    if (!current) return;
+    const next = Math.max(0, current.current_stock + delta);
+    const applied = next - current.current_stock;
+    if (applied === 0) return;
+    setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, current_stock: next } : i)));
+    pendingDelta.current[itemId] = (pendingDelta.current[itemId] ?? 0) + applied;
+    clearTimeout(timers.current[itemId]);
+    timers.current[itemId] = setTimeout(async () => {
+      const d = pendingDelta.current[itemId] ?? 0;
+      pendingDelta.current[itemId] = 0;
+      if (!d) return;
+      const res = await fetch(`${base}/${itemId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ delta: d }),
+      }).catch(() => null);
+      if (res?.ok) {
+        const { current_stock } = (await res.json()) as { current_stock: number | null };
+        // Show the server's number: it includes anything that changed in the meantime.
+        if (typeof current_stock === "number" && !pendingDelta.current[itemId]) {
+          setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, current_stock } : i)));
+        }
+        toast("Stock updated");
+      } else {
+        toast("Could not save the count. Showing the saved number.", "error");
+        await reload();
+      }
+    }, 600);
   }
 
+  const parTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   function setParLevel(itemId: string, value: number) {
-    setItems((prev) => prev.map((i) => i.id === itemId ? { ...i, par_level: value } : i));
-    patchStock(itemId, "par_level", value);
+    setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, par_level: value } : i)));
+    clearTimeout(parTimers.current[itemId]);
+    parTimers.current[itemId] = setTimeout(async () => {
+      const res = await fetch(`${base}/${itemId}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ par_level: value }),
+      }).catch(() => null);
+      if (res?.ok) toast("Saved");
+      else { toast("Could not save. Showing the saved value.", "error"); await reload(); }
+    }, 600);
   }
 
   async function deleteItem(itemId: string) {
-    if (!confirm("Remove this item?")) return;
-    const res = await fetch(`/api/admin/ops/inventory/${propertyId}/${itemId}`, { method: "DELETE" });
-    if (res.ok) setItems((prev) => prev.filter((i) => i.id !== itemId));
+    if (!confirm("Remove this item from the list? Its history is kept.")) return;
+    const res = await fetch(`${base}/${itemId}`, { method: "DELETE" }).catch(() => null);
+    if (res?.ok) setItems((prev) => prev.filter((i) => i.id !== itemId));
+    else toast("Could not remove the item.", "error");
   }
 
   async function addItem() {
     if (!newItem.name.trim()) return;
     setAddingPending(true);
-    const res = await fetch(`/api/admin/ops/inventory/${propertyId}`, {
+    setAddError(null);
+    const res = await fetch(base, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...newItem, name: newItem.name.trim() }),
-    });
+    }).catch(() => null);
     setAddingPending(false);
-    if (res.ok) {
+    if (res?.ok) {
       const { id } = await res.json();
       setItems((prev) => [...prev, { id, property_id: propertyId, ...newItem, name: newItem.name.trim() }]);
       setNewItem({ category: "linen", name: "", unit: "pcs", par_level: 0, current_stock: 0 });
       setAdding(false);
+    } else {
+      const data = await res?.json().catch(() => null);
+      setAddError(data?.message ?? "Could not add the item. Check your connection and try again.");
     }
   }
 
@@ -292,10 +320,11 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
               <input type="number" value={newItem.current_stock} min={0} onChange={(e) => setNewItem((n) => ({ ...n, current_stock: parseInt(e.target.value) || 0 }))} style={inputStyle} />
             </div>
             <div>
-              <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Min stock (par)</label>
+              <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Keep at least (par)</label>
               <input type="number" value={newItem.par_level} min={0} onChange={(e) => setNewItem((n) => ({ ...n, par_level: parseInt(e.target.value) || 0 }))} style={inputStyle} />
             </div>
           </div>
+          {addError && <p role="alert" style={{ color: "var(--jood-danger)", fontSize: "0.8125rem", marginBottom: "10px" }}>{addError}</p>}
           <div style={{ display: "flex", gap: "8px" }}>
             <button onClick={addItem} disabled={addingPending || !newItem.name.trim()} style={{ padding: "8px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer", opacity: addingPending || !newItem.name.trim() ? 0.4 : 1 }}>
               {addingPending ? "Adding…" : "Add item"}

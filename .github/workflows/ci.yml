@@ -39,6 +39,11 @@ jobs:
           ADMIN_SECRET: test-admin-secret-32-chars-long!!
           PAYMOB_HMAC_SECRET: test-paymob-hmac-secret
 
+      - name: Inventory SQL (migration 030) against a real Postgres (PGlite)
+        run: |
+          npm i --no-save @electric-sql/pglite
+          node tools/sql/inventory.test.mjs
+
   e2e:
     name: E2E (with token)
     runs-on: ubuntu-latest

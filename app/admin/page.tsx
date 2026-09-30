@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { ROLE_HOME } from "@/lib/admin-auth";
 import { Package, RefreshCcw, Wrench, AlertTriangle, Check, type LucideIcon } from "lucide-react";
 import { cairoDay, cairoHour } from "@/lib/cairo-time";
+import { sortAlerts } from "@/lib/inventory";
 
 function Section({ title, count }: { title: string; count: number }) {
   return (
@@ -45,7 +46,7 @@ export default async function AdminTodayPage() {
     { data: activeTurnovers },
     { data: openTickets },
     { data: pendingServiceReqs },
-    { data: invAlerts },
+    { data: rawInvAlerts },
     { count: openRequestsCount },
   ] = await Promise.all([
     supabase
@@ -91,8 +92,7 @@ export default async function AdminTodayPage() {
       .from("inventory_alerts")
       .select("id, alert_type, severity, message, property_id, inventory_items(name, category)")
       .is("resolved_at", null)
-      .order("severity", { ascending: false })
-      .order("created_at", { ascending: false }),
+      .limit(200),
     // Reliable count — no joins, so it can't fail due to FK resolution issues
     supabase
       .from("guest_requests")
@@ -104,6 +104,10 @@ export default async function AdminTodayPage() {
   const openRequests = openRequestItems ?? [];
   // Prefer the dedicated count (join-free); fall back to array length if count query failed
   const openCount = openRequestsCount ?? openRequests.length;
+
+  // Most urgent first. (Ordering the words alphabetically in SQL put "critical" LAST, so the top five shown below
+  // could miss every critical alert.)
+  const invAlerts = sortAlerts(rawInvAlerts ?? []);
 
   // ── Daily brief narrative ─────────────────────────────────────────────────
   const today = new Date();

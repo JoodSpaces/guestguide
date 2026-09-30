@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
+import { isUniqueViolation } from "@/lib/inventory";
 
 const schema = z.object({
   item_id:   z.string().uuid(),
@@ -61,13 +62,22 @@ export async function POST(
   if (!propertyId) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!checkPropertyAccess(session, propertyId)) return forbidden();
 
+  // The item must belong to THIS property (a damage record naming another property's item would corrupt that stock).
+  const { data: owned } = await supabase
+    .from("inventory_items").select("id").eq("id", parsed.data.item_id).eq("property_id", propertyId).is("archived_at", null)
+    .maybeSingle<{ id: string }>();
+  if (!owned) return NextResponse.json({ error: "unknown_item", message: "That item is not on this property's inventory." }, { status: 400 });
+
   const { data, error } = await supabase
     .from("turnover_damage_items")
     .insert({ turnover_task_id: id, ...parsed.data })
     .select("id, item_id, quantity, condition, notes, created_at, inventory_items(name, unit, category)")
     .single();
 
-  if (error || !data) return NextResponse.json({ error: error?.message }, { status: 500 });
+  if (isUniqueViolation(error)) {
+    return NextResponse.json({ error: "already_reported", message: "That item is already reported on this turnover. Remove that entry first if the quantity was wrong." }, { status: 409 });
+  }
+  if (error || !data) return NextResponse.json({ error: "create_failed", message: "Could not save the report." }, { status: 500 });
   return NextResponse.json(data, { status: 201 });
 }
 
