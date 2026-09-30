@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { parseUiMode, uiSwitch } from "@/lib/ui-mode";
 
 describe("the new-look switch", () => {
-  it("is classic unless the cookie says next", () => {
-    expect(parseUiMode(undefined)).toBe("classic");
-    expect(parseUiMode("")).toBe("classic");
-    expect(parseUiMode("classic")).toBe("classic");
-    expect(parseUiMode("nope")).toBe("classic");
+  it("is the new look unless the cookie says classic", () => {
+    expect(parseUiMode(undefined)).toBe("next");
+    expect(parseUiMode("")).toBe("next");
+    expect(parseUiMode("nope")).toBe("next");
     expect(parseUiMode("next")).toBe("next");
+    expect(parseUiMode("classic")).toBe("classic");
   });
 
   it("reads ?ui= only when it is exactly next or classic", () => {

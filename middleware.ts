@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminCookie, refreshSession, isPathAllowed, ROLE_HOME } from "@/lib/admin-auth";
 import { allow, type RateRule } from "@/lib/rate-limit";
-import { UI_COOKIE, UI_COOKIE_MAX_AGE, uiSwitch } from "@/lib/ui-mode";
+import { UI_COOKIE, UI_COOKIE_MAX_AGE, STAY_HEADER, uiSwitch } from "@/lib/ui-mode";
 
 // ── Rate limits ──────────────────────────────────────────────────────────────
 // Each rule has its own counter (see lib/rate-limit.ts). Upstash Redis is used
@@ -110,7 +110,10 @@ export async function middleware(req: NextRequest) {
         { status: 429, headers: { "Retry-After": "30", "Content-Type": "text/html; charset=utf-8" } },
       );
     }
-    return NextResponse.next();
+    // Tell the root layout this is a stay page, where the new look is the default.
+    const stayHeaders = new Headers(req.headers);
+    stayHeaders.set(STAY_HEADER, "1");
+    return NextResponse.next({ request: { headers: stayHeaders } });
   }
 
   const limited = ruleFor(pathname, req.method);
