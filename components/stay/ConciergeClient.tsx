@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { Phase } from "@/lib/token";
+import { WEBSITE_URL } from "@/lib/site";
 
 interface Message {
   role: "user" | "assistant";
@@ -354,6 +355,19 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
             style={{ color: "var(--jood-ink-muted)", textDecoration: "underline" }}
           >
             {isAr ? "تواصل مع فريق جود" : "Reach the JOOD team"}
+          </a>
+        </p>
+        <p style={{ fontSize: "0.66rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", marginTop: "4px" }}>
+          {isAr
+            ? "الإجابات من الذكاء الاصطناعي، وما تكتبه يُرسَل إلى مزوّده. لا تكتب بيانات بطاقة أو كلمات مرور. "
+            : "Answers are written by AI and what you type is sent to its provider. Don't enter card details or passwords. "}
+          <a
+            href={`${WEBSITE_URL}/legal#privacy`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--jood-ink-muted)", textDecoration: "underline" }}
+          >
+            {isAr ? "الخصوصية" : "Privacy"}
           </a>
         </p>
       </div>

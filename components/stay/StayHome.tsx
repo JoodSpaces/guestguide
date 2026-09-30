@@ -15,6 +15,7 @@ import { IntentSelector } from "@/components/stay/IntentSelector";
 import { WeatherStrip } from "@/components/stay/WeatherStrip";
 import { TonightCard } from "@/components/stay/TonightCard";
 import { cairoHour } from "@/lib/cairo-time";
+import { WEBSITE_URL } from "@/lib/site";
 
 /* ── Time helpers (unchanged) ───────────────────────────────────────────── */
 function getTimeKicker(h: number) {
@@ -663,6 +664,17 @@ export function StayHome({
           />
         </div>
       )}
+
+      <p style={{ textAlign: "center", fontSize: "0.66rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", padding: "0 22px 8px" }}>
+        <a
+          href={`${WEBSITE_URL}/legal#privacy`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "inherit", textDecoration: "underline" }}
+        >
+          {isAr ? "الخصوصية وكيف نتعامل مع بياناتك" : "Privacy and how we handle your data"}
+        </a>
+      </p>
 
       <div style={{ height: "70px" }} />
       <BottomNav token={token} active="home" />
