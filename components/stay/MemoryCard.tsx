@@ -200,7 +200,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
         fontFamily: "var(--font-label)",
         letterSpacing: "0.08em",
       }}>
-        {isAr ? "شكراً لإقامتك معنا ✦" : "Thank you for staying with us ✦"}
+        {isAr ? "شكراً لإقامتك معنا" : "Thank you for staying with us"}
       </p>
     </div>
   );

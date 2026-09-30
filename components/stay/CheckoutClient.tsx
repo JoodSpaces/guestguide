@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 interface Props {
   bookingId: string;
@@ -191,7 +192,7 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
           alignItems: "center",
           gap: "16px",
         }}>
-          <div style={{ fontSize: "3.5rem", lineHeight: 1 }}>✦</div>
+          <AppIcon name="ai" size={52} strokeWidth={1.25} />
           <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 6vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1 }}>
             {t("farewell")}
           </p>

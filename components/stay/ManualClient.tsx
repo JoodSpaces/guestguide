@@ -208,7 +208,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
             dir={isAr ? "rtl" : "ltr"}
           />
           <span style={{ position: "absolute", insetInlineStart: "16px", top: "50%", transform: "translateY(-50%)", color: aiSearching ? "var(--jood-accent)" : "var(--jood-ink-muted)", pointerEvents: "none", fontSize: "15px" }}>
-            {aiSearching ? "✦" : "⌕"}
+            <AppIcon name={aiSearching ? "ai" : "search"} size={16} />
           </span>
         </div>
       </div>
@@ -248,7 +248,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
         <div style={{ background: "var(--jood-surface)", border: "1px solid var(--jood-aqua)", borderRadius: "var(--radius-lg)", padding: "18px 20px", marginBottom: "20px", animation: "cc-rise 0.4s cubic-bezier(0.16,1,0.3,1) both" }}>
           <style>{`@keyframes cc-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
           <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
-            ✦ {isAr ? "JOOD ذكاء" : "JOOD AI"}
+            <AppIcon name="ai" size={12} style={{ marginInlineEnd: "6px", verticalAlign: "-2px" }} />{isAr ? "JOOD ذكاء" : "JOOD AI"}
           </p>
           <p style={{ fontSize: "15px", color: "var(--jood-ink)", lineHeight: 1.65, margin: 0 }}>
             {aiResult.answer}
@@ -409,7 +409,7 @@ function EntryRow({ entry, isAr, isOpen, onToggle, isAiMatch, isLast, inGroup }:
         }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-          {isAiMatch && <span style={{ fontSize: "11px", color: "var(--jood-aqua)", flexShrink: 0 }}>✦</span>}
+          {isAiMatch && <AppIcon name="ai" size={13} style={{ color: "var(--jood-aqua)" }} />}
           <span style={{ fontWeight: 500, color: "var(--jood-ink)", fontSize: "14.5px", lineHeight: 1.3 }}>{title}</span>
         </span>
         <span style={{

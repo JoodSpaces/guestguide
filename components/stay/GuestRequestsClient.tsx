@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
 import { createClient } from "@supabase/supabase-js";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -248,7 +249,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
       {/* ── Logbook ──────────────────────────────────────────────────────── */}
       {requests.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-subtle)" }}>
-          <p style={{ fontSize: "1.5rem", marginBottom: "8px" }}>✦</p>
+          <p style={{ marginBottom: "8px", color: "var(--jood-ink-subtle)", display: "flex", justifyContent: "center" }}><AppIcon name="ai" size={28} /></p>
           <p style={{ fontSize: "14px" }}>{isAr ? "لا توجد طلبات بعد" : "No requests yet"}</p>
         </div>
       ) : (

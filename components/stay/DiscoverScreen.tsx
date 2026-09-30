@@ -145,7 +145,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
           fontStyle: "italic",
           transition: "opacity 400ms",
         }}>
-          ✦ {hint}
+          <AppIcon name="ai" size={13} style={{ marginInlineEnd: "6px", verticalAlign: "-2px" }} />{hint}
         </p>
       </div>
 
@@ -192,7 +192,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
 
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-subtle)" }}>
-          <p style={{ fontSize: "1.5rem", marginBottom: "8px" }}>✦</p>
+          <p style={{ marginBottom: "8px", color: "var(--jood-ink-subtle)", display: "flex", justifyContent: "center" }}><AppIcon name="ai" size={28} /></p>
           <p style={{ fontSize: "14px" }}>{isAr ? "لا توجد نتائج" : "Nothing here yet"}</p>
         </div>
       )}
@@ -306,7 +306,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                 }}
               >
                 {savedIds.has(`${featured.name}-${featured.category}`)
-                  ? (isAr ? "✦ محفوظ" : "✦ Saved")
+                  ? (<><AppIcon name="save" size={13} filled style={{ marginInlineEnd: "5px", verticalAlign: "-2px" }} />{isAr ? "محفوظ" : "Saved"}</>)
                   : (isAr ? "حفظ" : "Save")}
               </button>
             </div>
@@ -365,7 +365,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                     }}
                     aria-label={isSaved ? "Unsave" : "Save"}
                   >
-                    {isSaved ? "✦" : "✧"}
+                    <AppIcon name="save" size={16} filled={isSaved} />
                   </button>
                 </div>
 

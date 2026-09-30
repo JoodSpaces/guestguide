@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 const STORAGE_KEY = "jood-intent";
 
 const INTENTS = [
-  { id: "relax",   labelEn: "Relax",    labelAr: "استرخاء", icon: "✦" },
-  { id: "explore", labelEn: "Explore",  labelAr: "اكتشاف",  icon: "◎" },
-  { id: "work",    labelEn: "Work",     labelAr: "عمل",     icon: "⌘" },
-  { id: "social",  labelEn: "Social",   labelAr: "تواصل",   icon: "◇" },
+  { id: "relax",   labelEn: "Relax",    labelAr: "استرخاء", icon: "relax" },
+  { id: "explore", labelEn: "Explore",  labelAr: "اكتشاف",  icon: "explore" },
+  { id: "work",    labelEn: "Work",     labelAr: "عمل",     icon: "work" },
+  { id: "social",  labelEn: "Social",   labelAr: "تواصل",   icon: "social" },
 ] as const;
 
 type IntentId = typeof INTENTS[number]["id"];
@@ -90,12 +91,8 @@ export function IntentSelector({ isAr, onChange }: IntentSelectorProps) {
                 outline: "none",
               }}
             >
-              <span style={{
-                fontSize: "11px",
-                lineHeight: 1,
-                opacity: isActive ? 1 : 0.7,
-              }}>
-                {icon}
+              <span style={{ display: "inline-flex", opacity: isActive ? 1 : 0.75 }}>
+                <AppIcon name={icon} size={14} />
               </span>
               {isAr ? labelAr : labelEn}
             </button>

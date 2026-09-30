@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useLocale } from "use-intl";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 const STATUS_COLOR: Record<string, string> = {
   pending:   "var(--jood-warning)",
@@ -150,7 +151,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   if (!initialServices.length) {
     return (
       <div style={{ textAlign: "center", padding: "60px 0", color: "var(--jood-ink-muted)" }}>
-        <p style={{ fontSize: "1.5rem", marginBottom: "10px" }}>✦</p>
+        <p style={{ marginBottom: "10px", color: "var(--jood-ink-subtle)", display: "flex", justifyContent: "center" }}><AppIcon name="ai" size={28} /></p>
         <p style={{ fontSize: "0.9375rem" }}>{isAr ? "الخدمات قادمة قريباً" : "Services coming soon"}</p>
       </div>
     );
@@ -465,7 +466,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                       fontSize: "12px", color: "var(--jood-ink-muted)",
                       fontFamily: "var(--font-label)", letterSpacing: "0.08em",
                     }}>
-                      {isAr ? "شكراً على تقييمك ✦" : "Thanks for your feedback ✦"}
+                      {isAr ? "شكراً على تقييمك" : "Thanks for your feedback"}
                     </p>
                   )}
                 </div>

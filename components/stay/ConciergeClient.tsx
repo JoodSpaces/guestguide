@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { Phase } from "@/lib/token";
 import { WEBSITE_URL } from "@/lib/site";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 interface Message {
   role: "user" | "assistant";
@@ -163,7 +164,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
             flexShrink: 0,
           }}
         >
-          ✦
+          <AppIcon name="ai" size={14} />
         </div>
         <div>
           <p style={{ fontWeight: 500, fontSize: "0.9375rem", color: "var(--jood-ink)" }}>
@@ -248,7 +249,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
                     flexShrink: 0,
                   }}
                 >
-                  ✦
+                  <AppIcon name="ai" size={14} />
                 </div>
               )}
               <div style={{ maxWidth: "80%" }}>
@@ -296,7 +297,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
                     flexShrink: 0,
                   }}
                 >
-                  ✦
+                  <AppIcon name="ai" size={14} />
                 </div>
               )}
             </div>
