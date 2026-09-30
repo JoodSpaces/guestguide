@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     .single<{ check_out: string; guest_first_name: string; properties: { name: string } | { name: string }[] | null }>();
   if (!booking || isTokenExpired(booking.check_out)) return NextResponse.json({ error: "expired" }, { status: 404 });
 
-  if (!(await allow({ name: "voice-session", limit: 8, windowSec: 24 * 3600 }, tokenRow.booking_id))) {
+  if (!(await allow({ name: "voice-session", limit: 15, windowSec: 24 * 3600 }, tokenRow.booking_id))) {
     return NextResponse.json({ error: "daily_limit" }, { status: 429 });
   }
 
