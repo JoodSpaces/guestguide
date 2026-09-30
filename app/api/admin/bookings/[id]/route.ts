@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { releaseNights } from "@/lib/website-calendar";
 import { z } from "zod";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -74,9 +75,9 @@ export async function PATCH(
 
   const { data: target } = await supabase
     .from("bookings")
-    .select("property_id")
+    .select("property_id, external_ref")
     .eq("id", id)
-    .single<{ property_id: string }>();
+    .single<{ property_id: string; external_ref: string | null }>();
   if (!target) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!checkPropertyAccess(session, target.property_id)) return forbidden();
 
@@ -132,6 +133,9 @@ export async function PATCH(
       .update({ revoked_at: new Date().toISOString() })
       .eq("booking_id", id)
       .is("revoked_at", null);
+
+    // Give the nights back on the website too (a website booking's nights are the website's to release).
+    if (!target.external_ref?.startsWith("JOOD-")) await releaseNights(id);
   }
 
   // When booking is completed, activate the scheduled turnover (or create one if missing)

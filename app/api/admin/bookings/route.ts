@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { z } from "zod";
 import { generateToken, hashToken } from "@/lib/token";
 import { encrypt } from "@/lib/crypto";
@@ -6,6 +7,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import type { PropertySpecs } from "@/lib/ops-checklist";
 import { createScheduledTurnover } from "@/lib/ops-turnover";
 import { requireSession, forbidden, scopedPropertyIds } from "@/lib/admin-auth";
+import { reserveNights, releaseNights } from "@/lib/website-calendar";
 
 function resolveAppUrl(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL ?? "";
@@ -82,9 +84,9 @@ export async function POST(req: NextRequest) {
   // Validate property exists and fetch specs for checklist
   const { data: property } = await supabase
     .from("properties")
-    .select("id, specs")
+    .select("id, slug, specs")
     .eq("id", d.propertyId)
-    .single<{ id: string; specs: PropertySpecs | null }>();
+    .single<{ id: string; slug: string; specs: PropertySpecs | null }>();
 
   if (!property) {
     return NextResponse.json({ error: "property_not_found" }, { status: 404 });
@@ -115,6 +117,28 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // The website sells these nights too. Take them there first (atomically), so a stay added by hand here can never
+  // be double-sold. A booking that came FROM the website already holds its nights, so it is not asked again.
+  const bookingId = randomUUID();
+  if (!d.externalRef?.startsWith("JOOD-")) {
+    const reserved = await reserveNights({
+      bookingId,
+      slug: property.slug,
+      checkIn: d.checkIn.slice(0, 10),
+      checkOut: d.checkOut.slice(0, 10),
+      ota: d.source === "airbnb" || d.source === "booking",
+    });
+    if (reserved.kind === "conflict") {
+      return NextResponse.json({ error: "date_conflict", message: `${reserved.message} Nothing was saved.` }, { status: 409 });
+    }
+    if (reserved.kind === "unavailable") {
+      return NextResponse.json(
+        { error: "website_calendar_unavailable", message: "Could not check the website calendar, so nothing was saved. Try again in a minute." },
+        { status: 503 },
+      );
+    }
+  }
+
   // Encrypt sensitive fields
   const doorCodeEncrypted = d.doorCode ? encrypt(d.doorCode) : null;
   const guestPhoneEncrypted = d.guestPhone ? encrypt(d.guestPhone) : null;
@@ -123,6 +147,7 @@ export async function POST(req: NextRequest) {
   const { data: booking, error: bookingErr } = await supabase
     .from("bookings")
     .insert({
+      id: bookingId,
       property_id: d.propertyId,
       external_ref: d.externalRef ?? null,
       source: d.source,
@@ -142,6 +167,7 @@ export async function POST(req: NextRequest) {
 
   if (bookingErr || !booking) {
     console.error(bookingErr);
+    await releaseNights(bookingId);
     return NextResponse.json({ error: "booking_creation_failed" }, { status: 500 });
   }
 
@@ -161,6 +187,7 @@ export async function POST(req: NextRequest) {
   if (tokenErr) {
     // Compensate: remove the orphaned booking so the admin can retry cleanly.
     await supabase.from("bookings").delete().eq("id", booking.id);
+    await releaseNights(bookingId);
     console.error(tokenErr);
     return NextResponse.json({ error: "token_creation_failed" }, { status: 500 });
   }
