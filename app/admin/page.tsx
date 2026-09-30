@@ -70,7 +70,7 @@ export default async function AdminTodayPage() {
       .order("created_at", { ascending: false })
       .limit(10)
       .returns<{ id: string; category: string; urgency: string; created_at: string; bookings: { guest_first_name: string; properties: { name: string } } }[]>(),
-    supabase.from("properties").select("id, name"),
+    supabase.from("properties").select("id, name").is("archived_at", null),
     supabase.from("turnover_tasks").select("property_id, status").in("status", ["pending", "in_progress"]),
     supabase
       .from("maintenance_tickets")

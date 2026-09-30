@@ -26,6 +26,7 @@ const updateSchema = z.object({
   max_guests: z.coerce.number().int().min(1).max(100).optional(),
   wifi_ssid: z.string().max(100).optional(),
   specs: specsSchema.optional(),
+  archived: z.boolean().optional(),          // true = archive, false = restore
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -37,23 +38,28 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
 
   const supabase = createServiceClient();
+  const { archived, ...fields } = parsed.data;
+  const update: Record<string, unknown> = { ...fields };
+  if (archived !== undefined) update.archived_at = archived ? new Date().toISOString() : null;
   const { data, error } = await supabase
     .from("properties")
-    .update(parsed.data)
+    .update(update)
     .eq("id", id)
-    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid, hero_image_url, specs")
+    .select("id, slug, name, name_ar, city, address, bedrooms, max_guests, wifi_ssid, hero_image_url, specs, archived_at")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
 
+// "Delete" archives: the property leaves every list and stops taking bookings, but its bookings, requests,
+// turnovers and stock history are kept, and it can be restored (PATCH { archived: false }). Nothing cascades.
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await requireSession(req, ["admin"]))) return forbidden();
   const { id } = await params;
 
   const supabase = createServiceClient();
-  const { error } = await supabase.from("properties").delete().eq("id", id);
+  const { error } = await supabase.from("properties").update({ archived_at: new Date().toISOString() }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

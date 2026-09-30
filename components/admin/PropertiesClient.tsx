@@ -15,6 +15,7 @@ export interface Property {
   wifi_ssid: string | null;
   hero_image_url: string | null;
   specs?: PropertySpecs | null;
+  archived_at?: string | null;
 }
 
 interface Props {
@@ -170,15 +171,25 @@ export function PropertiesClient({ initialProperties }: Props) {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this property? All bookings and data linked to it will also be deleted.")) return;
+  // Archive, not delete: the property leaves the lists and stops taking bookings, but every booking, request and
+  // stock record is kept, and it can be restored.
+  async function setArchived(id: string, archived: boolean) {
+    if (archived && !confirm("Archive this property?\n\nIt disappears from the lists and can't take new bookings. Its bookings and history are kept, and you can restore it below.")) return;
     setDeleting(id);
-    const res = await fetch(`/api/admin/properties/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/admin/properties/${id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ archived }),
+    }).catch(() => null);
     setDeleting(null);
-    if (res.ok) setProperties((prev) => prev.filter((p) => p.id !== id));
-    else { const d = await res.json(); alert(d.error ?? "Failed to delete"); }
+    if (res?.ok) {
+      const updated = (await res.json()) as Property;
+      setProperties((prev) => prev.map((p) => (p.id === id ? { ...p, archived_at: updated.archived_at ?? null } : p)));
+    } else {
+      alert(archived ? "Could not archive the property." : "Could not restore the property.");
+    }
   }
 
+  const active = properties.filter((p) => !p.archived_at);
+  const archivedList = properties.filter((p) => p.archived_at);
   const specs = form.specs ?? DEFAULT_SPECS;
   const showForm = adding || !!editing;
 
@@ -403,12 +414,12 @@ export function PropertiesClient({ initialProperties }: Props) {
         </div>
       )}
 
-      {properties.length === 0 && (
+      {active.length === 0 && (
         <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.9375rem" }}>No properties yet. Add your first one above.</p>
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {properties.map((p) => (
+        {active.map((p) => (
           <div key={p.id} className="row-card" style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "20px" }}>
             <div className="row-card__main" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
               {p.hero_image_url ? (
@@ -451,13 +462,36 @@ export function PropertiesClient({ initialProperties }: Props) {
               <button onClick={() => openEdit(p)} style={{ padding: "6px 14px", borderRadius: "var(--radius-pill)", border: "1px solid var(--jood-line)", fontSize: "0.8rem", color: "var(--jood-ink-muted)", cursor: "pointer", fontFamily: "inherit", backgroundColor: "transparent" }}>
                 Edit
               </button>
-              <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id} style={{ padding: "6px 14px", borderRadius: "var(--radius-pill)", border: "1px solid var(--jood-line)", fontSize: "0.8rem", color: "var(--jood-danger)", cursor: "pointer", fontFamily: "inherit", backgroundColor: "transparent", opacity: deleting === p.id ? 0.5 : 1 }}>
-                {deleting === p.id ? "…" : "Delete"}
+              <button onClick={() => setArchived(p.id, true)} disabled={deleting === p.id} style={{ padding: "6px 14px", borderRadius: "var(--radius-pill)", border: "1px solid var(--jood-line)", fontSize: "0.8rem", color: "var(--jood-ink-muted)", cursor: "pointer", fontFamily: "inherit", backgroundColor: "transparent", opacity: deleting === p.id ? 0.5 : 1 }}>
+                {deleting === p.id ? "…" : "Archive"}
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      {archivedList.length > 0 && (
+        <div style={{ marginTop: "32px" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>
+            Archived · {archivedList.length}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {archivedList.map((p) => (
+              <div key={p.id} className="row-card" style={{ backgroundColor: "var(--jood-surface)", border: "1px dashed var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "14px 20px" }}>
+                <div className="row-card__main">
+                  <p style={{ fontWeight: 500, color: "var(--jood-ink-muted)" }}>{p.name}</p>
+                  <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-subtle)" }}>History kept · not taking bookings</p>
+                </div>
+                <div className="row-card__actions">
+                  <button onClick={() => setArchived(p.id, false)} disabled={deleting === p.id} style={{ padding: "6px 14px", borderRadius: "var(--radius-pill)", border: "1px solid var(--jood-line)", fontSize: "0.8rem", color: "var(--jood-ink)", cursor: "pointer", fontFamily: "inherit", backgroundColor: "transparent" }}>
+                    {deleting === p.id ? "…" : "Restore"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

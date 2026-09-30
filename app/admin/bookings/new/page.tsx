@@ -7,6 +7,7 @@ export default async function NewBookingPage() {
   const { data: properties } = await supabase
     .from("properties")
     .select("id, name, slug")
+    .is("archived_at", null)
     .order("name")
     .returns<{ id: string; name: string; slug: string }[]>();
 

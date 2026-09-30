@@ -6,6 +6,7 @@ export default async function NewMaintenancePage() {
   const { data: properties } = await supabase
     .from("properties")
     .select("id, name")
+    .is("archived_at", null)
     .order("name")
     .returns<{ id: string; name: string }[]>();
 

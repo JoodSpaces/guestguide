@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
     .from("properties")
     .select("id, specs, checkin_time, checkout_time")
     .eq("slug", d.propertySlug)
+    .is("archived_at", null)
     .maybeSingle<{ id: string; specs: PropertySpecs | null; checkin_time: string; checkout_time: string }>();
   if (!property) return NextResponse.json({ error: "property_not_found" }, { status: 404 });
 

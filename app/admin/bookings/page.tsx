@@ -12,7 +12,7 @@ export default async function AdminBookingsPage() {
     .from("bookings")
     .select("id, guest_first_name, guest_last_name, check_in, check_out, status, source, property_id, properties(id, name)")
     .order("check_in", { ascending: true });
-  let propertiesQuery = supabase.from("properties").select("id, name, slug").order("name");
+  let propertiesQuery = supabase.from("properties").select("id, name, slug").is("archived_at", null).order("name");
   if (scope) {
     bookingsQuery = bookingsQuery.in("property_id", scope);
     propertiesQuery = propertiesQuery.in("id", scope);

@@ -84,12 +84,15 @@ export async function POST(req: NextRequest) {
   // Validate property exists and fetch specs for checklist
   const { data: property } = await supabase
     .from("properties")
-    .select("id, slug, specs")
+    .select("id, slug, specs, archived_at")
     .eq("id", d.propertyId)
-    .single<{ id: string; slug: string; specs: PropertySpecs | null }>();
+    .single<{ id: string; slug: string; specs: PropertySpecs | null; archived_at: string | null }>();
 
   if (!property) {
     return NextResponse.json({ error: "property_not_found" }, { status: 404 });
+  }
+  if (property.archived_at) {
+    return NextResponse.json({ error: "property_archived", message: "That property is archived. Restore it on the Properties page to take bookings." }, { status: 409 });
   }
 
   // Check for overlapping bookings on the same property (exclude cancelled)

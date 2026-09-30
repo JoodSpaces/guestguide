@@ -88,7 +88,7 @@ export default async function OpsPage() {
       .neq("status", "resolved")
       .order("created_at", { ascending: false })
       .limit(20),
-    supabase.from("properties").select("id, name").order("name"),
+    supabase.from("properties").select("id, name").is("archived_at", null).order("name"),
     supabase.from("team_members").select("id, name, role").eq("is_active", true).in("role", ["housekeeping", "ops"]).order("name"),
   ]);
 
