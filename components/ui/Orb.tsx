@@ -143,9 +143,11 @@ export function Orb({ size = 176, state = "idle", amp = 0, label, onClick }: {
     </div>
   );
 
-  if (!onClick) return <div role="img" aria-label={label}>{inner}</div>;
+  // One element type for every state: swapping div <-> button would remount the canvas and rebuild the WebGL context mid-call,
+  // which some phones fail to do (the orb vanished).
+  if (!onClick && label === undefined) return <div aria-hidden>{inner}</div>;
   return (
-    <button type="button" onClick={onClick} aria-label={label} style={{ display: "block", margin: "0 auto", background: "none", border: 0, padding: 0, cursor: "pointer", touchAction: "manipulation" }}>
+    <button type="button" onClick={onClick} disabled={!onClick} aria-label={label} style={{ display: "block", margin: "0 auto", background: "none", border: 0, padding: 0, cursor: onClick ? "pointer" : "default", touchAction: "manipulation" }}>
       {inner}
     </button>
   );
