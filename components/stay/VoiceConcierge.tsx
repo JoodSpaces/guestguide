@@ -40,11 +40,11 @@ function Inner({ token, isAr }: Props) {
   const { status, isSpeaking, isMuted } = conv;
   const live = status === "connected";
   const convRef = useRef(conv);
-  convRef.current = conv;
+  useEffect(() => { convRef.current = conv; });
 
   // The orb breathes with whichever side is making sound.
   useEffect(() => {
-    if (!live) { setAmp(0); return; }
+    if (!live) return;
     let raf = 0; let last = 0;
     const tick = (t: number) => {
       if (t - last > 50) {
@@ -77,7 +77,7 @@ function Inner({ token, isAr }: Props) {
 
   return (
     <div style={{ padding: "36px 24px 24px", textAlign: "center", maxWidth: 420, margin: "0 auto" }}>
-      <Orb size={200} state={state} amp={amp} label={label} onClick={live || busy ? undefined : start} />
+      <Orb size={200} state={state} amp={live ? amp : 0} label={label} onClick={live || busy ? undefined : start} />
       <p aria-live="polite" style={{ marginTop: 22, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-ink-subtle)" }}>{label}</p>
       <p aria-live="polite" style={{ minHeight: 72, margin: "14px 0", fontSize: 16, lineHeight: 1.6, color: "var(--jood-ink)" }}>
         {error ?? (caption || (live ? "" : c.hint))}
