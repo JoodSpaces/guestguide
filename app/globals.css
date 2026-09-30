@@ -959,3 +959,53 @@ body {
   button, [role="button"], select, .row-card__actions > a { min-height: 40px; }
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 40px; }
 }
+
+
+/* ══════════════════════════════════════════════════════
+   New look ("next"): JOOD's own palette as dark luminous glass
+   Switched per browser with ?ui=next / ?ui=classic (see lib/ui-mode.ts). Dark by design.
+   ══════════════════════════════════════════════════════ */
+:root[data-ui="next"][data-ui="next"] {
+  color-scheme: dark;
+  --jood-ink:              #EDE9E0;
+  --jood-ink-deep:         #F5F4ED;
+  --jood-garnet:           #C49898;
+  --jood-ground:           #140D0B;
+  --jood-surface:          rgba(237, 233, 224, 0.06);
+  --jood-surface-raised:   rgba(237, 233, 224, 0.09);
+  --jood-mist2:            #2A1B19;
+  --jood-mist3:            #35231F;
+  --jood-mid:              #A08880;
+  --jood-ink-muted:        rgba(237, 233, 224, 0.76);
+  --jood-ink-subtle:       rgba(237, 233, 224, 0.62);
+  --jood-ink-faint:        rgba(237, 233, 224, 0.25);
+  --jood-ink-ghost:        rgba(237, 233, 224, 0.12);
+  --jood-line:             rgba(237, 233, 224, 0.14);
+  --jood-line-mid:         rgba(237, 233, 224, 0.09);
+  --jood-line-dark:        rgba(237, 233, 224, 0.08);
+  --jood-success:          #3DA366;
+  --jood-success-surface:  rgba(61, 163, 102, 0.12);
+  --jood-warning:          #D48F2A;
+  --jood-warning-surface:  rgba(212, 143, 42, 0.12);
+  --jood-danger:           #E05050;
+  --jood-danger-surface:   rgba(224, 80, 80, 0.12);
+  --shadow-card:   0 14px 36px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(237, 233, 224, 0.12);
+}
+html[data-ui="next"] body {
+  background:
+    radial-gradient(900px 560px at 18% -6%, rgba(115, 54, 53, 0.55), transparent 70%),
+    radial-gradient(700px 520px at 105% 42%, rgba(255, 96, 55, 0.07), transparent 70%),
+    radial-gradient(700px 500px at -5% 104%, rgba(160, 201, 203, 0.06), transparent 70%),
+    linear-gradient(180deg, #1A0F0D, #120B09);
+  background-attachment: fixed;
+}
+html[data-ui="next"] .stay-root { background: transparent !important; }
+html[data-ui="next"] [data-theme-toggle] { display: none; }
+html[data-ui="next"] .jood-header-glass { background: rgba(20, 13, 11, 0.45) !important; }
+html[data-ui="next"] .stay-glass {
+  background: linear-gradient(180deg, rgba(237, 233, 224, 0.10), rgba(237, 233, 224, 0.035));
+  border: 1px solid var(--jood-line);
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  box-shadow: inset 0 1px 0 rgba(237, 233, 224, 0.13), 0 14px 36px rgba(0, 0, 0, 0.4);
+}

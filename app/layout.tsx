@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { cookies } from "next/headers";
+import { UI_COOKIE, parseUiMode } from "@/lib/ui-mode";
+import { UiModeProvider } from "@/components/ui/UiMode";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -24,9 +27,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const messages = await getMessages();
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const ui = parseUiMode((await cookies()).get(UI_COOKIE)?.value);
 
   return (
-    <html lang={locale} dir={dir}>
+    <html lang={locale} dir={dir} data-ui={ui}>
       <head>
         {/* Prevent flash-of-wrong-theme: apply stored theme before first paint */}
         <script
@@ -36,9 +40,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body>
-        <NextIntlClientProvider messages={messages} locale={locale}>
-          {children}
-        </NextIntlClientProvider>
+        <UiModeProvider mode={ui}>
+          <NextIntlClientProvider messages={messages} locale={locale}>
+            {children}
+          </NextIntlClientProvider>
+        </UiModeProvider>
       </body>
     </html>
   );

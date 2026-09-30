@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminCookie, refreshSession, isPathAllowed, ROLE_HOME } from "@/lib/admin-auth";
 import { allow, type RateRule } from "@/lib/rate-limit";
+import { UI_COOKIE, UI_COOKIE_MAX_AGE, uiSwitch } from "@/lib/ui-mode";
 
 // ── Rate limits ──────────────────────────────────────────────────────────────
 // Each rule has its own counter (see lib/rate-limit.ts). Upstash Redis is used
@@ -80,6 +81,16 @@ export async function middleware(req: NextRequest) {
       session.role !== "admin" && session.propertyIds ? JSON.stringify(session.propertyIds) : "",
     );
     return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  // ?ui=next / ?ui=classic on a stay link chooses the look (kept in a cookie), then the address is cleaned.
+  const uiChoice = pathname.startsWith("/s/") ? uiSwitch(req.nextUrl.searchParams) : null;
+  if (uiChoice) {
+    const clean = req.nextUrl.clone();
+    clean.searchParams.delete("ui");
+    const res = NextResponse.redirect(clean);
+    res.cookies.set(UI_COOKIE, uiChoice, { path: "/", maxAge: UI_COOKIE_MAX_AGE, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
+    return res;
   }
 
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";

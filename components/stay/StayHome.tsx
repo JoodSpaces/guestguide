@@ -233,7 +233,7 @@ export function StayHome({
   const isPreArrival = payload.phase === "anticipation" || payload.phase === "preparation";
 
   return (
-    <main style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)", ...ambience }}>
+    <main className="stay-root" style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)", ...ambience }}>
       <CinematicReveal token={token} propertyName={propertyName} locale={locale} />
       <ScrollProgress />
 

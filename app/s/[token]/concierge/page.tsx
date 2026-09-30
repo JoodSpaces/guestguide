@@ -5,6 +5,8 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { StayShell } from "@/components/stay/StayShell";
 import { ConciergeClient } from "@/components/stay/ConciergeClient";
 import { aiEnabled } from "@/lib/ai";
+import { getUiMode } from "@/lib/ui-mode-server";
+import { Orb } from "@/components/ui/Orb";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -52,6 +54,7 @@ export default async function ConciergePage({ params }: Props) {
     return (
       <StayShell token={token} back title={isAr ? "فريق جود" : "JOOD team"} activeTab="concierge">
         <div style={{ padding: "48px 24px", textAlign: "center", maxWidth: "420px", margin: "0 auto" }}>
+          {(await getUiMode()) === "next" && <div style={{ marginBottom: "28px" }}><Orb size={150} label="" /></div>}
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "26px", color: "var(--jood-ink)", marginBottom: "12px" }}>
             {isAr ? "نحن على بعد رسالة" : "We're one message away"}
           </h2>

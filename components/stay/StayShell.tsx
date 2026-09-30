@@ -59,7 +59,7 @@ export function StayShell({ token, title, eyebrow, children, back, activeTab = "
   }
 
   return (
-    <div style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)" }}>
+    <div className="stay-root" style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)" }}>
 
       {/* ── Sticky header — minimal ────────────────────────────────────────── */}
       <header

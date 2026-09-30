@@ -6,6 +6,8 @@ import { StayHome } from "@/components/stay/StayHome";
 import type { TokenPayload } from "@/lib/token";
 import { shouldSyncLocale } from "@/lib/locale";
 import { aiEnabled } from "@/lib/ai";
+import { getUiMode } from "@/lib/ui-mode-server";
+import { StayHomeV2 } from "@/components/stay/StayHomeV2";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -124,6 +126,23 @@ export default async function StayPage({ params }: Props) {
             : null,
         }
       : null;
+
+  // The new look (opt-in with ?ui=next) draws the same data in the new design.
+  if ((await getUiMode()) === "next") {
+    return (
+      <StayHomeV2
+        aiEnabled={aiEnabled()}
+        payload={payload}
+        token={token}
+        requestSummary={requestSummary}
+        tonightNote={property?.tonight_note ?? null}
+        tonightNoteAr={property?.tonight_note_ar ?? null}
+        hostPick={property?.host_pick ?? null}
+        hostPickAr={property?.host_pick_ar ?? null}
+        hasArrivalPrefs={!!arrivalPrefs}
+      />
+    );
+  }
 
   return (
     <StayHome
