@@ -70,10 +70,14 @@ function Inner({ token, isAr }: Props) {
 
   const conv = useConversation({
     onMessage: (m: { source?: string; message?: string }) => {
-      if (!m.message) return;
-      transcript.current.push({ role: m.source === "ai" ? "agent" : "guest", text: m.message });
-      if (m.source === "ai") setCaption(m.message);
+      // The voice model marks its tone with tags like [Warmly]; they are for the voice, not for reading.
+      const text = (m.message ?? "").replace(/\[[^\]]{1,30}\]/g, "").replace(/\s{2,}/g, " ").trim();
+      if (!text) return;
+      transcript.current.push({ role: m.source === "ai" ? "agent" : "guest", text });
+      if (m.source === "ai") setCaption(text);
     },
+    // The agent asked for a tool this screen does not have: keep a trace so the log shows it.
+    onUnhandledClientToolCall: (t: { tool_name?: string }) => { actions.current.push(`unhandled:${t?.tool_name ?? "?"}`); },
     onError: (m: unknown) => { setError(c.fail); setDetail(String((m as { message?: string })?.message ?? m).slice(0, 120)); },
     clientTools: {
       report_problem: async (p: Record<string, unknown>) => {
