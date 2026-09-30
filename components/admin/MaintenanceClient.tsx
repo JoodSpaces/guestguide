@@ -3,11 +3,13 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { TeamPicker } from "@/components/admin/TeamPicker";
 
 interface Property { id: string; name: string; }
 
 interface Props {
   properties: Property[];
+  team?: string[];
   defaultPropertyId?: string;
 }
 
@@ -31,7 +33,7 @@ const input: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-export function MaintenanceClient({ properties, defaultPropertyId }: Props) {
+export function MaintenanceClient({ properties, defaultPropertyId, team = [] }: Props) {
   const router = useRouter();
   const [propertyId, setPropertyId] = useState(defaultPropertyId ?? (properties.length === 1 ? properties[0].id : ""))   // never guess a property for the person;
   const [title, setTitle] = useState("");
@@ -124,7 +126,7 @@ export function MaintenanceClient({ properties, defaultPropertyId }: Props) {
         {/* Assigned to */}
         <div>
           <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "var(--font-label)" }}>Assign to (optional)</label>
-          <input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} style={input} placeholder="Name or team" />
+          <TeamPicker value={assignedTo} onChange={setAssignedTo} team={team} style={input} />
         </div>
 
         {/* Photos */}

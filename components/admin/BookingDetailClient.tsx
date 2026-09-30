@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 type Status = "confirmed" | "cancelled" | "completed";
 
@@ -99,11 +100,11 @@ function fmt(iso: string) {
 }
 
 const OCCASION_LABEL: Record<string, string> = {
-  leisure: "Leisure 🌴", business: "Business 💼", honeymoon: "Honeymoon 🌹",
-  birthday: "Birthday 🎂", anniversary: "Anniversary ✦", family: "Family 👨‍👩‍👧", other: "Other",
+  leisure: "Leisure", business: "Business", honeymoon: "Honeymoon",
+  birthday: "Birthday", anniversary: "Anniversary", family: "Family", other: "Other",
 };
 const TEMP_LABEL: Record<string, string> = {
-  cool: "Cool (AC on) ❄️", warm: "Warm ☀️", any: "No preference",
+  cool: "Cool (AC on)", warm: "Warm", any: "No preference",
 };
 
 export function BookingDetailClient({ booking, property, tokens, rating, arrivalPrefs }: Props) {
@@ -253,7 +254,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
       {booking.dndActive && (
         <div style={{ ...card, border: "1px solid rgba(115,54,53,0.35)", background: "rgba(115,54,53,0.06)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "1.25rem" }}>🔕</span>
+            <AppIcon name="bellOff" size={20} />
             <div>
               <p style={{ fontFamily: "var(--font-label)", fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-garnet)", marginBottom: "2px" }}>
                 Do Not Disturb — active

@@ -11,7 +11,7 @@ export default async function GuestRequestDetailPage({ params }: Props) {
   const supabase = createServiceClient();
   const { data } = await supabase
     .from("guest_requests")
-    .select("*, bookings(guest_first_name, guest_last_name, check_in, check_out, properties(name))")
+    .select("*, bookings(id, property_id, guest_first_name, guest_last_name, check_in, check_out, properties(name))")
     .eq("id", id)
     .single();
 

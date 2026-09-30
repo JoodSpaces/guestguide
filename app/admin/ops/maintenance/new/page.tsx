@@ -9,10 +9,14 @@ export default async function NewMaintenancePage() {
     .is("archived_at", null)
     .order("name")
     .returns<{ id: string; name: string }[]>();
+  const { data: members } = await supabase
+    .from("team_members").select("name").eq("is_active", true).in("role", ["admin", "ops", "maintenance"]).order("name")
+    .returns<{ name: string }[]>();
+  const team = (members ?? []).map((m) => m.name);
 
   return (
     <div>
-      <MaintenanceClient properties={properties ?? []} />
+      <MaintenanceClient properties={properties ?? []} team={team} />
     </div>
   );
 }

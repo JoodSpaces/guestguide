@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { guessTicketCategory, ticketTitle } from "@/lib/ticket-from-request";
 import { toast } from "@/components/admin/Toaster";
 
 interface ServiceRequest {
@@ -27,7 +29,7 @@ interface GuestRequest {
   status: "received" | "in_progress" | "resolved";
   admin_notes: string | null;
   created_at: string;
-  bookings: { guest_first_name: string; guest_last_name: string; check_in: string; check_out: string; properties: { name: string } | { name: string }[] } | null;
+  bookings: { id?: string; property_id?: string; guest_first_name: string; guest_last_name: string; check_in: string; check_out: string; properties: { name: string } | { name: string }[] } | null;
 }
 
 const STATUS_COLOR: Record<string, string> = {
@@ -226,6 +228,36 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
     }
   }
 
+  const router = useRouter();
+  const [ticketing, setTicketing] = useState(false);
+  const canTicket = !!booking?.property_id && req.status !== "resolved";
+
+  // One tap: open a maintenance ticket from this request (title, category and priority taken from it),
+  // mark the request "in progress", and go to the ticket.
+  async function createTicket() {
+    if (!booking?.property_id) return;
+    setTicketing(true);
+    const res = await fetch("/api/admin/ops/maintenance", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        propertyId: booking.property_id,
+        bookingId: booking.id,
+        title: ticketTitle(req.body),
+        description: `${req.body}\n\nFrom a guest request by ${booking.guest_first_name} ${booking.guest_last_name}.`.slice(0, 2000),
+        category: guessTicketCategory(req.body),
+        priority: req.urgency === "urgent" ? "urgent" : "normal",
+      }),
+    }).catch(() => null);
+    if (!res?.ok) { setTicketing(false); toast("Could not create the ticket. Try again.", "error"); return; }
+    const { id } = (await res.json()) as { id: string };
+    await fetch(`/api/admin/requests/guest/${req.id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "in_progress", adminNotes: (adminNotes ? adminNotes + "\n" : "") + "Ticket opened." }),
+    }).catch(() => null);
+    toast("Ticket created");
+    router.push(`/admin/ops/maintenance/${id}`);
+  }
+
   const CAT_LABELS: Record<string, string> = { maintenance: "Maintenance", housekeeping: "Housekeeping", supplies: "Supplies", service: "Service booking", other: "Other" };
 
   return (
@@ -260,6 +292,21 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
         <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Internal notes for this request…" style={{ ...inputStyle, resize: "vertical", minHeight: "70px", marginBottom: "10px" }} />
         <button onClick={() => patch()} disabled={saving} style={{ padding: "8px 16px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer" }}>Save notes</button>
       </div>
+
+      {canTicket && (
+        <div style={{ ...card, display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+          <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", flex: "1 1 220px", lineHeight: 1.5 }}>
+            Something broken or not working? Open a maintenance ticket for the team from this request.
+          </p>
+          <button
+            onClick={createTicket}
+            disabled={ticketing}
+            style={{ padding: "9px 18px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.875rem", cursor: "pointer", opacity: ticketing ? 0.6 : 1 }}
+          >
+            {ticketing ? "Creating…" : "Create maintenance ticket"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

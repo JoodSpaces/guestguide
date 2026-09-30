@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BottomNav } from "@/components/stay/BottomNav";
 import { PushPrompt } from "@/components/stay/PushPrompt";
 import type { ReactNode } from "react";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 interface StayShellProps {
   token: string;
@@ -121,7 +122,7 @@ export function StayShell({ token, title, eyebrow, children, back, activeTab = "
                 opacity: subscribing ? 0.5 : 1,
               }}
             >
-              🔔
+              <AppIcon name="bell" size={16} />
               <span aria-hidden style={{
                 position: "absolute", top: "4px", right: "4px",
                 width: "5px", height: "5px", borderRadius: "50%",

@@ -1,21 +1,22 @@
 "use client";
 
 import { useState } from "react";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 const OCCASIONS = [
-  { value: "leisure",     en: "Leisure",      ar: "ترفيه",      icon: "🌴" },
-  { value: "business",    en: "Business",     ar: "أعمال",       icon: "💼" },
-  { value: "honeymoon",   en: "Honeymoon",    ar: "شهر العسل",   icon: "🌹" },
-  { value: "birthday",    en: "Birthday",     ar: "عيد ميلاد",   icon: "🎂" },
-  { value: "anniversary", en: "Anniversary",  ar: "ذكرى سنوية",  icon: "✦" },
-  { value: "family",      en: "Family",       ar: "عائلي",       icon: "👨‍👩‍👧" },
-  { value: "other",       en: "Other",        ar: "أخرى",        icon: "◎" },
+  { value: "leisure",     en: "Leisure",      ar: "ترفيه",      icon: "leisure" },
+  { value: "business",    en: "Business",     ar: "أعمال",       icon: "business" },
+  { value: "honeymoon",   en: "Honeymoon",    ar: "شهر العسل",   icon: "honeymoon" },
+  { value: "birthday",    en: "Birthday",     ar: "عيد ميلاد",   icon: "birthday" },
+  { value: "anniversary", en: "Anniversary",  ar: "ذكرى سنوية",  icon: "anniversary" },
+  { value: "family",      en: "Family",       ar: "عائلي",       icon: "family" },
+  { value: "other",       en: "Other",        ar: "أخرى",        icon: "other" },
 ];
 
 const TEMPS = [
-  { value: "cool", en: "Cool (AC on)", ar: "بارد (مكيف مفتوح)", icon: "❄️" },
-  { value: "warm", en: "Warm",         ar: "دافئ",              icon: "☀️" },
-  { value: "any",  en: "No preference", ar: "لا أهمية",         icon: "—" },
+  { value: "cool", en: "Cool (AC on)", ar: "بارد (مكيف مفتوح)", icon: "cool" },
+  { value: "warm", en: "Warm",         ar: "دافئ",              icon: "warm" },
+  { value: "any",  en: "No preference", ar: "لا أهمية",         icon: "any" },
 ];
 
 interface Prefs {
@@ -116,7 +117,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
               onClick={() => setOccasion(o.value === occasion ? "" : o.value)}
               style={occasion === o.value ? pillActive : pill}
             >
-              <span>{o.icon}</span>
+              <AppIcon name={o.icon} size={16} />
               <span>{isAr ? o.ar : o.en}</span>
             </button>
           ))}
@@ -139,7 +140,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
               onClick={() => setTempPref(t.value)}
               style={tempPref === t.value ? pillActive : pill}
             >
-              <span>{t.icon}</span>
+              <AppIcon name={t.icon} size={16} />
               <span>{isAr ? t.ar : t.en}</span>
             </button>
           ))}

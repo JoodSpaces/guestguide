@@ -19,6 +19,16 @@ const IconCompass = () => (
   </svg>
 );
 
+// Services: a concierge bell. (The sparkle is the conventional "AI" mark, so it belongs to the AI tab.)
+const IconServices = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+    stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 20a1 1 0 0 1-1-1v-1a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1Z" />
+    <path d="M20 16a8 8 0 1 0-16 0" />
+    <path d="M12 4v4M10 4h4" />
+  </svg>
+);
+
 const IconSparkle = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
@@ -30,14 +40,6 @@ const IconChat = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
     stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-  </svg>
-);
-
-const IconAI = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
   </svg>
 );
 
@@ -53,8 +55,8 @@ export function BottomNav({ token, active = "none" }: BottomNavProps) {
   const tabs = [
     { id: "home",      href: `/s/${token}`,             icon: <IconHome />,    label: isRtl ? "الرئيسية" : "Home" },
     { id: "discover",  href: `/s/${token}/discover`,     icon: <IconCompass />, label: isRtl ? "اكتشف" : "Discover" },
-    { id: "services",  href: `/s/${token}/services`,     icon: <IconSparkle />, label: isRtl ? "الخدمات" : "Services" },
-    { id: "concierge", href: `/s/${token}/concierge`,    icon: <IconAI />,      label: isRtl ? "مساعد" : "AI" },
+    { id: "services",  href: `/s/${token}/services`,     icon: <IconServices />, label: isRtl ? "الخدمات" : "Services" },
+    { id: "concierge", href: `/s/${token}/concierge`,    icon: <IconSparkle />,      label: isRtl ? "مساعد" : "AI" },
     { id: "help",      href: `/s/${token}/requests`,     icon: <IconChat />,    label: isRtl ? "تواصل" : "Help" },
   ] as const;
 

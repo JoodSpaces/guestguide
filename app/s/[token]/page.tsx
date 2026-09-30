@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { StayHome } from "@/components/stay/StayHome";
 import type { TokenPayload } from "@/lib/token";
 import { shouldSyncLocale } from "@/lib/locale";
+import { aiEnabled } from "@/lib/ai";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -126,6 +127,7 @@ export default async function StayPage({ params }: Props) {
 
   return (
     <StayHome
+      aiEnabled={aiEnabled()}
       payload={payload}
       token={token}
       requestSummary={requestSummary}

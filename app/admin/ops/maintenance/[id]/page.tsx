@@ -17,5 +17,10 @@ export default async function MaintenanceDetailPage({ params }: Props) {
 
   if (!ticket) notFound();
 
-  return <MaintenanceDetailClient ticket={ticket} />;
+  const { data: members } = await supabase
+    .from("team_members").select("name").eq("is_active", true).in("role", ["admin", "ops", "maintenance"]).order("name")
+    .returns<{ name: string }[]>();
+  const team = (members ?? []).map((m) => m.name);
+
+  return <MaintenanceDetailClient ticket={ticket} team={team} />;
 }

@@ -16,6 +16,7 @@ import { WeatherStrip } from "@/components/stay/WeatherStrip";
 import { TonightCard } from "@/components/stay/TonightCard";
 import { cairoHour } from "@/lib/cairo-time";
 import { WEBSITE_URL } from "@/lib/site";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 /* ── Time helpers (unchanged) ───────────────────────────────────────────── */
 function getTimeKicker(h: number) {
@@ -87,6 +88,8 @@ interface StayHomeProps {
   hostPick?: string | null;
   hostPickAr?: string | null;
   hasArrivalPrefs?: boolean;
+  /** False when no AI provider is configured: the AI card is not offered (the page behind it is the human team). */
+  aiEnabled?: boolean;
 }
 
 /* ── Carousel portrait card ─────────────────────────────────────────────── */
@@ -94,7 +97,7 @@ function PortraitCard({
   href, eyebrow, title, arrow = "Open →", dark = false, faded = false, icon,
 }: {
   href: string; eyebrow: string; title: string; arrow?: string;
-  dark?: boolean; faded?: boolean; icon?: string;
+  dark?: boolean; faded?: boolean; icon?: string;   // icon: a name from components/ui/AppIcon
 }) {
   return (
     <Link
@@ -142,9 +145,7 @@ function PortraitCard({
         </p>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-        {icon && (
-          <span style={{ fontSize: "20px", lineHeight: 1 }}>{icon}</span>
-        )}
+        {icon && <AppIcon name={icon} size={22} style={{ color: dark ? "var(--jood-aqua)" : "var(--jood-garnet)" }} />}
         <p style={{
           fontFamily: "var(--font-label)",
           fontSize: "11px",
@@ -166,6 +167,7 @@ export function StayHome({
   dndActive: initialDnd = false,
   hostPick = null, hostPickAr = null,
   hasArrivalPrefs = false,
+  aiEnabled = true,
 }: StayHomeProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -292,7 +294,7 @@ export function StayHome({
                 flexShrink: 0,
               }}
             >
-              {dnd ? "🔕" : "🔔"}
+              <AppIcon name={dnd ? "bellOff" : "bell"} size={16} />
             </button>
             <ThemeToggle />
             <LanguageToggle />
@@ -310,7 +312,8 @@ export function StayHome({
             fontSize: "11px",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            color: "rgba(245,244,237,0.66)",
+            color: "rgba(245,244,237,0.9)",
+            textShadow: "0 1px 10px rgba(0,0,0,0.6)",
             marginBottom: "8px",
           }}>
             {timeKicker.kicker} · {propertyName}
@@ -420,6 +423,36 @@ export function StayHome({
         <CountdownChip phase={payload.phase as any} checkIn={payload.checkIn} checkOut={payload.checkOut} />
       </div>
 
+      {/* ── Essentials: what a guest needs most, always visible (no side-scrolling to find the door code) ── */}
+      <div style={{ padding: "20px 22px 4px" }}>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "12px" }}>
+          {isAr ? "الأساسيات" : "Essentials"}
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+          {([
+            { href: `/s/${token}/arrival`,  icon: "key",      title: isAr ? "رمز الباب" : "Door code",      sub: isAr ? "الدخول والاتجاهات" : "Access and directions" },
+            { href: `/s/${token}/manual`,   icon: "book",     title: isAr ? "دليل البيت" : "House guide",   sub: isAr ? "الواي فاي والأجهزة والقواعد" : "Wi-Fi, appliances, rules" },
+            { href: `/s/${token}/requests`, icon: "chat",     title: isAr ? "تواصل مع الفريق" : "Contact the team", sub: isAr ? "نردّ عليك" : "A person replies" },
+            { href: `/s/${token}/services`, icon: "services", title: isAr ? "اطلب خدمة" : "Order a service", sub: isAr ? "أضف شيئاً لإقامتك" : "Add to your stay" },
+          ] as const).map((e) => (
+            <Link
+              key={e.icon}
+              href={e.href}
+              style={{
+                display: "flex", flexDirection: "column", gap: "10px", padding: "16px", minHeight: "100px", textDecoration: "none",
+                backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "16px",
+              }}
+            >
+              <AppIcon name={e.icon} size={22} style={{ color: "var(--jood-garnet)" }} />
+              <span>
+                <span style={{ display: "block", fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)", lineHeight: 1.3 }}>{e.title}</span>
+                <span style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginTop: "2px", lineHeight: 1.4 }}>{e.sub}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* ── Your stay carousel ───────────────────────────────────────────── */}
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "20px 22px 14px" }}>
         <p style={{
@@ -430,7 +463,7 @@ export function StayHome({
           color: "var(--jood-ink)",
           lineHeight: 1,
         }}>
-          {isAr ? "إقامتك" : "Your stay"}
+          {isAr ? "المزيد" : "More for your stay"}
         </p>
         <a href={`/s/${token}/services`} style={{
           fontFamily: "var(--font-label)",
@@ -455,7 +488,7 @@ export function StayHome({
         scrollbarWidth: "none",
         WebkitOverflowScrolling: "touch",
       } as React.CSSProperties}>
-        {/* AI Concierge — hero card */}
+        {aiEnabled && (
         <Link
           href={`/s/${token}/concierge`}
           style={{
@@ -482,12 +515,14 @@ export function StayHome({
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <span style={{ fontSize: "18px", lineHeight: 1 }}>✦</span>
+            <AppIcon name="ai" size={20} style={{ color: "#EDE9E0" }} />
             <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(160,201,203,0.5)" }}>
               {isAr ? "تحدث →" : "Chat →"}
             </p>
           </div>
         </Link>
+
+        )}
 
         {/* Primary: services / active phase */}
         <PortraitCard
@@ -503,35 +538,8 @@ export function StayHome({
           href={`/s/${token}/discover`}
           eyebrow={isAr ? "اكتشف" : "Discover"}
           title={isAr ? "استكشف\nالمنطقة" : "Explore\nthe area"}
-          icon="◎"
+          icon="discover"
           arrow={isAr ? "عرض →" : "View →"}
-        />
-
-        {/* Door code */}
-        <PortraitCard
-          href={`/s/${token}/arrival`}
-          eyebrow={isAr ? "الدخول" : "Access"}
-          title={isAr ? "رمز\nالباب" : "Door\ncode"}
-          icon="🗝"
-          arrow={isAr ? "عرض →" : "View →"}
-        />
-
-        {/* House guide: wifi, appliances, house rules */}
-        <PortraitCard
-          href={`/s/${token}/manual`}
-          eyebrow={isAr ? "الدليل" : "Guide"}
-          title={isAr ? "دليل\nالبيت" : "House\nguide"}
-          icon="📖"
-          arrow={isAr ? "عرض →" : "View →"}
-        />
-
-        {/* Help */}
-        <PortraitCard
-          href={`/s/${token}/requests`}
-          eyebrow={isAr ? "المساعدة" : "Help"}
-          title={isAr ? "تواصل\nمع الفريق" : "Contact\nthe team"}
-          icon="💬"
-          arrow={isAr ? "إرسال →" : "Send →"}
         />
 
         {/* Checkout — faded when not yet departure */}
@@ -539,7 +547,7 @@ export function StayHome({
           href={`/s/${token}/checkout`}
           eyebrow={isAr ? "يوم المغادرة" : "Checkout day"}
           title={isAr ? "قائمة\nالمغادرة" : "Check‑out"}
-          icon="📋"
+          icon="checkout"
           arrow={isAr ? "عرض →" : "View →"}
           faded={!isDeparture}
         />
@@ -571,7 +579,7 @@ export function StayHome({
               </p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <span style={{ fontSize: "18px", lineHeight: 1 }}>✦</span>
+              <AppIcon name="ai" size={20} style={{ color: "#8CB48C" }} />
               <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(140,180,140,0.4)" }}>
                 {isAr ? "أخبرنا →" : "Tell us →"}
               </p>
@@ -606,7 +614,7 @@ export function StayHome({
               </p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <span style={{ fontSize: "18px", lineHeight: 1 }}>◈</span>
+              <AppIcon name="memory" size={20} style={{ color: "#C49A82" }} />
               <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(196,154,130,0.4)" }}>
                 {isAr ? "عرض →" : "View →"}
               </p>

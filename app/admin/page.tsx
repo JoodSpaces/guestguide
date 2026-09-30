@@ -6,6 +6,7 @@ import { ROLE_HOME } from "@/lib/admin-auth";
 import { Package, RefreshCcw, Wrench, AlertTriangle, Check, type LucideIcon } from "lucide-react";
 import { cairoDay, cairoHour } from "@/lib/cairo-time";
 import { sortAlerts } from "@/lib/inventory";
+import { DismissAlertButton } from "@/components/admin/DismissAlertButton";
 
 function Section({ title, count }: { title: string; count: number }) {
   return (
@@ -323,40 +324,38 @@ export default async function AdminTodayPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               {(invAlerts ?? []).slice(0, 5).map((a) => {
                 const item = Array.isArray(a.inventory_items) ? a.inventory_items[0] : a.inventory_items;
+                const Icon = ALERT_ICON[a.alert_type] ?? AlertTriangle;
+                const WHY: Record<string, string> = {
+                  low_stock: "Below the level you set. Restock it, or change the level.",
+                  recurring_damage: "Reported damaged or missing on several cleanings. Check how it is used, or replace it.",
+                  out_of_service: "Marked out of service on a maintenance ticket.",
+                };
                 return (
-                  <Link
+                  <div
                     key={a.id}
-                    href={`/admin/ops/inventory/${a.property_id}`}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 16px",
-                      backgroundColor: "var(--jood-surface)",
-                      border: "1px solid var(--jood-line)",
-                      borderLeft: `3px solid ${SEVERITY_COLOR[a.severity]}`,
-                      borderRadius: "var(--radius-lg)",
-                      textDecoration: "none",
-                      color: "inherit",
+                      display: "flex", alignItems: "center", gap: "12px", padding: "12px 16px",
+                      backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)",
+                      borderLeft: `3px solid ${SEVERITY_COLOR[a.severity]}`, borderRadius: "var(--radius-lg)", flexWrap: "wrap",
                     }}
                   >
-                    {(() => { const Icon = ALERT_ICON[a.alert_type] ?? AlertTriangle; return <Icon size={16} strokeWidth={1.75} style={{ flexShrink: 0, color: SEVERITY_COLOR[a.severity] }} />; })()}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {a.message ?? (item as { name: string } | null)?.name ?? "Inventory alert"}
-                      </p>
-                    </div>
-                    <span style={{
-                      fontFamily: "var(--font-label)",
-                      fontSize: "11px",
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      color: SEVERITY_COLOR[a.severity],
-                      flexShrink: 0,
-                    }}>
-                      {a.severity}
-                    </span>
-                  </Link>
+                    <Link
+                      href={`/admin/ops/inventory/${a.property_id}`}
+                      style={{ display: "flex", alignItems: "center", gap: "12px", flex: "1 1 220px", minWidth: 0, textDecoration: "none", color: "inherit" }}
+                    >
+                      <Icon size={16} strokeWidth={1.75} style={{ flexShrink: 0, color: SEVERITY_COLOR[a.severity] }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink)" }}>
+                          {a.message ?? (item as { name: string } | null)?.name ?? "Inventory alert"}
+                        </p>
+                        <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginTop: "2px", lineHeight: 1.45 }}>{WHY[a.alert_type] ?? ""}</p>
+                      </div>
+                      <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: SEVERITY_COLOR[a.severity], flexShrink: 0 }}>
+                        {a.severity}
+                      </span>
+                    </Link>
+                    <DismissAlertButton id={a.id} />
+                  </div>
                 );
               })}
               {total > 5 && (

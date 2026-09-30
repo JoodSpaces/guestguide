@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 interface Props {
   token: string;
@@ -96,7 +97,7 @@ export function PushPrompt({ token }: Props) {
         direction: isAr ? "rtl" : "ltr",
       }}
     >
-      <div style={{ fontSize: "1.5rem", flexShrink: 0, lineHeight: 1.2 }}>🛎️</div>
+      <div style={{ flexShrink: 0, lineHeight: 1, color: "var(--jood-garnet)", paddingTop: "2px" }}><AppIcon name="services" size={24} /></div>
       <div style={{ flex: 1 }}>
         <p style={{ fontWeight: 500, fontSize: "0.9rem", color: "var(--jood-ink)", marginBottom: "4px" }}>
           {t("title")}

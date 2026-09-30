@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { toast } from "@/components/admin/Toaster";
+import { TeamPicker } from "@/components/admin/TeamPicker";
 
 interface Ticket {
   id: string;
@@ -22,7 +23,7 @@ interface Ticket {
   properties: { id: string; name: string } | { id: string; name: string }[];
 }
 
-interface Props { ticket: Ticket }
+interface Props { ticket: Ticket; team?: string[] }
 
 const STATUS_COLOR: Record<string, string> = {
   open: "var(--jood-accent)",
@@ -59,7 +60,7 @@ const card: React.CSSProperties = {
   marginBottom: "12px",
 };
 
-export function MaintenanceDetailClient({ ticket: initial }: Props) {
+export function MaintenanceDetailClient({ ticket: initial, team = [] }: Props) {
   const [ticket, setTicket] = useState(initial);
   const [assignedTo, setAssignedTo] = useState(initial.assigned_to ?? "");
   const [resolutionNotes, setResolutionNotes] = useState(initial.resolution_notes ?? "");
@@ -174,7 +175,7 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
       <div style={card}>
         <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Assigned to</p>
         <div style={{ display: "flex", gap: "8px" }}>
-          <input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="Name or team" style={{ ...inputStyle, flex: 1 }} />
+          <TeamPicker value={assignedTo} onChange={setAssignedTo} team={team} style={{ ...inputStyle, flex: 1 }} />
           <button onClick={() => patch({ assigned_to: assignedTo || null })} disabled={saving} style={{ padding: "9px 16px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer", opacity: saving ? 0.5 : 1 }}>
             Save
           </button>

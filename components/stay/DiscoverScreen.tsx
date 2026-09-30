@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,15 +28,9 @@ interface Place {
 
 // ─── Icon helpers ─────────────────────────────────────────────────────────────
 
+// Discover categories -> line icon names (see components/ui/AppIcon)
 const CAT_ICON: Record<string, string> = {
-  all:        "✦",
-  eat:        "🍽",
-  coffee:     "☕",
-  beach:      "🏖",
-  activities: "🎭",
-  wifi:       "📶",
-  checkout:   "🏠",
-  emergency:  "🚨",
+  all: "all", eat: "food", coffee: "coffee", beach: "beach", activities: "activities", wifi: "wifi", checkout: "checkout", emergency: "emergency",
 };
 
 const CAT_EN: Record<string, string> = {
@@ -188,7 +183,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                 transition: "background-color 200ms, border-color 200ms, color 200ms",
               }}
             >
-              <span>{CAT_ICON[cat]}</span>
+              <AppIcon name={CAT_ICON[cat]} size={14} />
               <span>{isAr ? CAT_AR[cat] : CAT_EN[cat]}</span>
             </button>
           );

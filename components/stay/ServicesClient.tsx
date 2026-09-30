@@ -13,13 +13,8 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const CAT_ICON: Record<string, string> = {
-  early_checkin: "🌅",
-  late_checkout: "🌙",
-  transfer:      "🚗",
-  housekeeping:  "🧹",
-  amenities:     "✨",
-  food:          "🍽️",
-  other:         "📋",
+  early_checkin: "early_checkin", late_checkout: "late_checkout", transfer: "transfer", housekeeping: "housekeeping",
+  amenities: "amenities", food: "food", other: "other",
 };
 
 /* Category display labels */

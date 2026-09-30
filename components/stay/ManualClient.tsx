@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { AppIcon } from "@/components/ui/AppIcon";
 
 interface Entry {
   id: string;
@@ -28,21 +29,21 @@ interface Props {
 }
 
 const SECTION_ICONS: Record<string, string> = {
-  wifi: "⚡", internet: "⚡", network: "⚡",
-  checkout: "⬆", departure: "⬆", "check-out": "⬆",
-  kitchen: "🍳", appliances: "🍳", cooking: "🍳",
-  ac: "❄", cooling: "❄", climate: "❄",
-  pool: "🌊", outdoor: "🌊", garden: "🌊",
-  parking: "🚘", car: "🚘",
-  rules: "📋", house: "📋", policy: "📋",
-  emergency: "🚨", safety: "🚨",
+  wifi: "wifi", internet: "wifi", network: "wifi",
+  checkout: "departure", departure: "departure", "check-out": "departure",
+  kitchen: "kitchen", appliances: "kitchen", cooking: "kitchen",
+  ac: "ac", cooling: "ac", climate: "ac",
+  pool: "pool", outdoor: "pool", garden: "pool",
+  parking: "parking", car: "parking",
+  rules: "rules", house: "rules", policy: "rules",
+  emergency: "emergency", safety: "emergency",
 };
-function sectionIcon(section: string) {
+function sectionIcon(section: string): string | null {
   const low = section.toLowerCase();
   for (const [key, icon] of Object.entries(SECTION_ICONS)) {
     if (low.includes(key)) return icon;
   }
-  return "·";
+  return null;
 }
 
 /* Render body text: treat double newlines as paragraphs, single as <br> */
@@ -235,7 +236,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
                   transition: "all 150ms",
                 }}
               >
-                {sectionIcon(sec)} {sec}
+                <AppIcon name={sectionIcon(sec)} size={13} style={{ marginInlineEnd: "6px", verticalAlign: "-2px" }} />{sec}
               </button>
             ))}
           </div>
@@ -348,7 +349,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
               >
                 {/* Section header */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                  <span style={{ fontSize: "16px" }}>{sectionIcon(sec)}</span>
+                  <AppIcon name={sectionIcon(sec)} size={18} />
                   <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 600, color: "var(--jood-ink)", margin: 0 }}>
                     {sec}
                   </p>
