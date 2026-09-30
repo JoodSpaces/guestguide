@@ -8,6 +8,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 const STATUS_COLOR: Record<string, string> = {
+  received:    "var(--jood-ink-muted)",   // the status a new request really starts with (there is no "open")
   open:        "var(--jood-warning)",
   in_progress: "var(--jood-aqua)",
   resolved:    "var(--jood-success)",
@@ -15,12 +16,14 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 const STATUS_LABEL_EN: Record<string, string> = {
+  received:    "Received",
   open:        "Open",
   in_progress: "In progress",
   resolved:    "Resolved",
   cancelled:   "Cancelled",
 };
 const STATUS_LABEL_AR: Record<string, string> = {
+  received:    "تم الاستلام",
   open:        "مفتوح",
   in_progress: "قيد التنفيذ",
   resolved:    "تم الحل",
@@ -264,7 +267,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
             </div>
 
             {group.items.map((req) => {
-              const statusColor = STATUS_COLOR[req.status] ?? "var(--jood-line)";
+              const statusColor = STATUS_COLOR[req.status] ?? "var(--jood-ink-muted)";
               const statusLabel = isAr ? (STATUS_LABEL_AR[req.status] ?? req.status) : (STATUS_LABEL_EN[req.status] ?? req.status);
               const isExpanded = expandedId === req.id;
 
