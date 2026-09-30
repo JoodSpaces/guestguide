@@ -68,7 +68,7 @@ function Inner({ token, isAr }: Props) {
     const res = await fetch("/api/stay/voice", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token }) }).catch(() => null);
     if (!res || !res.ok) { setError(res?.status === 429 ? c.limit : c.fail); return; }
     const { signedUrl } = (await res.json()) as { signedUrl: string };
-    conv.startSession({ signedUrl });
+    conv.startSession({ signedUrl, libsampleratePath: "/vendor/libsamplerate.worklet.js" });
   }
 
   const state: OrbState = status === "connecting" ? "thinking" : live ? (isSpeaking ? "speaking" : "listening") : "idle";
