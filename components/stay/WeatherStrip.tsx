@@ -14,7 +14,7 @@ const STATIC_PLACES = ["North Coast", "Sidi Heneish", "Hacienda Bay", "Mediterra
 
 function Dot() {
   return (
-    <span style={{ color: "var(--jood-accent)", fontSize: "7px", lineHeight: 1, flexShrink: 0 }}>●</span>
+    <span style={{ color: "var(--jood-accent)", fontSize: "11px", lineHeight: 1, flexShrink: 0 }}>●</span>
   );
 }
 
@@ -73,7 +73,7 @@ export function WeatherStrip({ token, isAr }: Props) {
         <div dir="ltr" className="jood-marquee-track" style={{ display: "inline-flex", gap: "18px", alignItems: "center", whiteSpace: "nowrap" }}>
           {[...STATIC_PLACES, ...STATIC_PLACES].flatMap((place, i) => [
             <span key={`p-${i}`} style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-ink)", fontWeight: 500 }}>{place}</span>,
-            <span key={`d-${i}`} style={{ color: "var(--jood-accent)", fontSize: "8px" }}>●</span>,
+            <span key={`d-${i}`} style={{ color: "var(--jood-accent)", fontSize: "11px" }}>●</span>,
           ])}
         </div>
       </div>

@@ -85,7 +85,7 @@ export function CinematicReveal({ token, propertyName, locale }: Props) {
             fontSize: "11px",
             letterSpacing: "0.22em",
             textTransform: "uppercase",
-            color: "rgba(245,244,237,0.38)",
+            color: "rgba(245,244,237,0.66)",
             marginBottom: "14px",
           }}
         >

@@ -72,6 +72,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const classifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [predictedCategory, setPredictedCategory] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
 
   /* Realtime subscription */
   useEffect(() => {
@@ -122,19 +123,31 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
     if (!body.trim() || inFlight.current) return;
     inFlight.current = true;
     setSending(true);
+    setSendError(null);
     try {
-    const res = await fetch("/api/guest/requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, body: body.trim(), isUrgent: urgent }),
-    });
-    if (res.ok) {
-      const newReq: GuestRequest = await res.json();
-      setRequests((prev) => [newReq, ...prev]);
-      setBody("");
-      setUrgent(false);
-      setPredictedCategory(null);
-    }
+      const text = body.trim();
+      const res = await fetch("/api/guest/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, body: text, isUrgent: urgent }),
+      }).catch(() => null);
+      if (res?.ok) {
+        // The server answers with only the id, category and urgency: build the rest here, so the new entry shows its
+        // text, status and date straight away (it used to appear blank under "Invalid date" until a reload).
+        const created = (await res.json()) as { id: string; category: string; urgency: string };
+        const newReq: GuestRequest = {
+          id: created.id, category: created.category, urgency: created.urgency, body: text,
+          status: "received", admin_notes: null, created_at: new Date().toISOString(),
+        };
+        setRequests((prev) => (prev.some((r) => r.id === newReq.id) ? prev : [newReq, ...prev]));
+        setBody("");
+        setUrgent(false);
+        setPredictedCategory(null);
+      } else if (res?.status === 429) {
+        setSendError(isAr ? "رسائل كثيرة في وقت قصير. حاول بعد دقيقة." : "Too many messages in a short time. Please try again in a minute.");
+      } else {
+        setSendError(isAr ? "تعذّر إرسال طلبك. تحقق من الاتصال وحاول مرة أخرى، أو تواصل مع فريق جود." : "We couldn't send your request. Check your connection and try again, or contact the JOOD team.");
+      }
     } finally {
       setSending(false);
       inFlight.current = false;
@@ -175,24 +188,6 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
           }}
         />
 
-        {predictedCategory && (
-          <div style={{ padding: "0 18px 10px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{
-              fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "var(--jood-ink-subtle)",
-            }}>
-              {isAr ? "تصنيف" : "Category"}
-            </span>
-            <span style={{
-              fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
-              textTransform: "uppercase", color: "var(--jood-garnet)",
-              border: "1px solid var(--jood-garnet)", borderRadius: "99px", padding: "2px 7px",
-            }}>
-              {predictedCategory}
-            </span>
-          </div>
-        )}
-
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "10px 18px 14px", borderTop: "1px solid var(--jood-line)",
@@ -215,6 +210,17 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
             </span>
           </label>
 
+          {/* What we think this is about: shown in place (no layout jump) and only when it is more than "other" */}
+          {predictedCategory && predictedCategory !== "other" && (
+            <span style={{
+              fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase",
+              color: "var(--jood-garnet)", border: "1px solid var(--jood-garnet)", borderRadius: "99px", padding: "2px 9px",
+              marginInline: "auto 12px",
+            }}>
+              {predictedCategory}
+            </span>
+          )}
+
           <button
             onClick={submitRequest}
             disabled={sending || !body.trim()}
@@ -232,6 +238,10 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
         </div>
       </div>
 
+      {sendError && (
+        <p role="alert" style={{ color: "var(--jood-danger)", fontSize: "13px", margin: "-16px 0 24px", lineHeight: 1.5 }}>{sendError}</p>
+      )}
+
       {/* ── Logbook ──────────────────────────────────────────────────────── */}
       {requests.length === 0 ? (
         <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-subtle)" }}>
@@ -245,7 +255,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
             <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "24px 0 12px" }}>
               <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
               <p style={{
-                fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em",
+                fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em",
                 textTransform: "uppercase", color: "var(--jood-ink-subtle)", whiteSpace: "nowrap",
               }}>
                 {group.label}
@@ -278,7 +288,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
                         </p>
                         {isUrgent(req) && (
                           <p style={{
-                            fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
+                            fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em",
                             textTransform: "uppercase", color: "var(--jood-danger)", marginTop: "4px",
                           }}>
                             {isAr ? "عاجل" : "Urgent"}
@@ -287,7 +297,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
                       </div>
 
                       <span style={{
-                        fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
+                        fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em",
                         textTransform: "uppercase", color: statusColor,
                         border: `1px solid ${statusColor}`, borderRadius: "99px",
                         padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
@@ -303,7 +313,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
                         paddingLeft: "12px", borderLeft: "2px solid var(--jood-garnet)",
                       }}>
                         <p style={{
-                          fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.12em",
+                          fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em",
                           textTransform: "uppercase", color: "var(--jood-garnet)", marginBottom: "4px",
                         }}>
                           JOOD

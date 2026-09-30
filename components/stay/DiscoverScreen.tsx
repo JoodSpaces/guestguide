@@ -176,7 +176,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                 alignItems: "center",
                 gap: "5px",
                 fontFamily: "var(--font-label)",
-                fontSize: "8.5px",
+                fontSize: "11px",
                 letterSpacing: "0.14em",
                 textTransform: "uppercase",
                 padding: "6px 12px",
@@ -215,7 +215,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
             {/* Category eyebrow */}
             <p style={{
               fontFamily: "var(--font-label)",
-              fontSize: "8px",
+              fontSize: "11px",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: "rgba(200,165,135,0.7)",
@@ -282,7 +282,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                   rel="noopener noreferrer"
                   style={{
                     fontFamily: "var(--font-label)",
-                    fontSize: "8.5px",
+                    fontSize: "11px",
                     letterSpacing: "0.16em",
                     textTransform: "uppercase",
                     color: "#F5F4ED",
@@ -300,7 +300,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                 onClick={() => toggleSaved(`${featured.name}-${featured.category}`)}
                 style={{
                   fontFamily: "var(--font-label)",
-                  fontSize: "8.5px",
+                  fontSize: "11px",
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
                   color: savedIds.has(`${featured.name}-${featured.category}`) ? "#C49A82" : "rgba(200,165,135,0.6)",
@@ -412,7 +412,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                     rel="noopener noreferrer"
                     style={{
                       fontFamily: "var(--font-label)",
-                      fontSize: "8px",
+                      fontSize: "11px",
                       letterSpacing: "0.12em",
                       textTransform: "uppercase",
                       color: "var(--jood-garnet)",

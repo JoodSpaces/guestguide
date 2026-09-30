@@ -111,7 +111,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
   if (state.kind === "revealed") {
     return (
       <div style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 48px)" }}>
-        <p className="label-eyebrow" style={{ color: "rgba(245,244,237,.4)", marginBottom: "16px" }}>
+        <p className="label-eyebrow" style={{ color: "rgba(245,244,237,0.66)", marginBottom: "16px" }}>
           {t("door_code_label")}
         </p>
         <button
@@ -226,7 +226,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
   if (state.kind === "loading") {
     return (
       <div style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 48px)", minHeight: "140px", display: "flex", alignItems: "center" }}>
-        <p style={{ color: "rgba(245,244,237,.4)", fontFamily: "var(--font-label)", letterSpacing: "0.14em", textTransform: "uppercase", fontSize: "0.75rem" }}>
+        <p style={{ color: "rgba(245,244,237,0.66)", fontFamily: "var(--font-label)", letterSpacing: "0.14em", textTransform: "uppercase", fontSize: "0.75rem" }}>
           {t("door_code_label")}…
         </p>
       </div>
@@ -250,7 +250,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
         touchAction: "none",
       }}
     >
-      <p className="label-eyebrow" style={{ color: "rgba(245,244,237,.4)", marginBottom: "20px" }}>
+      <p className="label-eyebrow" style={{ color: "rgba(245,244,237,0.66)", marginBottom: "20px" }}>
         {t("door_code_label")}
       </p>
 
@@ -258,7 +258,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
       <p style={{
         fontFamily: "var(--font-body)",
         fontSize: "0.9375rem",
-        color: `rgba(245,244,237,${0.28 + progress * 0.32})`,
+        color: `rgba(245,244,237,${0.62 + progress * 0.3})`,
         marginBottom: "20px",
         transition: isDragging && !isSnapping ? "none" : "color 300ms",
       }}>
@@ -305,7 +305,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
           pointerEvents: "none",
         }}>
           {["●","●","●","●"].map((d, i) => (
-            <span key={i} style={{ fontSize: "11px", color: "rgba(245,244,237,0.3)", letterSpacing: "0.1em" }}>{d}</span>
+            <span key={i} style={{ fontSize: "11px", color: "rgba(245,244,237,0.66)", letterSpacing: "0.1em" }}>{d}</span>
           ))}
         </div>
 

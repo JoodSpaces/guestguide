@@ -24,7 +24,7 @@ const inputStyle: React.CSSProperties = {
 export function CreateTurnoverForm({ properties, teamMembers }: Props) {
   const router = useRouter();
   const [open, setOpen]         = useState(false);
-  const [propertyId, setPropertyId] = useState(properties[0]?.id ?? "");
+  const [propertyId, setPropertyId] = useState(properties.length === 1 ? properties[0].id : "")   // never guess a property for the person;
   const [assignTo, setAssignTo] = useState("");
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState<string | null>(null);
@@ -115,6 +115,7 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
           <div>
             <label style={{ display: "block", fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>Which property?</label>
             <select value={propertyId} onChange={(e) => setPropertyId(e.target.value)} style={inputStyle}>
+              <option value="" disabled>Select property…</option>
               {properties.map((p) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}

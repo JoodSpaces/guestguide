@@ -258,7 +258,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
                           style={{ width: "44px", padding: "4px 6px", textAlign: "center", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "var(--jood-ground)", color: "var(--jood-ink-muted)", fontSize: "0.75rem", fontVariantNumeric: "tabular-nums" }}
                           title="Par level (minimum stock)"
                         />
-                        <span style={{ fontFamily: "var(--font-label)", fontSize: "7px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)" }}>min</span>
+                        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)" }}>min</span>
                       </div>
 
                       {/* Stepper */}

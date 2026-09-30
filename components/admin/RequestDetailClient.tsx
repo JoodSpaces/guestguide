@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { toast } from "@/components/admin/Toaster";
 
 interface ServiceRequest {
   id: string;
@@ -75,14 +76,17 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
   const totalPrice = (req.services?.price_egp ?? 0) * req.quantity;
 
   async function patch(action?: string) {
+    if (action === "mark_paid" && !confirm("Mark this order as paid?\n\nOnly do this if the guest paid outside the payment link (for example in cash). It cannot be undone here.")) return;
     setSaving(true);
     const res = await fetch(`/api/admin/requests/service/${req.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, adminNotes: adminNotes || null }),
-    });
+    }).catch(() => null);
     setSaving(false);
-    if (res.ok) {
+    if (!res?.ok) { toast("Could not save. Nothing was changed. Try again.", "error"); return; }
+    {
+      toast(action === "approve" ? "Approved" : action === "reject" ? "Rejected" : action === "mark_paid" ? "Marked as paid" : action === "fulfill" ? "Marked fulfilled" : action === "regenerate_link" ? "New link generated" : "Saved");
       const data = await res.json();
       setReq((r) => ({ ...r, status: data.status ?? r.status, paymob_payment_url: data.paymob_payment_url ?? r.paymob_payment_url, fulfilled_at: data.fulfilled_at ?? r.fulfilled_at, rejected_at: data.rejected_at ?? r.rejected_at }));
     }
@@ -205,14 +209,21 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
   const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
 
   async function patch(status?: string) {
+    const before = req.status;
+    if (status) setReq((r) => ({ ...r, status: status as GuestRequest["status"] }));   // show the change at once
     setSaving(true);
     const res = await fetch(`/api/admin/requests/guest/${req.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status, adminNotes: adminNotes || null }),
-    });
+    }).catch(() => null);
     setSaving(false);
-    if (res.ok && status) setReq((r) => ({ ...r, status: status as GuestRequest["status"] }));
+    if (res?.ok) {
+      toast(status ? "Status updated" : "Notes saved");
+    } else {
+      if (status) setReq((r) => ({ ...r, status: before }));
+      toast("Could not save. Nothing was changed. Try again.", "error");
+    }
   }
 
   const CAT_LABELS: Record<string, string> = { maintenance: "Maintenance", housekeeping: "Housekeeping", supplies: "Supplies", service: "Service booking", other: "Other" };

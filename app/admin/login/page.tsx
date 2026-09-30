@@ -70,7 +70,7 @@ export default function AdminLoginPage() {
           }} />
           <p style={{
             fontFamily: "var(--font-label)",
-            fontSize: "8.5px",
+            fontSize: "11px",
             letterSpacing: "0.22em",
             textTransform: "uppercase",
             color: "var(--jood-ink-muted)",

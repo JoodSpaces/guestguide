@@ -37,9 +37,9 @@ export default async function RequestsPage({ params }: Props) {
 
   return (
     <StayShell token={token} title={locale === "ar" ? "الطلبات" : "Requests"} back activeTab="help">
-      <h2 className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.2rem)", marginBottom: "24px" }}>
-        {locale === "ar" ? "الطلبات" : "Requests"}
-      </h2>
+      <p style={{ fontSize: "0.9375rem", lineHeight: 1.6, color: "var(--jood-ink-muted)", marginBottom: "24px" }}>
+        {locale === "ar" ? "اكتب ما تحتاجه وسيرد عليك أحد أفراد فريقنا." : "Tell us what you need and a member of the team will reply."}
+      </p>
       <GuestRequestsClient token={token} bookingId={tokenRow.booking_id} initialRequests={guestRequests ?? []} />
     </StayShell>
   );

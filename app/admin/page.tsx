@@ -149,7 +149,7 @@ export default async function AdminTodayPage() {
         display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
       }}>
         <div>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "8.5px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", marginBottom: "6px" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", marginBottom: "6px" }}>
             {today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}
           </p>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.7rem", fontWeight: 400, fontStyle: "italic", color: "var(--jood-ink)", marginBottom: "10px", lineHeight: 1 }}>

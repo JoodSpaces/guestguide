@@ -81,14 +81,14 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
               fontSize: "11px",
               letterSpacing: "0.28em",
               textTransform: "uppercase",
-              color: "rgba(245,244,237,0.35)",
+              color: "rgba(245,244,237,0.66)",
             }}>
               JOOD · {isAr ? "إقامة" : "Stay"}
             </p>
             <p style={{
               fontFamily: "var(--font-mono)",
               fontSize: "11px",
-              color: "rgba(245,244,237,0.25)",
+              color: "rgba(245,244,237,0.66)",
               letterSpacing: "0.04em",
             }}>
               {nightLabel}
@@ -141,7 +141,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
           <p style={{
             fontFamily: "var(--font-mono)",
             fontSize: "11px",
-            color: "rgba(245,244,237,0.28)",
+            color: "rgba(245,244,237,0.66)",
             letterSpacing: "0.06em",
           }}>
             {checkIn} — {checkOut}
@@ -160,7 +160,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
             fontSize: "14px",
             fontWeight: 300,
             fontStyle: "italic",
-            color: "rgba(245,244,237,0.38)",
+            color: "rgba(245,244,237,0.66)",
             lineHeight: 1.5,
             maxWidth: "260px",
           }}>

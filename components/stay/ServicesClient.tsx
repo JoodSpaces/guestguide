@@ -176,7 +176,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
             {/* Category label */}
             <p style={{
               fontFamily: "var(--font-label)",
-              fontSize: "8px",
+              fontSize: "11px",
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: "var(--jood-garnet)",
@@ -227,7 +227,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                       {isRequested ? (
                         <span style={{
                           fontFamily: "var(--font-label)",
-                          fontSize: "8px",
+                          fontSize: "11px",
                           letterSpacing: "0.12em",
                           textTransform: "uppercase",
                           color: "var(--jood-ink-subtle)",
@@ -393,7 +393,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
 
                     <span style={{
                       fontFamily: "var(--font-label)",
-                      fontSize: "8px",
+                      fontSize: "11px",
                       letterSpacing: "0.12em",
                       textTransform: "uppercase",
                       color: STATUS_COLOR[r.status] ?? "var(--jood-ink-subtle)",
@@ -431,7 +431,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                       gap: "10px",
                     }}>
                       <p style={{
-                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        fontFamily: "var(--font-label)", fontSize: "11px",
                         letterSpacing: "0.14em", textTransform: "uppercase",
                         color: "var(--jood-ink-subtle)", flexShrink: 0,
                       }}>

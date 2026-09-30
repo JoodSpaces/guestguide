@@ -35,7 +35,7 @@ export function PhaseCard({
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          backgroundColor: "var(--jood-ink-deep)",
+          backgroundColor: "#2A1715",
           borderRadius: "var(--radius-lg)",
           padding: "clamp(22px, 4vw, 36px)",
           textDecoration: "none",
@@ -71,7 +71,7 @@ export function PhaseCard({
         <div style={{
           marginTop: "14px",
           display: "flex", alignItems: "center", gap: "5px",
-          color: "rgba(245,244,237,0.25)",
+          color: "rgba(245,244,237,0.66)",
           fontSize: "0.6875rem",
           fontFamily: "var(--font-label)",
           letterSpacing: "0.12em",

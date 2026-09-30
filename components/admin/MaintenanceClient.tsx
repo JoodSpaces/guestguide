@@ -33,7 +33,7 @@ const input: React.CSSProperties = {
 
 export function MaintenanceClient({ properties, defaultPropertyId }: Props) {
   const router = useRouter();
-  const [propertyId, setPropertyId] = useState(defaultPropertyId ?? properties[0]?.id ?? "");
+  const [propertyId, setPropertyId] = useState(defaultPropertyId ?? (properties.length === 1 ? properties[0].id : ""))   // never guess a property for the person;
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("general");
@@ -88,6 +88,7 @@ export function MaintenanceClient({ properties, defaultPropertyId }: Props) {
         <div>
           <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "var(--font-label)" }}>Property</label>
           <select value={propertyId} onChange={(e) => setPropertyId(e.target.value)} style={input} required>
+            <option value="" disabled>Select property…</option>
             {properties.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>

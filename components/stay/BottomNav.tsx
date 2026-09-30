@@ -68,7 +68,7 @@ export function BottomNav({ token, active = "none" }: BottomNavProps) {
         bottom: 0,
         left: 0,
         right: 0,
-        height: "58px",
+        height: "64px",
         display: "flex",
         alignItems: "center",
         backgroundColor: "var(--jood-ground)",
@@ -108,13 +108,16 @@ export function BottomNav({ token, active = "none" }: BottomNavProps) {
             }}>
               {tab.icon}
             </span>
+            <span style={{ fontSize: "11px", lineHeight: 1, marginTop: "3px", fontWeight: isActive ? 600 : 400, letterSpacing: isRtl ? 0 : "0.02em" }}>
+              {tab.label}
+            </span>
 
             {isActive && (
               <span
                 aria-hidden
                 style={{
                   position: "absolute",
-                  bottom: "8px",
+                  bottom: "3px",
                   left: "50%",
                   transform: "translateX(-50%)",
                   width: "3px",

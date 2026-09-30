@@ -9,7 +9,7 @@ const schema = z.object({
   assigned_to: z.string().max(100).nullable().optional(),
   description: z.string().max(2000).nullable().optional(),
   resolution_notes: z.string().max(2000).nullable().optional(),
-  resolved_by: z.string().max(100).optional(),
+  resolved_by: z.string().max(100).nullable().optional(),
   photo_urls: z.array(z.string().url()).max(10).optional(),
 });
 
@@ -59,7 +59,11 @@ export async function PATCH(
   if (!checkPropertyAccess(session, ticket.property_id)) return forbidden();
 
   const updates: Record<string, unknown> = { ...parsed.data, updated_at: new Date().toISOString() };
-  if (parsed.data.status === "resolved") updates.resolved_at = new Date().toISOString();
+  if (parsed.data.status === "resolved") {
+    updates.resolved_at = new Date().toISOString();
+    // "Resolved by" is optional on screen: when it is left empty, record who pressed the button.
+    if (!parsed.data.resolved_by) updates.resolved_by = session.name;
+  }
 
   const { error } = await supabase.from("maintenance_tickets").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

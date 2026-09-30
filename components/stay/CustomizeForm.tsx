@@ -103,7 +103,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
       {/* Section: Occasion */}
       <div style={{ marginBottom: "28px" }}>
         <p style={{
-          fontFamily: "var(--font-label)", fontSize: "8px",
+          fontFamily: "var(--font-label)", fontSize: "11px",
           letterSpacing: "0.2em", textTransform: "uppercase",
           color: "var(--jood-garnet)", marginBottom: "14px",
         }}>
@@ -126,7 +126,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
       {/* Section: Temperature */}
       <div style={{ marginBottom: "28px" }}>
         <p style={{
-          fontFamily: "var(--font-label)", fontSize: "8px",
+          fontFamily: "var(--font-label)", fontSize: "11px",
           letterSpacing: "0.2em", textTransform: "uppercase",
           color: "var(--jood-garnet)", marginBottom: "14px",
         }}>
@@ -149,7 +149,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
       {/* Section: Notes */}
       <div style={{ marginBottom: "32px" }}>
         <p style={{
-          fontFamily: "var(--font-label)", fontSize: "8px",
+          fontFamily: "var(--font-label)", fontSize: "11px",
           letterSpacing: "0.2em", textTransform: "uppercase",
           color: "var(--jood-garnet)", marginBottom: "14px",
         }}>

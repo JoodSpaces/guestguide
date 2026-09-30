@@ -40,9 +40,9 @@ export default async function ServicesPage({ params }: Props) {
 
   return (
     <StayShell token={token} title={locale === "ar" ? "الخدمات" : "Services"} back activeTab="services">
-      <h2 className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.2rem)", marginBottom: "24px" }}>
-        {locale === "ar" ? "الخدمات" : "Services"}
-      </h2>
+      <p style={{ fontSize: "0.9375rem", lineHeight: 1.6, color: "var(--jood-ink-muted)", marginBottom: "24px" }}>
+        {locale === "ar" ? "أضف شيئاً إلى إقامتك. سنؤكد لك قبل أي دفع." : "Add something to your stay. We'll confirm with you before anything is charged."}
+      </p>
       <ServicesClient token={token} services={(services as never) ?? []} myRequests={(myRequests as never) ?? []} />
     </StayShell>
   );

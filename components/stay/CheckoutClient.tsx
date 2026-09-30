@@ -54,29 +54,29 @@ function ScrapbookCard({ propertyName, checkInDate, checkoutDate, nightsCount, c
 
   return (
     <div className="animate-reveal" style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 44px)", position: "relative", overflow: "hidden" }}>
-      <div aria-hidden style={{ position: "absolute", insetInlineEnd: "-12px", top: "-16px", fontFamily: "var(--font-display)", fontSize: "clamp(7rem, 22vw, 11rem)", color: "rgba(245,244,237,0.04)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
+      <div aria-hidden style={{ position: "absolute", insetInlineEnd: "-12px", top: "-16px", fontFamily: "var(--font-display)", fontSize: "clamp(7rem, 22vw, 11rem)", color: "rgba(245,244,237,0.66)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
         {nightsCount}
       </div>
-      <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.35)", marginBottom: "20px" }}>
+      <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.66)", marginBottom: "20px" }}>
         {t("stay_at")}
       </p>
       <p className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1, marginBottom: "28px" }}>
         {propertyName}
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "24px" }}>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "rgba(245,244,237,0.5)" }}>{checkInDate}</p>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "rgba(245,244,237,0.66)" }}>{checkInDate}</p>
         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0" }}>
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--jood-accent)", flexShrink: 0 }} />
           <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(245,244,237,0.15)", position: "relative" }}>
-            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#351E1C", padding: "0 8px", fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(245,244,237,0.4)", whiteSpace: "nowrap" }}>
+            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#351E1C", padding: "0 8px", fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(245,244,237,0.66)", whiteSpace: "nowrap" }}>
               {nightsLabel}
             </span>
           </div>
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", border: "1px solid rgba(245,244,237,0.3)", flexShrink: 0 }} />
         </div>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "rgba(245,244,237,0.5)" }}>{checkoutDate}</p>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "rgba(245,244,237,0.66)" }}>{checkoutDate}</p>
       </div>
-      <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.35)", lineHeight: 1.5, borderTop: "1px solid rgba(245,244,237,0.08)", paddingTop: "16px" }}>
+      <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.66)", lineHeight: 1.5, borderTop: "1px solid rgba(245,244,237,0.08)", paddingTop: "16px" }}>
         &ldquo;{isAr ? quote.ar : quote.en}&rdquo;
       </p>
     </div>
@@ -195,7 +195,7 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
           <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 6vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1 }}>
             {t("farewell")}
           </p>
-          <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.45)", lineHeight: 1.6, maxWidth: "28ch" }}>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.66)", lineHeight: 1.6, maxWidth: "28ch" }}>
             {t("thank_you")}
           </p>
         </div>

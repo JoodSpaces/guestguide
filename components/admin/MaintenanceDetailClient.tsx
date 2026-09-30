@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { toast } from "@/components/admin/Toaster";
 
 interface Ticket {
   id: string;
@@ -76,9 +77,14 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updates),
-    });
+    }).catch(() => null);
     setSaving(false);
-    if (res.ok) setTicket((t) => ({ ...t, ...updates }));
+    if (res?.ok) {
+      setTicket((t) => ({ ...t, ...updates }));
+      toast(updates.status === "resolved" ? "Ticket resolved" : "Saved");
+    } else {
+      toast("Could not save. Nothing was changed. Try again.", "error");
+    }
   }
 
   async function uploadPhoto(file: File) {

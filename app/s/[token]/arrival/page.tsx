@@ -129,7 +129,7 @@ export default async function ArrivalPage({ params }: Props) {
           />
         ) : (
           <div style={{
-            background: "linear-gradient(135deg, var(--jood-ink) 0%, #4a2220 100%)",
+            background: "linear-gradient(135deg, #351E1C 0%, #4a2220 100%)",
             borderRadius: "var(--radius-lg)",
             padding: "clamp(24px, 4vw, 40px)",
           }}>
@@ -138,7 +138,7 @@ export default async function ArrivalPage({ params }: Props) {
               fontSize: "11px",
               letterSpacing: "0.2em",
               textTransform: "uppercase",
-              color: "rgba(245,244,237,0.4)",
+              color: "rgba(245,244,237,0.66)",
               marginBottom: "14px",
             }}>
               {t("door_code_label")}
@@ -146,7 +146,7 @@ export default async function ArrivalPage({ params }: Props) {
             <p style={{ color: "rgba(245,244,237,0.9)", fontFamily: "var(--font-display)", fontSize: "1.15rem", fontWeight: 500, marginBottom: "8px" }}>
               {t("locked_title")}
             </p>
-            <p style={{ color: "rgba(245,244,237,0.5)", fontSize: "0.875rem", lineHeight: 1.6, margin: 0 }}>
+            <p style={{ color: "rgba(245,244,237,0.66)", fontSize: "0.875rem", lineHeight: 1.6, margin: 0 }}>
               {t("locked_body")}
             </p>
           </div>
@@ -216,7 +216,7 @@ export default async function ArrivalPage({ params }: Props) {
                 <p style={{ color: "var(--jood-ground)", fontSize: "14px", fontFamily: "var(--font-body)", margin: "0 0 2px" }}>
                   {isAr ? "افتح في خرائط جوجل" : "Open in Google Maps"}
                 </p>
-                <p style={{ color: "rgba(245,244,237,0.45)", fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
+                <p style={{ color: "rgba(245,244,237,0.66)", fontSize: "11px", fontFamily: "var(--font-mono)", letterSpacing: "0.1em", textTransform: "uppercase", margin: 0 }}>
                   {isAr ? "نقطة الوصول الدقيقة" : "Pinned drop point"}
                 </p>
               </div>

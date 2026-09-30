@@ -122,7 +122,7 @@ function PortraitCard({
       <div>
         <p style={{
           fontFamily: "var(--font-label)",
-          fontSize: "8px",
+          fontSize: "11px",
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: dark ? "var(--jood-aqua)" : "var(--jood-ink-subtle)",
@@ -307,10 +307,10 @@ export function StayHome({
         }}>
           <p style={{
             fontFamily: "var(--font-label)",
-            fontSize: "8.5px",
+            fontSize: "11px",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            color: "rgba(245,244,237,0.42)",
+            color: "rgba(245,244,237,0.66)",
             marginBottom: "8px",
           }}>
             {timeKicker.kicker} · {propertyName}
@@ -340,13 +340,13 @@ export function StayHome({
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "space-between",
           padding: "18px 22px",
-          background: "linear-gradient(135deg, var(--jood-ink) 0%, var(--jood-ink-deep) 100%)",
+          background: "linear-gradient(135deg, #351E1C 0%, #2A1715 100%)",
           gap: "16px",
         }}>
           <div>
             <p style={{
-              fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.2em",
-              textTransform: "uppercase", color: "rgba(245,244,237,0.5)", marginBottom: "6px",
+              fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.2em",
+              textTransform: "uppercase", color: "rgba(245,244,237,0.66)", marginBottom: "6px",
             }}>
               {isAr ? "إقامتك تبدأ قريباً" : "Your stay begins soon"}
             </p>
@@ -474,7 +474,7 @@ export function StayHome({
             pointerEvents: "none",
           }} />
           <div>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
+            <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
               {isAr ? "مساعد ذكي" : "AI concierge"}
             </p>
             <p style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 300, fontStyle: "italic", lineHeight: 1.1, color: "#EDE9E0" }}>
@@ -538,7 +538,7 @@ export function StayHome({
         <PortraitCard
           href={`/s/${token}/checkout`}
           eyebrow={isAr ? "يوم المغادرة" : "Checkout day"}
-          title={isAr ? "قائمة\nالمغادرة" : "Check-\nout"}
+          title={isAr ? "قائمة\nالمغادرة" : "Check‑out"}
           icon="📋"
           arrow={isAr ? "عرض →" : "View →"}
           faded={!isDeparture}
@@ -563,7 +563,7 @@ export function StayHome({
               pointerEvents: "none",
             }} />
             <div>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", color: hasArrivalPrefs ? "#8CB48C" : "rgba(140,180,140,0.6)", marginBottom: "10px" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: hasArrivalPrefs ? "#8CB48C" : "rgba(140,180,140,0.6)", marginBottom: "10px" }}>
                 {hasArrivalPrefs ? (isAr ? "تم ✓" : "Done ✓") : (isAr ? "قبل الوصول" : "Pre-arrival")}
               </p>
               <p style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 300, fontStyle: "italic", lineHeight: 1.1, color: "#EDE9E0" }}>
@@ -598,7 +598,7 @@ export function StayHome({
               pointerEvents: "none",
             }} />
             <div>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C49A82", marginBottom: "10px" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "#C49A82", marginBottom: "10px" }}>
                 {isAr ? "ذكراك هنا" : "Your memory"}
               </p>
               <p style={{ fontFamily: "var(--font-display)", fontSize: "22px", fontWeight: 300, fontStyle: "italic", lineHeight: 1.1, color: "#EDE9E0" }}>
@@ -636,7 +636,7 @@ export function StayHome({
             position: "relative",
           }}>
             <p style={{
-              fontFamily: "var(--font-label)", fontSize: "8px",
+              fontFamily: "var(--font-label)", fontSize: "11px",
               letterSpacing: "0.2em", textTransform: "uppercase",
               color: "var(--jood-garnet)", marginBottom: "10px",
             }}>

@@ -203,11 +203,11 @@ export function RequestsListClient({
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" }}>
-                      <span style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", backgroundColor: "var(--jood-surface-raised)", borderRadius: "var(--radius-pill)", padding: "2px 7px" }}>
+                      <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", backgroundColor: "var(--jood-surface-raised)", borderRadius: "var(--radius-pill)", padding: "2px 7px" }}>
                         {CAT_LABELS[r.category] ?? r.category}
                       </span>
                       {r.urgency === "urgent" && (
-                        <span style={{ fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-danger)" }}>Urgent</span>
+                        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-danger)" }}>Urgent</span>
                       )}
                     </div>
                     <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

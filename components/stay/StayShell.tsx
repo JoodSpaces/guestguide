@@ -147,7 +147,7 @@ export function StayShell({ token, title, eyebrow, children, back, activeTab = "
             {eyebrow && (
               <p style={{
                 fontFamily: "var(--font-label)",
-                fontSize: "8.5px",
+                fontSize: "11px",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
                 color: "var(--jood-ink-subtle)",

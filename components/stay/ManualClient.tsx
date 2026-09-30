@@ -268,14 +268,14 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
 
       {/* ── Wi-Fi card ── */}
       {wifiSsid && (
-        <div style={{ background: "var(--jood-ink)", borderRadius: "var(--radius-lg)", padding: "20px 22px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
+        <div style={{ background: "#351E1C", borderRadius: "var(--radius-lg)", padding: "20px 22px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
           <div>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.4)", marginBottom: "6px" }}>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.66)", marginBottom: "6px" }}>
               {isAr ? "الواي فاي" : "Wi-Fi"}
             </p>
             <p style={{ color: "rgba(245,244,237,0.9)", fontWeight: 500, fontSize: "15px", margin: "0 0 3px" }}>{wifiSsid}</p>
             {wifiPassword && (
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "rgba(245,244,237,0.5)", letterSpacing: "0.05em", margin: 0 }}>{wifiPassword}</p>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "rgba(245,244,237,0.75)", letterSpacing: "0.05em", margin: 0 }}>{wifiPassword}</p>
             )}
           </div>
           {wifiPassword && (
