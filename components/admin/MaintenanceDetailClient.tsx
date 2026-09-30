@@ -122,7 +122,7 @@ export function MaintenanceDetailClient({ ticket: initial, team = [] }: Props) {
         </div>
         <h1 className="font-display" style={{ fontSize: "1.6rem", marginBottom: "4px" }}>{ticket.title}</h1>
         <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>{property?.name} · {fmt(ticket.created_at)}</p>
-        {ticket.description && <p style={{ marginTop: "12px", fontSize: "0.9375rem", lineHeight: 1.6, color: "var(--jood-ink)" }}>{ticket.description}</p>}
+        {ticket.description && <p style={{ marginTop: "12px", fontSize: "0.9375rem", lineHeight: 1.6, color: "var(--jood-ink)", whiteSpace: "pre-line" }}>{ticket.description}</p>}
       </div>
 
       {/* Photos */}

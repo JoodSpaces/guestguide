@@ -66,11 +66,11 @@ export default async function AdminTodayPage() {
       .returns<{ id: string; guest_first_name: string; guest_last_name: string; properties: { name: string } }[]>(),
     supabase
       .from("guest_requests")
-      .select("id, category, urgency, created_at, bookings(guest_first_name, properties(name))")
+      .select("id, category, urgency, body, created_at, bookings(guest_first_name, properties(name))")
       .in("status", ["received", "in_progress"])
       .order("created_at", { ascending: false })
       .limit(10)
-      .returns<{ id: string; category: string; urgency: string; created_at: string; bookings: { guest_first_name: string; properties: { name: string } } }[]>(),
+      .returns<{ id: string; category: string; urgency: string; body: string; created_at: string; bookings: { guest_first_name: string; properties: { name: string } } }[]>(),
     supabase.from("properties").select("id, name").is("archived_at", null),
     supabase.from("turnover_tasks").select("property_id, status").in("status", ["pending", "in_progress"]),
     supabase
@@ -463,11 +463,14 @@ export default async function AdminTodayPage() {
               marginBottom: "8px",
             }}
           >
-            <div>
-              <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem" }}>
-                {booking?.guest_first_name} — {r.category}
+            <div style={{ minWidth: 0 }}>
+              {/* What the guest actually wrote (two requests from one guest used to look identical) */}
+              <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {r.body}
               </p>
-              <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
+              <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>
+                {booking?.guest_first_name} · {prop?.name}{r.category && r.category !== "other" ? ` · ${r.category}` : ""}
+              </p>
             </div>
             {r.urgency === "urgent" && (
               <span
