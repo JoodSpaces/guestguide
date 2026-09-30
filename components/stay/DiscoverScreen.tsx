@@ -361,7 +361,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                     style={{
                       flexShrink: 0,
                       fontSize: "12px",
-                      color: isSaved ? "var(--jood-garnet)" : "var(--jood-ink-faint)",
+                      color: isSaved ? "var(--jood-garnet)" : "var(--jood-ink-subtle)",
                       background: "none",
                       border: "none",
                       cursor: "pointer",

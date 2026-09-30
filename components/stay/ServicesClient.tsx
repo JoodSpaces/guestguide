@@ -396,7 +396,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                       fontSize: "8px",
                       letterSpacing: "0.12em",
                       textTransform: "uppercase",
-                      color: STATUS_COLOR[r.status] ?? "var(--jood-ink-faint)",
+                      color: STATUS_COLOR[r.status] ?? "var(--jood-ink-subtle)",
                       border: "1px solid var(--jood-line)",
                       borderRadius: "99px",
                       padding: "4px 9px",

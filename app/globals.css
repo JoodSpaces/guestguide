@@ -955,7 +955,7 @@ body {
 }
 
 /* ── Touch: comfortable targets (44px is the usual minimum, 40px here) ── */
-@media (pointer: coarse) {
+@media (pointer: coarse), (max-width: 560px) {
   button, [role="button"], select, .row-card__actions > a { min-height: 40px; }
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 40px; }
 }

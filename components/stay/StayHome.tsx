@@ -125,7 +125,7 @@ function PortraitCard({
           fontSize: "8px",
           letterSpacing: "0.18em",
           textTransform: "uppercase",
-          color: dark ? "var(--jood-aqua)" : "var(--jood-ink-faint)",
+          color: dark ? "var(--jood-aqua)" : "var(--jood-ink-subtle)",
           marginBottom: "10px",
         }}>
           {eyebrow}
@@ -150,7 +150,7 @@ function PortraitCard({
           fontSize: "11px",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
-          color: dark ? "rgba(245,244,237,0.22)" : "var(--jood-ink-faint)",
+          color: dark ? "rgba(245,244,237,0.62)" : "var(--jood-ink-subtle)",
         }}>
           {arrow}
         </p>

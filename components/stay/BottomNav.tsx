@@ -93,7 +93,7 @@ export function BottomNav({ token, active = "none" }: BottomNavProps) {
               justifyContent: "center",
               height: "100%",
               textDecoration: "none",
-              color: isActive ? "var(--jood-ink)" : "var(--jood-ink-faint)",
+              color: isActive ? "var(--jood-ink)" : "var(--jood-ink-subtle)",
               position: "relative",
               WebkitTapHighlightColor: "transparent",
               transition: "color 200ms",

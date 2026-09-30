@@ -11,7 +11,7 @@ const STATUS_COLOR: Record<string, string> = {
   open:        "var(--jood-warning)",
   in_progress: "var(--jood-aqua)",
   resolved:    "var(--jood-success)",
-  cancelled:   "var(--jood-ink-faint)",
+  cancelled:   "var(--jood-ink-subtle)",
 };
 
 const STATUS_LABEL_EN: Record<string, string> = {
@@ -221,7 +221,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
             style={{
               fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em",
               textTransform: "uppercase",
-              color: body.trim() ? "var(--jood-garnet)" : "var(--jood-ink-faint)",
+              color: body.trim() ? "var(--jood-garnet)" : "var(--jood-ink-subtle)",
               background: "none", border: "none",
               cursor: body.trim() ? "pointer" : "default",
               opacity: sending ? 0.5 : 1, padding: "0", transition: "color 180ms",

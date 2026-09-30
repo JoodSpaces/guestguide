@@ -331,7 +331,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                     borderRadius: "var(--radius-pill)",
                     backgroundColor: "var(--jood-ground)",
                     fontSize: "0.875rem",
-                    color: assignTo ? "var(--jood-ink)" : "var(--jood-ink-ghost)",
+                    color: assignTo ? "var(--jood-ink)" : "var(--jood-ink-subtle)",
                     cursor: "pointer",
                     opacity: savingAssign ? 0.5 : 1,
                     fontFamily: "inherit",

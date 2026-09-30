@@ -27,11 +27,11 @@ const STATUS_COLOR: Record<string, string> = {
   pending:     "var(--jood-accent)",
   approved:    "var(--jood-aqua)",
   paid:        "var(--jood-success)",
-  fulfilled:   "var(--jood-ink-ghost)",
+  fulfilled:   "var(--jood-ink-subtle)",
   rejected:    "var(--jood-danger)",
   received:    "var(--jood-accent)",
   in_progress: "var(--jood-aqua)",
-  resolved:    "var(--jood-ink-ghost)",
+  resolved:    "var(--jood-ink-subtle)",
 };
 
 const CAT_LABELS: Record<string, string> = {

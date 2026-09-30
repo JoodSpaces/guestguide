@@ -128,10 +128,10 @@ export function LiveFeedPanel() {
               display: "inline-block",
               animation: "pulse-green 2s infinite",
             }} />
-            <span style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.16em", textTransform: "uppercase" }}>
+            <span style={{ color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-label)", fontSize: "0.75rem", letterSpacing: "0.16em", textTransform: "uppercase" }}>
               Activity
             </span>
-            <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.7rem", fontFamily: "var(--font-mono)" }}>
+            <span style={{ color: "rgba(255,255,255,0.62)", fontSize: "0.75rem", fontFamily: "var(--font-mono)" }}>
               {loading ? "…" : `${events.length}`}
             </span>
           </div>
@@ -140,12 +140,12 @@ export function LiveFeedPanel() {
             aria-label="Close activity feed"
             style={{
               background: "none", border: "none", cursor: "pointer",
-              color: "rgba(255,255,255,0.4)", fontSize: "1.2rem",
+              color: "rgba(255,255,255,0.62)", fontSize: "1.2rem",
               lineHeight: 1, padding: "4px 8px", borderRadius: "4px",
               transition: "color 150ms",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.9)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.4)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.62)")}
           >
             <X size={16} strokeWidth={1.75} />
           </button>
@@ -154,7 +154,7 @@ export function LiveFeedPanel() {
         {/* Feed */}
         <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
           {events.length === 0 && !loading && (
-            <p style={{ color: "rgba(255,255,255,0.3)", textAlign: "center", padding: "40px 20px", fontSize: "0.875rem" }}>
+            <p style={{ color: "rgba(255,255,255,0.62)", textAlign: "center", padding: "40px 20px", fontSize: "0.875rem" }}>
               No recent activity
             </p>
           )}
@@ -174,7 +174,7 @@ export function LiveFeedPanel() {
               onMouseLeave={(el) => (el.currentTarget.style.background = "transparent")}
             >
               <div style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
-                <span style={{ flexShrink: 0, marginTop: "1px", color: "rgba(255,255,255,0.45)", display: "flex" }}>
+                <span style={{ flexShrink: 0, marginTop: "1px", color: "rgba(255,255,255,0.62)", display: "flex" }}>
                   {(() => { const Icon = TYPE_ICON[e.type]; return Icon ? <Icon size={14} strokeWidth={1.75} /> : <Bell size={14} strokeWidth={1.75} />; })()}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -190,15 +190,15 @@ export function LiveFeedPanel() {
                     }}>
                       {e.title}
                     </p>
-                    <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "0.7rem", fontFamily: "var(--font-mono)", flexShrink: 0 }}>
+                    <span style={{ color: "rgba(255,255,255,0.62)", fontSize: "0.75rem", fontFamily: "var(--font-mono)", flexShrink: 0 }}>
                       {timeAgo(e.timestamp)}
                     </span>
                   </div>
-                  <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "0.75rem", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <p style={{ color: "rgba(255,255,255,0.62)", fontSize: "0.75rem", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {e.subtitle}
                   </p>
                   {e.urgency === "urgent" && (
-                    <span style={{ display: "inline-block", marginTop: "4px", color: "#f87171", fontSize: "0.6rem", fontFamily: "var(--font-label)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+                    <span style={{ display: "inline-block", marginTop: "4px", color: "#f87171", fontSize: "0.6875rem", fontFamily: "var(--font-label)", textTransform: "uppercase", letterSpacing: "0.12em" }}>
                       ● Urgent
                     </span>
                   )}
@@ -210,11 +210,11 @@ export function LiveFeedPanel() {
 
         {/* Footer */}
         <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.6875rem", fontFamily: "var(--font-mono)" }}>
+          <p style={{ color: "rgba(255,255,255,0.62)", fontSize: "0.6875rem", fontFamily: "var(--font-mono)" }}>
             Refreshes every 15s
           </p>
           {lastUpdated && (
-            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.6875rem", fontFamily: "var(--font-mono)" }}>
+            <p style={{ color: "rgba(255,255,255,0.62)", fontSize: "0.6875rem", fontFamily: "var(--font-mono)" }}>
               {lastUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </p>
           )}

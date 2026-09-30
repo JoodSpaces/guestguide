@@ -187,7 +187,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
           <button key={v} onClick={() => setView(v)} style={{
             ...styles.segmentBtn,
             backgroundColor: view === v ? "var(--jood-surface)" : "transparent",
-            color: view === v ? "var(--jood-ink)" : "var(--jood-ink-ghost)",
+            color: view === v ? "var(--jood-ink)" : "var(--jood-ink-subtle)",
             boxShadow: view === v ? "0 1px 4px rgba(37,20,19,0.10)" : "none",
           }}>
             {v === "calendar" ? "Calendar" : "All bookings"}
@@ -228,7 +228,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                   textAlign: "center", padding: "10px 0",
                   fontFamily: "var(--font-label)", fontSize: "11px",
                   letterSpacing: "0.12em", textTransform: "uppercase",
-                  color: i === 0 || i === 6 ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
+                  color: i === 0 || i === 6 ? "var(--jood-accent)" : "var(--jood-ink-subtle)",
                 }}>
                   {d}
                 </div>
@@ -325,8 +325,8 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                       ))}
                       {dots.length > 3 && (
                         <span style={{
-                          fontSize: "8px", lineHeight: 1,
-                          color: isSel ? "rgba(245,244,237,0.55)" : "var(--jood-ink-ghost)",
+                          fontSize: "10px", lineHeight: 1,
+                          color: isSel ? "rgba(245,244,237,0.72)" : "var(--jood-ink-subtle)",
                           fontFamily: "var(--font-mono)",
                         }}>
                           +{dots.length - 3}
@@ -420,7 +420,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                           backgroundColor: meta.color, flexShrink: 0,
                         }} />
                         <span style={{
-                          fontFamily: "var(--font-label)", fontSize: "8.5px",
+                          fontFamily: "var(--font-label)", fontSize: "11px",
                           letterSpacing: "0.16em", textTransform: "uppercase",
                           color: meta.color,
                         }}>
@@ -428,7 +428,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                         </span>
                       </div>
                       <span style={{
-                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        fontFamily: "var(--font-label)", fontSize: "10px",
                         letterSpacing: "0.1em", textTransform: "uppercase",
                         color: STATUS_DOT[b.status] ?? "var(--jood-ink)",
                         border: `1px solid ${STATUS_DOT[b.status] ?? "var(--jood-ink)"}`,
@@ -517,9 +517,9 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                         </p>
                       </div>
                       <span style={{
-                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        fontFamily: "var(--font-label)", fontSize: "10px",
                         letterSpacing: "0.1em", textTransform: "uppercase",
-                        color: rl.urgent ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
+                        color: rl.urgent ? "var(--jood-accent)" : "var(--jood-ink-subtle)",
                         border: `1px solid ${rl.urgent ? "var(--jood-accent)" : "var(--jood-line)"}`,
                         borderRadius: "var(--radius-pill)", padding: "3px 8px",
                         flexShrink: 0,
@@ -652,9 +652,9 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
 
                     <div style={{ textAlign: "right", flexShrink: 0, display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-end" }}>
                       <span style={{
-                        fontFamily: "var(--font-label)", fontSize: "8px",
+                        fontFamily: "var(--font-label)", fontSize: "10px",
                         letterSpacing: "0.12em", textTransform: "uppercase",
-                        color: rl.urgent ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
+                        color: rl.urgent ? "var(--jood-accent)" : "var(--jood-ink-subtle)",
                         border: `1px solid ${rl.urgent ? "var(--jood-accent)" : "var(--jood-line)"}`,
                         borderRadius: "var(--radius-pill)", padding: "3px 8px",
                       }}>
@@ -675,7 +675,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
 // ── Shared styles ─────────────────────────────────────────────────────────
 const styles = {
   eyebrow: {
-    fontFamily: "var(--font-label)", fontSize: "8.5px",
+    fontFamily: "var(--font-label)", fontSize: "11px",
     letterSpacing: "0.2em", textTransform: "uppercase",
     color: "var(--jood-ink-subtle)",
   } satisfies CSSProperties,

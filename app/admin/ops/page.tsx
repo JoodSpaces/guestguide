@@ -16,7 +16,7 @@ const STATUS_COLOR: Record<string, string> = {
 const PRIORITY_COLOR: Record<string, string> = {
   urgent: "var(--jood-danger)",
   normal: "var(--jood-ink-muted)",
-  low: "var(--jood-ink-ghost)",
+  low: "var(--jood-ink-subtle)",
 };
 
 // Plain-language labels for staff
