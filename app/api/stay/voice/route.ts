@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = createServiceClient();
+  // Optional cap for this one stay (e.g. a test link). If the column is not there yet (migration 033) there is simply no cap.
+  const { data: lim } = await supabase.from("bookings").select("voice_limit").eq("id", booking.id).single<{ voice_limit: number | null }>();
+  if (lim?.voice_limit != null) {
+    const { count } = await supabase.from("voice_sessions").select("id", { count: "exact", head: true }).eq("booking_id", booking.id);
+    if ((count ?? 0) >= lim.voice_limit) return NextResponse.json({ error: "stay_limit" }, { status: 429 });
+  }
   // Monthly budget. If the table is not there yet (migration 032 not run) the cap simply cannot be measured.
   const { data: used, error: usedErr } = await supabase.from("voice_sessions").select("duration_sec").gte("started_at", monthStartIso());
   if (!usedErr) {

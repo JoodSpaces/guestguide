@@ -16,6 +16,7 @@ const COPY = {
     hint: "Ask about the house, check-out or what's nearby. I can also report a problem or request a service for you. For anything urgent, message the team.",
     mic: "We couldn't reach your microphone. Allow microphone access in your browser, or message the team.",
     limit: "That's enough voice chat for today. The team is always one message away.",
+    stay: "You've used all the voice conversations included with this stay. The team is one message away.",
     budget: "Voice chat is resting for this month. The team is one message away.",
     fail: "Voice isn't available right now. You can message the team any time.",
     privacy: "Your voice is processed by our voice provider during the conversation. See the privacy notice.",
@@ -27,6 +28,7 @@ const COPY = {
     hint: "اسأل عن البيت أو المغادرة أو ما حولك. يمكنني أيضاً الإبلاغ عن مشكلة أو طلب خدمة نيابةً عنك. لأي أمر عاجل راسل الفريق.",
     mic: "لم نتمكن من الوصول إلى الميكروفون. اسمح بالوصول من المتصفح، أو راسل الفريق.",
     limit: "يكفي هذا القدر من المحادثة الصوتية اليوم. الفريق على بعد رسالة.",
+    stay: "استخدمت كل المحادثات الصوتية المتاحة لهذه الإقامة. الفريق على بعد رسالة.",
     budget: "المحادثة الصوتية في استراحة هذا الشهر. الفريق على بعد رسالة.",
     fail: "المحادثة الصوتية غير متاحة الآن. يمكنك مراسلة الفريق في أي وقت.",
     privacy: "يعالج مزوّد الصوت صوتك أثناء المحادثة. راجع إشعار الخصوصية.",
@@ -157,7 +159,7 @@ function Inner({ token, isAr }: Props) {
     const res = await fetch("/api/stay/voice", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, locale: isAr ? "ar" : "en" }) }).catch(() => null);
     if (!res || !res.ok) {
       const code = res ? ((await res.json().catch(() => ({}))) as { error?: string }).error : undefined;
-      setError(code === "budget" ? c.budget : res?.status === 429 ? c.limit : c.fail); setDetail(`route ${res?.status ?? "network"}`); return;
+      setError(code === "budget" ? c.budget : code === "stay_limit" ? c.stay : res?.status === 429 ? c.limit : c.fail); setDetail(`route ${res?.status ?? "network"}`); return;
     }
     const j = (await res.json()) as { signedUrl: string; context: string; sessionId: string | null };
     sessionId.current = j.sessionId; pendingContext.current = j.context; startedAt.current = Date.now(); logged.current = !j.sessionId;
