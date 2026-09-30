@@ -210,11 +210,11 @@ export function LiveFeedPanel() {
 
         {/* Footer */}
         <div style={{ padding: "12px 20px", borderTop: "1px solid rgba(255,255,255,0.08)", flexShrink: 0, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.65rem", fontFamily: "var(--font-mono)" }}>
+          <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.6875rem", fontFamily: "var(--font-mono)" }}>
             Refreshes every 15s
           </p>
           {lastUpdated && (
-            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.65rem", fontFamily: "var(--font-mono)" }}>
+            <p style={{ color: "rgba(255,255,255,0.2)", fontSize: "0.6875rem", fontFamily: "var(--font-mono)" }}>
               {lastUpdated.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </p>
           )}

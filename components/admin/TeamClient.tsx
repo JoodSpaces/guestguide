@@ -123,9 +123,9 @@ export function TeamClient({ initialMembers }: { initialMembers: Member[] }) {
 
       {adding && (
         <div style={{ ...card, border: "1px solid var(--jood-accent)", marginBottom: "20px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "16px" }}>New team member</p>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "16px" }}>New team member</p>
           <form onSubmit={handleCreate} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "10px" }}>
               <div>
                 <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px" }}>Name *</label>
                 <input required value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Sara" style={inputStyle} />
@@ -206,12 +206,12 @@ export function TeamClient({ initialMembers }: { initialMembers: Member[] }) {
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
                   <p style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{member.name}</p>
                   {member.is_owner && (
-                    <span title="Master admin — protected" style={{ fontSize: "0.65rem", fontFamily: "var(--font-label)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--jood-accent)", border: "1px solid var(--jood-accent)", borderRadius: "var(--radius-pill)", padding: "1px 6px" }}>
+                    <span title="Master admin — protected" style={{ fontSize: "0.6875rem", fontFamily: "var(--font-label)", letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--jood-accent)", border: "1px solid var(--jood-accent)", borderRadius: "var(--radius-pill)", padding: "1px 6px" }}>
                       Owner
                     </span>
                   )}
                 </div>
-                <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: ROLE_COLOR[member.role] }}>
+                <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: ROLE_COLOR[member.role] }}>
                   {member.role}
                 </span>
               </div>

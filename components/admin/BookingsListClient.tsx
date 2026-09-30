@@ -30,7 +30,7 @@ function StatusChip({ status }: { status: string }) {
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: "5px",
-      fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em",
+      fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em",
       textTransform: "uppercase", color,
       border: `1px solid ${color}`, borderRadius: "var(--radius-pill)",
       padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
@@ -53,9 +53,9 @@ function DateBar({ checkIn, checkOut }: { checkIn: string; checkOut: string }) {
   return (
     <div style={{ marginTop: "8px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-ink-muted)", fontVariantNumeric: "tabular-nums" }}>{fmtShort(checkIn)}</span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-ink-ghost)" }}>{nights}n</span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-ink-muted)", fontVariantNumeric: "tabular-nums" }}>{fmtShort(checkOut)}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-muted)", fontVariantNumeric: "tabular-nums" }}>{fmtShort(checkIn)}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)" }}>{nights}n</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-muted)", fontVariantNumeric: "tabular-nums" }}>{fmtShort(checkOut)}</span>
       </div>
       <div style={{ position: "relative", height: "3px", backgroundColor: "var(--jood-line)", borderRadius: "2px" }}>
         {isActive && (
@@ -98,7 +98,7 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
 
       {/* Search */}
       <div style={{ position: "relative", marginBottom: "20px" }}>
-        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-ghost)", pointerEvents: "none", display: "flex" }}><Search size={15} strokeWidth={1.75} /></span>
+        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-subtle)", pointerEvents: "none", display: "flex" }}><Search size={15} strokeWidth={1.75} /></span>
         <input
           type="text"
           placeholder="Search by guest name, property, status…"
@@ -107,18 +107,18 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
           style={{ width: "100%", boxSizing: "border-box", padding: "11px 14px 11px 40px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", backgroundColor: "var(--jood-surface)", color: "var(--jood-ink)", fontSize: "0.9375rem", fontFamily: "inherit", outline: "none" }}
         />
         {query && (
-          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", padding: 0, display: "flex" }}><X size={15} strokeWidth={1.75} /></button>
+          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-subtle)", padding: 0, display: "flex" }}><X size={15} strokeWidth={1.75} /></button>
         )}
       </div>
 
       {/* Empty state */}
       {filtered.length === 0 && (
         <div style={{ textAlign: "center", padding: "56px 24px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-          <div style={{ marginBottom: "12px", color: "var(--jood-ink-ghost)", display: "flex", justifyContent: "center" }}>{query ? <Search size={24} strokeWidth={1.5} /> : <CalendarX2 size={24} strokeWidth={1.5} />}</div>
+          <div style={{ marginBottom: "12px", color: "var(--jood-ink-subtle)", display: "flex", justifyContent: "center" }}>{query ? <Search size={24} strokeWidth={1.5} /> : <CalendarX2 size={24} strokeWidth={1.5} />}</div>
           <p style={{ fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)", marginBottom: "6px" }}>
             {query ? `No results for "${query}"` : "No bookings yet"}
           </p>
-          <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)", marginBottom: query ? 0 : "16px" }}>
+          <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-subtle)", marginBottom: query ? 0 : "16px" }}>
             {query ? "Try a different name or property" : "Add your first booking to get started"}
           </p>
           {!query && (
@@ -159,7 +159,7 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "6px", flexShrink: 0 }}>
                   <StatusChip status={b.status} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-ink-ghost)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{b.source}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)", textTransform: "uppercase", letterSpacing: "0.08em" }}>{b.source}</span>
                 </div>
               </div>
             </Link>
@@ -168,7 +168,7 @@ export function BookingsListClient({ initialBookings }: { initialBookings: Booki
       </div>
 
       {query && filtered.length > 0 && (
-        <p style={{ textAlign: "center", marginTop: "16px", fontSize: "0.8rem", color: "var(--jood-ink-ghost)" }}>
+        <p style={{ textAlign: "center", marginTop: "16px", fontSize: "0.8rem", color: "var(--jood-ink-subtle)" }}>
           {filtered.length} of {initialBookings.length}
         </p>
       )}

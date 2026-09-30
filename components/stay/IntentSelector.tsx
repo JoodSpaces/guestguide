@@ -49,10 +49,10 @@ export function IntentSelector({ isAr, onChange }: IntentSelectorProps) {
     <div style={{ marginBottom: "28px" }}>
       <p style={{
         fontFamily: "var(--font-label)",
-        fontSize: "9px",
+        fontSize: "11px",
         letterSpacing: "0.18em",
         textTransform: "uppercase",
-        color: "var(--jood-ink-ghost)",
+        color: "var(--jood-ink-subtle)",
         marginBottom: "12px",
       }}>
         {isAr ? "ما مزاجك اليوم؟" : "What's your vibe today?"}

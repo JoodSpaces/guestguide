@@ -99,7 +99,7 @@ export function MaintenanceClient({ properties, defaultPropertyId }: Props) {
         </div>
 
         {/* Category + Priority */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px" }}>
           <div>
             <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px", textTransform: "uppercase", letterSpacing: "0.1em", fontFamily: "var(--font-label)" }}>Category</label>
             <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ ...input, textTransform: "capitalize" }}>
@@ -134,7 +134,7 @@ export function MaintenanceClient({ properties, defaultPropertyId }: Props) {
               <div key={i} style={{ position: "relative" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt="" style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--jood-line)" }} />
-                <button type="button" onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))} style={{ position: "absolute", top: "-6px", right: "-6px", width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "var(--jood-danger)", color: "white", border: "none", cursor: "pointer", fontSize: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+                <button type="button" onClick={() => setPhotos((p) => p.filter((_, j) => j !== i))} style={{ position: "absolute", top: "-6px", right: "-6px", width: "18px", height: "18px", borderRadius: "50%", backgroundColor: "var(--jood-danger)", color: "white", border: "none", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
               </div>
             ))}
             <input type="file" accept="image/*" capture="environment" ref={fileRef} style={{ display: "none" }} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} />

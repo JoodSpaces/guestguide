@@ -196,7 +196,7 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
       </div>
 
       {filtered.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-faint)" }}>
+        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-subtle)" }}>
           <p style={{ fontSize: "1.5rem", marginBottom: "8px" }}>✦</p>
           <p style={{ fontSize: "14px" }}>{isAr ? "لا توجد نتائج" : "Nothing here yet"}</p>
         </div>
@@ -388,8 +388,8 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                   {placeDist(place) && (
                     <span style={{
                       fontFamily: "var(--font-mono)",
-                      fontSize: "10px",
-                      color: "var(--jood-ink-faint)",
+                      fontSize: "11px",
+                      color: "var(--jood-ink-subtle)",
                     }}>
                       {placeDist(place)}
                     </span>
@@ -397,8 +397,8 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
                   {place.rating && (
                     <span style={{
                       fontFamily: "var(--font-mono)",
-                      fontSize: "10px",
-                      color: "var(--jood-ink-faint)",
+                      fontSize: "11px",
+                      color: "var(--jood-ink-subtle)",
                     }}>
                       ★ {place.rating}
                     </span>

@@ -167,16 +167,16 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
         {/* Summary pills */}
         {items.length > 0 && (
           <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
+            <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
               {items.length} tracked
             </span>
             {lowStock.length > 0 && (
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-accent)", border: "1px solid var(--jood-accent)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
+              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-accent)", border: "1px solid var(--jood-accent)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
                 {lowStock.length} low
               </span>
             )}
             {outOfStock.length > 0 && (
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-danger)", border: "1px solid var(--jood-danger)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
+              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-danger)", border: "1px solid var(--jood-danger)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
                 {outOfStock.length} out
               </span>
             )}
@@ -193,10 +193,10 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
           <div key={cat} style={{ marginBottom: "28px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
               {(() => { const Icon = meta.icon; return <Icon size={14} strokeWidth={1.75} style={{ color: "var(--jood-ink-muted)" }} />; })()}
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                 {meta.label}
               </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-ink-ghost)" }}>
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)" }}>
                 {catItems.length}
               </span>
             </div>
@@ -239,7 +239,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
                               transition: "width 400ms cubic-bezier(0.16, 1, 0.3, 1)",
                             }} />
                           </div>
-                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: STATUS_COLOR[status], flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
+                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: STATUS_COLOR[status], flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
                             {item.current_stock}/{item.par_level} {item.unit}
                           </span>
                         </div>
@@ -258,7 +258,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
                           style={{ width: "44px", padding: "4px 6px", textAlign: "center", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "var(--jood-ground)", color: "var(--jood-ink-muted)", fontSize: "0.75rem", fontVariantNumeric: "tabular-nums" }}
                           title="Par level (minimum stock)"
                         />
-                        <span style={{ fontFamily: "var(--font-label)", fontSize: "7px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-ghost)" }}>min</span>
+                        <span style={{ fontFamily: "var(--font-label)", fontSize: "7px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)" }}>min</span>
                       </div>
 
                       {/* Stepper */}
@@ -284,7 +284,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
                     {/* Delete */}
                     <button
                       onClick={() => deleteItem(item.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", width: "28px", height: "28px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 120ms, background 120ms" }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-subtle)", width: "28px", height: "28px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 120ms, background 120ms" }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = "var(--jood-danger)"; e.currentTarget.style.background = "rgba(201,48,48,0.06)"; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = "var(--jood-ink-ghost)"; e.currentTarget.style.background = "none"; }}
                     ><X size={13} strokeWidth={1.75} /></button>
@@ -299,8 +299,8 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
       {/* Add item form */}
       {adding ? (
         <div style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "18px 20px", marginBottom: "10px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "14px" }}>New item</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "14px" }}>New item</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "10px", marginBottom: "12px" }}>
             <div>
               <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Category</label>
               <select value={newItem.category} onChange={(e) => setNewItem((n) => ({ ...n, category: e.target.value }))} style={{ ...inputStyle, textTransform: "capitalize" }}>
@@ -337,7 +337,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
       ) : (
         <button
           onClick={() => setAdding(true)}
-          style={{ width: "100%", padding: "14px", backgroundColor: "transparent", border: "1.5px dashed var(--jood-line)", borderRadius: "var(--radius-lg)", fontSize: "0.875rem", cursor: "pointer", color: "var(--jood-ink-ghost)", transition: "border-color 150ms, color 150ms" }}
+          style={{ width: "100%", padding: "14px", backgroundColor: "transparent", border: "1.5px dashed var(--jood-line)", borderRadius: "var(--radius-lg)", fontSize: "0.875rem", cursor: "pointer", color: "var(--jood-ink-subtle)", transition: "border-color 150ms, color 150ms" }}
           onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--jood-ink-muted)"; e.currentTarget.style.color = "var(--jood-ink-muted)"; }}
           onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--jood-line)"; e.currentTarget.style.color = "var(--jood-ink-ghost)"; }}
         >

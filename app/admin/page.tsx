@@ -149,7 +149,7 @@ export default async function AdminTodayPage() {
         display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
       }}>
         <div>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "8.5px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-faint)", marginBottom: "6px" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "8.5px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", marginBottom: "6px" }}>
             {today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}
           </p>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.7rem", fontWeight: 400, fontStyle: "italic", color: "var(--jood-ink)", marginBottom: "10px", lineHeight: 1 }}>
@@ -232,12 +232,12 @@ export default async function AdminTodayPage() {
         return (
           <div style={{ marginBottom: "32px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "14px", flexWrap: "wrap" }}>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                 Properties
               </p>
               <div style={{ display: "flex", gap: "10px" }}>
                 {(["clear", "amber", "red"] as const).map((s) => (
-                  <span key={s} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.65rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", letterSpacing: "0.08em" }}>
+                  <span key={s} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.6875rem", color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", letterSpacing: "0.08em" }}>
                     <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: STATUS_COLOR[s], display: "inline-block" }} />
                     {s === "clear" ? "All clear" : s === "amber" ? "Attention" : "Urgent"}
                   </span>
@@ -321,7 +321,7 @@ export default async function AdminTodayPage() {
           <div style={{ marginBottom: "32px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+                <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                   Inventory
                 </p>
                 <span style={{
@@ -369,7 +369,7 @@ export default async function AdminTodayPage() {
                     </div>
                     <span style={{
                       fontFamily: "var(--font-label)",
-                      fontSize: "9px",
+                      fontSize: "11px",
                       letterSpacing: "0.1em",
                       textTransform: "uppercase",
                       color: SEVERITY_COLOR[a.severity],
@@ -381,7 +381,7 @@ export default async function AdminTodayPage() {
                 );
               })}
               {total > 5 && (
-                <Link href="/admin/ops" style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--jood-ink-ghost)", padding: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                <Link href="/admin/ops" style={{ textAlign: "center", fontSize: "0.8rem", color: "var(--jood-ink-subtle)", padding: "8px", textDecoration: "underline", textUnderlineOffset: "3px" }}>
                   +{total - 5} more alert{total - 5 !== 1 ? "s" : ""}
                 </Link>
               )}
@@ -591,7 +591,7 @@ export default async function AdminTodayPage() {
                 </p>
                 <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
               </div>
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-aqua)", flexShrink: 0 }}>
+              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-aqua)", flexShrink: 0 }}>
                 Pending
               </span>
             </Link>

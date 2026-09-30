@@ -100,7 +100,7 @@ export default async function ArrivalPage({ params }: Props) {
         <div style={{ marginBottom: "4px" }}>
           <p style={{
             fontFamily: "var(--font-mono)",
-            fontSize: "9px",
+            fontSize: "11px",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
             color: "var(--jood-ink-muted)",
@@ -135,7 +135,7 @@ export default async function ArrivalPage({ params }: Props) {
           }}>
             <p style={{
               fontFamily: "var(--font-mono)",
-              fontSize: "9px",
+              fontSize: "11px",
               letterSpacing: "0.2em",
               textTransform: "uppercase",
               color: "rgba(245,244,237,0.4)",
@@ -162,7 +162,7 @@ export default async function ArrivalPage({ params }: Props) {
           <div style={{ padding: "18px 20px 14px" }}>
             <p style={{
               fontFamily: "var(--font-label)",
-              fontSize: "10px",
+              fontSize: "11px",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
               fontWeight: 600,
@@ -182,7 +182,7 @@ export default async function ArrivalPage({ params }: Props) {
                 }}>
                   <span style={{
                     fontFamily: "var(--font-mono)",
-                    fontSize: "10px",
+                    fontSize: "11px",
                     color: "var(--jood-accent)",
                     flexShrink: 0,
                     paddingTop: "2px",
@@ -237,7 +237,7 @@ export default async function ArrivalPage({ params }: Props) {
           }}>
             <p style={{
               fontFamily: "var(--font-label)",
-              fontSize: "10px",
+              fontSize: "11px",
               letterSpacing: "0.16em",
               textTransform: "uppercase",
               fontWeight: 600,
@@ -248,7 +248,7 @@ export default async function ArrivalPage({ params }: Props) {
             </p>
             <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                   {isAr ? "الشبكة" : "Network"}
                 </span>
                 <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--jood-ink)", letterSpacing: "0.05em" }}>
@@ -257,7 +257,7 @@ export default async function ArrivalPage({ params }: Props) {
               </div>
               {wifiPassword && (
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                     {isAr ? "كلمة المرور" : "Password"}
                   </span>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "var(--jood-ink)", letterSpacing: "0.05em" }}>

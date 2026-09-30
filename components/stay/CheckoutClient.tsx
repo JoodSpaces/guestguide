@@ -57,7 +57,7 @@ function ScrapbookCard({ propertyName, checkInDate, checkoutDate, nightsCount, c
       <div aria-hidden style={{ position: "absolute", insetInlineEnd: "-12px", top: "-16px", fontFamily: "var(--font-display)", fontSize: "clamp(7rem, 22vw, 11rem)", color: "rgba(245,244,237,0.04)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
         {nightsCount}
       </div>
-      <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.35)", marginBottom: "20px" }}>
+      <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.35)", marginBottom: "20px" }}>
         {t("stay_at")}
       </p>
       <p className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1, marginBottom: "28px" }}>
@@ -68,7 +68,7 @@ function ScrapbookCard({ propertyName, checkInDate, checkoutDate, nightsCount, c
         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0" }}>
           <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--jood-accent)", flexShrink: 0 }} />
           <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(245,244,237,0.15)", position: "relative" }}>
-            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#351E1C", padding: "0 8px", fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(245,244,237,0.4)", whiteSpace: "nowrap" }}>
+            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#351E1C", padding: "0 8px", fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(245,244,237,0.4)", whiteSpace: "nowrap" }}>
               {nightsLabel}
             </span>
           </div>

@@ -50,7 +50,7 @@ export function HostPickEditor({ propertyId, initialPick, initialPickAr }: Props
     }}>
       <div style={{ marginBottom: "16px" }}>
         <p style={{
-          fontFamily: "var(--font-label)", fontSize: "0.65rem",
+          fontFamily: "var(--font-label)", fontSize: "0.6875rem",
           letterSpacing: "0.14em", textTransform: "uppercase",
           color: "var(--jood-garnet)", marginBottom: "4px",
         }}>
@@ -61,7 +61,7 @@ export function HostPickEditor({ propertyId, initialPick, initialPickAr }: Props
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px", marginBottom: "14px" }}>
         <div>
           <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "6px", fontFamily: "var(--font-label)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
             English

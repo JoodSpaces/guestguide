@@ -34,7 +34,7 @@ function StatusChip({ value, colorMap }: { value: string; colorMap: Record<strin
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: "5px",
-      fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em",
+      fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em",
       textTransform: "uppercase", color,
       border: `1px solid ${color}`, borderRadius: "var(--radius-pill)",
       padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
@@ -101,7 +101,7 @@ export default async function OpsPage() {
       <a href={`/admin/ops/turnover/${t.id}`} style={{
         ...card,
         textDecoration: "none", color: "inherit", display: "block",
-        opacity: muted ? 0.6 : 1,
+        opacity: muted ? 0.8 : 1,
         borderLeft: highlight
           ? "4px solid var(--jood-accent)"
           : t.status === "scheduled"
@@ -122,8 +122,11 @@ export default async function OpsPage() {
                 <User size={11} strokeWidth={1.75} /> {t.assigned_to}
               </p>
             )}
+            {!booking && (
+              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>Added by hand · {fmt(t.created_at)}</p>
+            )}
             {t.status === "approved" && (t as TurnoverRow).approved_at && (
-              <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)", marginTop: "2px" }}>
+              <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-subtle)", marginTop: "2px" }}>
                 Approved {fmt((t as TurnoverRow).approved_at!)}
               </p>
             )}
@@ -143,9 +146,9 @@ export default async function OpsPage() {
   return (
     <div>
       <AutoRefresh interval={30_000} />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "28px" }}>
         <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Operations</h1>
-        <div style={{ display: "flex", gap: "10px" }}>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           {(role === "admin" || role === "ops") && (
             <Link href="/admin/ops/maintenance/new" style={{ padding: "9px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem" }}>
               + Ticket
@@ -163,7 +166,7 @@ export default async function OpsPage() {
       {/* ── MY TASKS — always shown first ── */}
       {myTurnovers.length > 0 && (
         <section style={{ marginBottom: "36px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "10px" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "10px" }}>
             Your tasks · {myTurnovers.length}
           </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -178,7 +181,7 @@ export default async function OpsPage() {
         {/* Turnovers */}
         <section>
           <div style={{ marginBottom: "12px" }}>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+            <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
               {myTurnovers.length > 0 ? "All other tasks" : "Cleaning tasks"} · {active.length + upcoming.length}
             </p>
           </div>
@@ -186,7 +189,7 @@ export default async function OpsPage() {
           {!active.length && !upcoming.length && !myTurnovers.length && (
             <div style={{ ...card, textAlign: "center", padding: "32px 24px", marginBottom: "20px" }}>
               <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>All clear</p>
-              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>No cleaning tasks right now</p>
+              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-subtle)" }}>No cleaning tasks right now</p>
             </div>
           )}
 
@@ -196,7 +199,7 @@ export default async function OpsPage() {
 
           {upcoming.length > 0 && (
             <>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px", marginTop: "4px" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px", marginTop: "4px" }}>
                 Upcoming · {upcoming.length}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: history?.length ? "20px" : 0 }}>
@@ -207,7 +210,7 @@ export default async function OpsPage() {
 
           {(history?.length ?? 0) > 0 && (
             <>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-ghost)", marginBottom: "10px", marginTop: "20px" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", marginBottom: "10px", marginTop: "20px" }}>
                 History · {history!.length}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -221,7 +224,7 @@ export default async function OpsPage() {
         {(role === "admin" || role === "ops" || role === "maintenance") && (
           <section>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
                 Open tickets · {tickets?.length ?? 0}
               </p>
               <Link href="/admin/ops/maintenance" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "none" }}>View all →</Link>
@@ -230,7 +233,7 @@ export default async function OpsPage() {
             {!tickets?.length && (
               <div style={{ ...card, textAlign: "center", padding: "32px 24px" }}>
                 <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>No open tickets</p>
-                <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>All maintenance issues are resolved</p>
+                <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-subtle)" }}>All maintenance issues are resolved</p>
               </div>
             )}
 
@@ -257,7 +260,7 @@ export default async function OpsPage() {
       {/* Inventory links */}
       {(properties?.length ?? 0) > 0 && (
         <section style={{ marginTop: "32px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "12px" }}>Inventory</p>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "12px" }}>Inventory</p>
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
             {properties?.map((p) => (
               <Link key={p.id} href={`/admin/ops/inventory/${p.id}`} style={{ ...card, textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem", padding: "10px 16px" }}>

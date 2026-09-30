@@ -82,7 +82,7 @@ export function TonightCard({ token, isAr, note, noteAr }: Props) {
       }}>
         <p style={{
           fontFamily: "var(--font-mono)",
-          fontSize: "9px",
+          fontSize: "11px",
           letterSpacing: "0.18em",
           textTransform: "uppercase",
           color: "var(--jood-ink-muted)",
@@ -97,7 +97,7 @@ export function TonightCard({ token, isAr, note, noteAr }: Props) {
             gap: "5px",
             color: "var(--jood-accent)",
             fontFamily: "var(--font-mono)",
-            fontSize: "10px",
+            fontSize: "11px",
             letterSpacing: "0.12em",
           }}>
             <SunsetIcon />

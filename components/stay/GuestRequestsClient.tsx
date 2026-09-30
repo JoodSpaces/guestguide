@@ -179,7 +179,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
           <div style={{ padding: "0 18px 10px", display: "flex", alignItems: "center", gap: "6px" }}>
             <span style={{
               fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.14em",
-              textTransform: "uppercase", color: "var(--jood-ink-faint)",
+              textTransform: "uppercase", color: "var(--jood-ink-subtle)",
             }}>
               {isAr ? "تصنيف" : "Category"}
             </span>
@@ -208,7 +208,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
                 cursor: "pointer", flexShrink: 0, transition: "background-color 180ms",
               }}
             >
-              {urgent && <span style={{ color: "#fff", fontSize: "10px", lineHeight: 1 }}>✓</span>}
+              {urgent && <span style={{ color: "#fff", fontSize: "11px", lineHeight: 1 }}>✓</span>}
             </div>
             <span style={{ fontSize: "13px", color: "var(--jood-mid)", fontFamily: "var(--font-body)" }}>
               {isAr ? "عاجل" : "Urgent"}
@@ -219,7 +219,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
             onClick={submitRequest}
             disabled={sending || !body.trim()}
             style={{
-              fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.18em",
+              fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em",
               textTransform: "uppercase",
               color: body.trim() ? "var(--jood-garnet)" : "var(--jood-ink-faint)",
               background: "none", border: "none",
@@ -234,7 +234,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
 
       {/* ── Logbook ──────────────────────────────────────────────────────── */}
       {requests.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-faint)" }}>
+        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-subtle)" }}>
           <p style={{ fontSize: "1.5rem", marginBottom: "8px" }}>✦</p>
           <p style={{ fontSize: "14px" }}>{isAr ? "لا توجد طلبات بعد" : "No requests yet"}</p>
         </div>
@@ -246,7 +246,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
               <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
               <p style={{
                 fontFamily: "var(--font-label)", fontSize: "8px", letterSpacing: "0.18em",
-                textTransform: "uppercase", color: "var(--jood-ink-faint)", whiteSpace: "nowrap",
+                textTransform: "uppercase", color: "var(--jood-ink-subtle)", whiteSpace: "nowrap",
               }}>
                 {group.label}
               </p>

@@ -348,7 +348,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
           textAlign: "center",
         }}
       >
-        <p style={{ fontSize: "0.72rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", letterSpacing: "0.06em" }}>
+        <p style={{ fontSize: "0.72rem", color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", letterSpacing: "0.06em" }}>
           {isAr ? "هل تحتاج مساعدة بشرية؟ " : "Need a human? "}
           <a
             href={`/s/${token}/requests`}
@@ -357,7 +357,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
             {isAr ? "تواصل مع فريق جود" : "Reach the JOOD team"}
           </a>
         </p>
-        <p style={{ fontSize: "0.66rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", marginTop: "4px" }}>
+        <p style={{ fontSize: "0.6875rem", color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", marginTop: "4px" }}>
           {isAr
             ? "الإجابات من الذكاء الاصطناعي، وما تكتبه يُرسَل إلى مزوّده. لا تكتب بيانات بطاقة أو كلمات مرور. "
             : "Answers are written by AI and what you type is sent to its provider. Don't enter card details or passwords. "}
@@ -432,7 +432,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
         <p
           style={{
             fontSize: "0.68rem",
-            color: "var(--jood-ink-ghost)",
+            color: "var(--jood-ink-subtle)",
             marginTop: "6px",
             textAlign: isAr ? "right" : "left",
             fontFamily: "var(--font-label)",

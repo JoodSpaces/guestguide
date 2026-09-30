@@ -82,7 +82,7 @@ export function CinematicReveal({ token, propertyName, locale }: Props) {
         <p
           style={{
             fontFamily: "var(--font-label)",
-            fontSize: "10px",
+            fontSize: "11px",
             letterSpacing: "0.22em",
             textTransform: "uppercase",
             color: "rgba(245,244,237,0.38)",

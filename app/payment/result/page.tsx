@@ -95,7 +95,7 @@ function ResultContent() {
       </p>
 
       {orderId && (
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: "10px", letterSpacing: "0.14em", color: "var(--jood-ink-ghost)", marginBottom: "28px" }}>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.14em", color: "var(--jood-ink-subtle)", marginBottom: "28px" }}>
           {tr.ref} {orderId.slice(0, 8).toUpperCase()}
         </p>
       )}

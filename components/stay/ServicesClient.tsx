@@ -230,7 +230,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                           fontSize: "8px",
                           letterSpacing: "0.12em",
                           textTransform: "uppercase",
-                          color: "var(--jood-ink-faint)",
+                          color: "var(--jood-ink-subtle)",
                           border: "1px solid var(--jood-line)",
                           borderRadius: "99px",
                           padding: "4px 9px",
@@ -243,7 +243,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                           disabled={isSubmitting}
                           style={{
                             fontFamily: "var(--font-label)",
-                            fontSize: "9px",
+                            fontSize: "11px",
                             letterSpacing: "0.12em",
                             textTransform: "uppercase",
                             color: "var(--jood-garnet)",
@@ -340,7 +340,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
             }}>
               {isAr ? "طلباتي" : "My requests"}
             </p>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-faint)" }}>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)" }}>
               {myRequests.length}
             </p>
           </div>
@@ -433,7 +433,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
                       <p style={{
                         fontFamily: "var(--font-label)", fontSize: "8px",
                         letterSpacing: "0.14em", textTransform: "uppercase",
-                        color: "var(--jood-ink-ghost)", flexShrink: 0,
+                        color: "var(--jood-ink-subtle)", flexShrink: 0,
                       }}>
                         {isAr ? "كيف كانت التجربة؟" : "How was it?"}
                       </p>

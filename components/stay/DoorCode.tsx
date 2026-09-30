@@ -305,7 +305,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
           pointerEvents: "none",
         }}>
           {["●","●","●","●"].map((d, i) => (
-            <span key={i} style={{ fontSize: "10px", color: "rgba(245,244,237,0.3)", letterSpacing: "0.1em" }}>{d}</span>
+            <span key={i} style={{ fontSize: "11px", color: "rgba(245,244,237,0.3)", letterSpacing: "0.1em" }}>{d}</span>
           ))}
         </div>
 

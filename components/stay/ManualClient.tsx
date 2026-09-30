@@ -177,7 +177,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
 
       {/* ── Header ── */}
       <div style={{ marginBottom: "24px" }}>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>
+        <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>
           {isAr ? "المسكن" : "Your Stay"}
         </p>
         <h1 className="font-display animate-reveal" style={{ fontSize: "clamp(1.75rem, 6vw, 2.5rem)", fontWeight: 600, color: "var(--jood-ink)", lineHeight: 1.05, letterSpacing: "-0.02em", margin: "0 0 20px" }}>
@@ -246,7 +246,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
       {aiResult?.answer && (
         <div style={{ background: "var(--jood-surface)", border: "1px solid var(--jood-aqua)", borderRadius: "var(--radius-lg)", padding: "18px 20px", marginBottom: "20px", animation: "cc-rise 0.4s cubic-bezier(0.16,1,0.3,1) both" }}>
           <style>{`@keyframes cc-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
+          <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
             ✦ {isAr ? "JOOD ذكاء" : "JOOD AI"}
           </p>
           <p style={{ fontSize: "15px", color: "var(--jood-ink)", lineHeight: 1.65, margin: 0 }}>
@@ -270,7 +270,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
       {wifiSsid && (
         <div style={{ background: "var(--jood-ink)", borderRadius: "var(--radius-lg)", padding: "20px 22px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
           <div>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.4)", marginBottom: "6px" }}>
+            <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.4)", marginBottom: "6px" }}>
               {isAr ? "الواي فاي" : "Wi-Fi"}
             </p>
             <p style={{ color: "rgba(245,244,237,0.9)", fontWeight: 500, fontSize: "15px", margin: "0 0 3px" }}>{wifiSsid}</p>
@@ -352,7 +352,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
                   <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 600, color: "var(--jood-ink)", margin: 0 }}>
                     {sec}
                   </p>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-accent)", background: "rgba(255,96,55,0.08)", padding: "2px 6px", borderRadius: "4px" }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-accent)", background: "rgba(255,96,55,0.08)", padding: "2px 6px", borderRadius: "4px" }}>
                     {secEntries.length}
                   </span>
                 </div>
@@ -408,11 +408,11 @@ function EntryRow({ entry, isAr, isOpen, onToggle, isAiMatch, isLast, inGroup }:
         }}
       >
         <span style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-          {isAiMatch && <span style={{ fontSize: "10px", color: "var(--jood-aqua)", flexShrink: 0 }}>✦</span>}
+          {isAiMatch && <span style={{ fontSize: "11px", color: "var(--jood-aqua)", flexShrink: 0 }}>✦</span>}
           <span style={{ fontWeight: 500, color: "var(--jood-ink)", fontSize: "14.5px", lineHeight: 1.3 }}>{title}</span>
         </span>
         <span style={{
-          color: "var(--jood-ink-faint)",
+          color: "var(--jood-ink-subtle)",
           flexShrink: 0,
           transition: "transform 300ms var(--ease-standard)",
           transform: isOpen ? "rotate(180deg)" : "none",

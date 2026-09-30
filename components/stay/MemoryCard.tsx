@@ -78,7 +78,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "48px" }}>
             <p style={{
               fontFamily: "var(--font-label)",
-              fontSize: "9px",
+              fontSize: "11px",
               letterSpacing: "0.28em",
               textTransform: "uppercase",
               color: "rgba(245,244,237,0.35)",
@@ -87,7 +87,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
             </p>
             <p style={{
               fontFamily: "var(--font-mono)",
-              fontSize: "10px",
+              fontSize: "11px",
               color: "rgba(245,244,237,0.25)",
               letterSpacing: "0.04em",
             }}>
@@ -98,7 +98,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
           {/* Guest name */}
           <p style={{
             fontFamily: "var(--font-label)",
-            fontSize: "9px",
+            fontSize: "11px",
             letterSpacing: "0.18em",
             textTransform: "uppercase",
             color: "#C49A82",
@@ -179,7 +179,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
           border: "1px solid var(--jood-line)",
           borderRadius: "var(--radius-lg)",
           fontFamily: "var(--font-label)",
-          fontSize: "10px",
+          fontSize: "11px",
           letterSpacing: "0.16em",
           textTransform: "uppercase",
           color: copied ? "var(--jood-success)" : "var(--jood-ink-muted)",
@@ -196,7 +196,7 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
         marginTop: "16px",
         textAlign: "center",
         fontSize: "11px",
-        color: "var(--jood-ink-ghost)",
+        color: "var(--jood-ink-subtle)",
         fontFamily: "var(--font-label)",
         letterSpacing: "0.08em",
       }}>

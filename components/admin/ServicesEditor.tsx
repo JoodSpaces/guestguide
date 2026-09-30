@@ -83,7 +83,7 @@ function ServiceForm({
 
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "10px" }}>
         <div>
           <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px" }}>Name (EN) *</label>
           <input required value={form.name_en} onChange={(e) => set("name_en", e.target.value)} placeholder="Late checkout" style={inputStyle} />
@@ -94,7 +94,7 @@ function ServiceForm({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "10px" }}>
         <div>
           <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px" }}>Description (EN)</label>
           <textarea value={form.description_en ?? ""} onChange={(e) => set("description_en", e.target.value || null)} placeholder="Optional detail…" style={{ ...inputStyle, resize: "vertical", minHeight: "60px" }} />
@@ -105,7 +105,7 @@ function ServiceForm({
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "10px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 120px), 1fr))", gap: "10px" }}>
         <div>
           <label style={{ display: "block", fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "5px" }}>Category</label>
           <select value={form.category} onChange={(e) => set("category", e.target.value)} style={inputStyle}>
@@ -237,7 +237,7 @@ export function ServicesEditor({ initialServices }: { initialServices: Service[]
 
       {adding && (
         <div style={{ ...card, border: "1px solid var(--jood-accent)", marginBottom: "20px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "16px" }}>New service</p>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "16px" }}>New service</p>
           <ServiceForm initial={blank()} onSave={handleCreate} onCancel={() => setAdding(false)} />
         </div>
       )}
@@ -252,7 +252,7 @@ export function ServicesEditor({ initialServices }: { initialServices: Service[]
         <div key={svc.id} style={{ ...card, opacity: svc.is_active ? 1 : 0.55 }}>
           {editingId === svc.id ? (
             <>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "16px" }}>Editing</p>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "16px" }}>Editing</p>
               <ServiceForm
                 initial={{ name_en: svc.name_en, name_ar: svc.name_ar, description_en: svc.description_en, description_ar: svc.description_ar, category: svc.category, price_egp: svc.price_egp, lead_hours: svc.lead_hours, is_active: svc.is_active, sort_order: svc.sort_order }}
                 onSave={(data) => handleUpdate(svc.id, data)}
@@ -260,12 +260,12 @@ export function ServicesEditor({ initialServices }: { initialServices: Service[]
               />
             </>
           ) : (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
+            <div className="row-card" style={{ alignItems: "flex-start" }}>
               <div style={{ flex: 1 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "4px" }}>
                   <p style={{ fontWeight: 500, fontSize: "0.9375rem" }}>{svc.name_en}</p>
                   {svc.name_ar && <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", direction: "rtl" }}>{svc.name_ar}</p>}
-                  <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-ghost)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "2px 7px" }}>{catLabel(svc.category)}</span>
+                  <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "2px 7px" }}>{catLabel(svc.category)}</span>
                 </div>
                 <div style={{ display: "flex", gap: "16px", fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
                   <span>{svc.price_egp === 0 ? "Free" : `${svc.price_egp.toLocaleString()} EGP`}</span>
@@ -273,7 +273,7 @@ export function ServicesEditor({ initialServices }: { initialServices: Service[]
                   {svc.description_en && <span style={{ fontStyle: "italic" }}>{svc.description_en.slice(0, 60)}{svc.description_en.length > 60 ? "…" : ""}</span>}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+              <div className="row-card__actions">
                 <button onClick={() => toggleActive(svc)} style={{ padding: "6px 12px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", fontSize: "0.75rem", cursor: "pointer", color: svc.is_active ? "var(--jood-success)" : "var(--jood-ink-muted)" }}>
                   {svc.is_active ? "Active" : "Inactive"}
                 </button>

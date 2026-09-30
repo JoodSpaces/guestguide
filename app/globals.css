@@ -26,7 +26,10 @@
   --jood-faint:      #A98C84;
 
   /* ── Text Alpha Variants ── */
-  --jood-ink-muted:  rgba(53, 30, 28, 0.60);
+  /* Text levels (contrast on the ground): ink ≈14:1 · muted ≈7:1 · subtle ≈5:1.
+     ink-faint / ink-ghost are for lines, fills and decoration ONLY: they are far too pale to read as text. */
+  --jood-ink-muted:  rgba(53, 30, 28, 0.78);
+  --jood-ink-subtle: rgba(53, 30, 28, 0.68);
   --jood-ink-faint:  rgba(53, 30, 28, 0.28);
   --jood-ink-ghost:  rgba(53, 30, 28, 0.16);
   --jood-line:       rgba(53, 30, 28, 0.12);
@@ -107,7 +110,8 @@
     --jood-mist2:            #332826;
     --jood-mist3:            #3E302D;
     --jood-mid:              #A08880;
-    --jood-ink-muted:        rgba(237, 233, 224, 0.55);
+    --jood-ink-muted:        rgba(237, 233, 224, 0.72);
+    --jood-ink-subtle:       rgba(237, 233, 224, 0.60);
     --jood-ink-faint:        rgba(237, 233, 224, 0.25);
     --jood-ink-ghost:        rgba(237, 233, 224, 0.12);
     --jood-line:             rgba(237, 233, 224, 0.10);
@@ -138,7 +142,8 @@
   --jood-mist2:            #332826;
   --jood-mist3:            #3E302D;
   --jood-mid:              #A08880;
-  --jood-ink-muted:        rgba(237, 233, 224, 0.55);
+  --jood-ink-muted:        rgba(237, 233, 224, 0.72);
+  --jood-ink-subtle:       rgba(237, 233, 224, 0.60);
   --jood-ink-faint:        rgba(237, 233, 224, 0.25);
   --jood-ink-ghost:        rgba(237, 233, 224, 0.12);
   --jood-line:             rgba(237, 233, 224, 0.10);
@@ -465,7 +470,7 @@ body {
 }
 
 .jood-input::placeholder,
-.jood-textarea::placeholder { color: var(--jood-ink-faint); }
+.jood-textarea::placeholder { color: var(--jood-ink-subtle); }
 
 .jood-input:hover:not(:focus),
 .jood-textarea:hover:not(:focus) { border-color: var(--jood-mist3); }
@@ -497,7 +502,7 @@ body {
 
 .jood-hint {
   font-size: 0.75rem;
-  color: var(--jood-ink-faint);
+  color: var(--jood-ink-subtle);
   line-height: 1.5;
 }
 
@@ -903,7 +908,7 @@ body {
    ══════════════════════════════════════════════════════ */
 
 .text-muted   { color: var(--jood-ink-muted); }
-.text-faint   { color: var(--jood-ink-faint); }
+.text-faint   { color: var(--jood-ink-subtle); }
 .text-accent  { color: var(--jood-accent); }
 .text-garnet  { color: var(--jood-garnet); }
 .text-success { color: var(--jood-success); }
@@ -938,3 +943,19 @@ body {
 
 .cursor-pointer { cursor: pointer; }
 .no-select      { -webkit-user-select: none; user-select: none; }
+
+
+/* ── Admin lists: a card whose actions drop below the details on a phone ── */
+.row-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.row-card__main { flex: 1 1 240px; min-width: 0; }
+.row-card__actions { display: flex; gap: 8px; flex-wrap: wrap; flex: 0 0 auto; }
+@media (max-width: 560px) {
+  .row-card__actions { width: 100%; }
+  .row-card__actions > * { flex: 1 1 auto; text-align: center; display: inline-flex; align-items: center; justify-content: center; }
+}
+
+/* ── Touch: comfortable targets (44px is the usual minimum, 40px here) ── */
+@media (pointer: coarse) {
+  button, [role="button"], select, .row-card__actions > a { min-height: 40px; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) { min-height: 40px; }
+}

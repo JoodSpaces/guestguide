@@ -102,9 +102,9 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
       </Link>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Service request</span>
-        <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[req.status], border: `1px solid ${STATUS_COLOR[req.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{req.status}</span>
-        {req.services?.price_egp === 0 && <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-success)", border: "1px solid var(--jood-success)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Free</span>}
+        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Service request</span>
+        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[req.status], border: `1px solid ${STATUS_COLOR[req.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{req.status}</span>
+        {req.services?.price_egp === 0 && <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-success)", border: "1px solid var(--jood-success)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Free</span>}
       </div>
 
       <h1 className="font-display" style={{ fontSize: "1.6rem", marginBottom: "4px" }}>{req.services?.name_en ?? "Service"}</h1>
@@ -115,7 +115,7 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
       <div style={card}>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>Summary</p>
+            <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>Summary</p>
             <p style={{ fontSize: "0.9375rem" }}>{req.quantity} × {req.services?.name_en}</p>
             {req.services?.description_en && <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginTop: "4px" }}>{req.services.description_en}</p>}
             {req.guest_notes && <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink)", marginTop: "8px", fontStyle: "italic" }}>&ldquo;{req.guest_notes}&rdquo;</p>}
@@ -129,7 +129,7 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
       {/* Payment link */}
       {req.paymob_payment_url && req.status !== "rejected" && (
         <div style={{ ...card, borderColor: req.status === "paid" ? "var(--jood-success)" : "var(--jood-accent)" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: req.status === "paid" ? "var(--jood-success)" : "var(--jood-accent)", marginBottom: "10px" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: req.status === "paid" ? "var(--jood-success)" : "var(--jood-accent)", marginBottom: "10px" }}>
             {req.status === "paid" ? "Payment received" : "Payment link"}
           </p>
           {req.status !== "paid" && (
@@ -146,7 +146,7 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
 
       {/* Admin notes */}
       <div style={card}>
-        <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Admin notes</p>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Admin notes</p>
         <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Internal notes…" style={{ ...inputStyle, resize: "vertical", minHeight: "70px", marginBottom: "10px" }} />
         <button onClick={() => patch()} disabled={saving} style={{ padding: "8px 16px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer" }}>Save notes</button>
       </div>
@@ -224,9 +224,9 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
       </Link>
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{CAT_LABELS[req.category] ?? req.category}</span>
-        <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[req.status], border: `1px solid ${STATUS_COLOR[req.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{req.status.replace("_", " ")}</span>
-        {req.urgency === "urgent" && <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-danger)", border: "1px solid var(--jood-danger)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Urgent</span>}
+        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{CAT_LABELS[req.category] ?? req.category}</span>
+        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[req.status], border: `1px solid ${STATUS_COLOR[req.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{req.status.replace("_", " ")}</span>
+        {req.urgency === "urgent" && <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-danger)", border: "1px solid var(--jood-danger)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Urgent</span>}
       </div>
 
       <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginBottom: "16px" }}>
@@ -238,7 +238,7 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
       </div>
 
       <div style={card}>
-        <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Status</p>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Status</p>
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           {(["received", "in_progress", "resolved"] as const).map((s) => (
             <button key={s} disabled={saving} onClick={() => patch(s)} style={{ padding: "7px 14px", borderRadius: "var(--radius-pill)", border: `1px solid ${req.status === s ? STATUS_COLOR[s] : "var(--jood-line)"}`, backgroundColor: "transparent", color: req.status === s ? STATUS_COLOR[s] : "var(--jood-ink-muted)", fontSize: "0.8125rem", cursor: "pointer" }}>

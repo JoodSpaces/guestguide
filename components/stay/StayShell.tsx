@@ -150,7 +150,7 @@ export function StayShell({ token, title, eyebrow, children, back, activeTab = "
                 fontSize: "8.5px",
                 letterSpacing: "0.2em",
                 textTransform: "uppercase",
-                color: "var(--jood-ink-faint)",
+                color: "var(--jood-ink-subtle)",
                 marginBottom: "6px",
               }}>
                 {eyebrow}

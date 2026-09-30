@@ -127,7 +127,7 @@ export function PhaseCard({
             </p>
           )}
         </div>
-        <span style={{ color: "var(--jood-ink-faint)", fontSize: "1rem", flexShrink: 0 }}>→</span>
+        <span style={{ color: "var(--jood-ink-subtle)", fontSize: "1rem", flexShrink: 0 }}>→</span>
       </Link>
     );
   }
@@ -211,7 +211,7 @@ export function PhaseCard({
           </p>
         )}
       </div>
-      <span style={{ color: "var(--jood-ink-faint)", flexShrink: 0 }}>→</span>
+      <span style={{ color: "var(--jood-ink-subtle)", flexShrink: 0 }}>→</span>
     </Link>
   );
 }

@@ -53,7 +53,7 @@ const card: React.CSSProperties = {
 
 const label: React.CSSProperties = {
   fontFamily: "var(--font-label)",
-  fontSize: "0.65rem",
+  fontSize: "0.6875rem",
   letterSpacing: "0.12em",
   textTransform: "uppercase",
   color: "var(--jood-ink-muted)",
@@ -267,7 +267,7 @@ export function GuideEditor({ propertyId, propertyName, initialSections }: Props
             </p>
             <h1 className="font-display" style={{ fontSize: "1.8rem", lineHeight: 1.1 }}>{propertyName}</h1>
           </div>
-          <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
             {sections.length} sections
           </span>
         </div>
@@ -286,18 +286,18 @@ export function GuideEditor({ propertyId, propertyName, initialSections }: Props
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: s.expanded ? "16px" : 0 }}>
             {/* Reorder */}
             <div style={{ display: "flex", flexDirection: "column", gap: "2px", flexShrink: 0 }}>
-              <button onClick={() => moveUp(idx)} disabled={idx === 0} style={{ background: "none", border: "none", cursor: idx === 0 ? "default" : "pointer", color: idx === 0 ? "var(--jood-line)" : "var(--jood-ink-muted)", fontSize: "10px", lineHeight: 1, padding: "2px" }}>▲</button>
-              <button onClick={() => moveDown(idx)} disabled={idx === sections.length - 1} style={{ background: "none", border: "none", cursor: idx === sections.length - 1 ? "default" : "pointer", color: idx === sections.length - 1 ? "var(--jood-line)" : "var(--jood-ink-muted)", fontSize: "10px", lineHeight: 1, padding: "2px" }}>▼</button>
+              <button onClick={() => moveUp(idx)} disabled={idx === 0} style={{ background: "none", border: "none", cursor: idx === 0 ? "default" : "pointer", color: idx === 0 ? "var(--jood-line)" : "var(--jood-ink-muted)", fontSize: "11px", lineHeight: 1, padding: "2px" }}>▲</button>
+              <button onClick={() => moveDown(idx)} disabled={idx === sections.length - 1} style={{ background: "none", border: "none", cursor: idx === sections.length - 1 ? "default" : "pointer", color: idx === sections.length - 1 ? "var(--jood-line)" : "var(--jood-ink-muted)", fontSize: "11px", lineHeight: 1, padding: "2px" }}>▼</button>
             </div>
 
             {/* Section type badge */}
-            <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", backgroundColor: "rgba(255,96,55,0.08)", borderRadius: "var(--radius-pill)", padding: "3px 9px", flexShrink: 0 }}>
+            <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", backgroundColor: "rgba(255,96,55,0.08)", borderRadius: "var(--radius-pill)", padding: "3px 9px", flexShrink: 0 }}>
               {sectionLabel(s.data.section)}
             </span>
 
             {/* Title preview */}
             <span style={{ flex: 1, minWidth: 0, fontWeight: 500, fontSize: "0.875rem", color: "var(--jood-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {s.data.title_en || <span style={{ color: "var(--jood-ink-faint)" }}>Untitled</span>}
+              {s.data.title_en || <span style={{ color: "var(--jood-ink-subtle)" }}>Untitled</span>}
             </span>
 
             {/* Published toggle */}
@@ -320,7 +320,7 @@ export function GuideEditor({ propertyId, propertyName, initialSections }: Props
           {s.expanded && (
             <>
               {/* Section type selector */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px", marginBottom: "12px" }}>
                 <div>
                   <label style={label}>Section type</label>
                   <select
@@ -346,7 +346,7 @@ export function GuideEditor({ propertyId, propertyName, initialSections }: Props
               </div>
 
               {/* Titles */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px", marginBottom: "12px" }}>
                 <div>
                   <label style={label}>Title (English)</label>
                   <input
@@ -370,7 +370,7 @@ export function GuideEditor({ propertyId, propertyName, initialSections }: Props
               </div>
 
               {/* Bodies */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px", marginBottom: "16px" }}>
                 <div>
                   <label style={label}>Content (English)</label>
                   <textarea

@@ -147,7 +147,7 @@ function PortraitCard({
         )}
         <p style={{
           fontFamily: "var(--font-label)",
-          fontSize: "9px",
+          fontSize: "11px",
           letterSpacing: "0.12em",
           textTransform: "uppercase",
           color: dark ? "rgba(245,244,237,0.22)" : "var(--jood-ink-faint)",
@@ -367,7 +367,7 @@ export function StayHome({
               color: "#F5F4ED",
               textDecoration: "none",
               fontFamily: "var(--font-label)",
-              fontSize: "9px",
+              fontSize: "11px",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               whiteSpace: "nowrap",
@@ -397,7 +397,7 @@ export function StayHome({
             href={nudge.href}
             style={{
               fontFamily: "var(--font-label)",
-              fontSize: "9px",
+              fontSize: "11px",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               color: "var(--jood-garnet)",
@@ -434,10 +434,10 @@ export function StayHome({
         </p>
         <a href={`/s/${token}/services`} style={{
           fontFamily: "var(--font-label)",
-          fontSize: "9px",
+          fontSize: "11px",
           letterSpacing: "0.14em",
           textTransform: "uppercase",
-          color: "var(--jood-ink-faint)",
+          color: "var(--jood-ink-subtle)",
           textDecoration: "none",
         }}>
           {isAr ? "الكل →" : "All →"}
@@ -483,7 +483,7 @@ export function StayHome({
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <span style={{ fontSize: "18px", lineHeight: 1 }}>✦</span>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(160,201,203,0.5)" }}>
+            <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(160,201,203,0.5)" }}>
               {isAr ? "تحدث →" : "Chat →"}
             </p>
           </div>
@@ -572,7 +572,7 @@ export function StayHome({
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <span style={{ fontSize: "18px", lineHeight: 1 }}>✦</span>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(140,180,140,0.4)" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(140,180,140,0.4)" }}>
                 {isAr ? "أخبرنا →" : "Tell us →"}
               </p>
             </div>
@@ -607,7 +607,7 @@ export function StayHome({
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <span style={{ fontSize: "18px", lineHeight: 1 }}>◈</span>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(196,154,130,0.4)" }}>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(196,154,130,0.4)" }}>
                 {isAr ? "عرض →" : "View →"}
               </p>
             </div>
@@ -665,7 +665,7 @@ export function StayHome({
         </div>
       )}
 
-      <p style={{ textAlign: "center", fontSize: "0.66rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", padding: "0 22px 8px" }}>
+      <p style={{ textAlign: "center", fontSize: "0.6875rem", color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", padding: "0 22px 8px" }}>
         <a
           href={`${WEBSITE_URL}/legal#privacy`}
           target="_blank"

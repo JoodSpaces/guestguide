@@ -106,7 +106,7 @@ export default async function PropertyGuidePage({ params }: Props) {
           <span
             style={{
               fontFamily: "var(--font-mono)",
-              fontSize: "9px",
+              fontSize: "11px",
               letterSpacing: "0.14em",
               textTransform: "uppercase",
               color: "var(--jood-ink-muted)",
@@ -151,7 +151,7 @@ export default async function PropertyGuidePage({ params }: Props) {
               <span
                 style={{
                   fontFamily: "var(--font-label)",
-                  fontSize: "9px",
+                  fontSize: "11px",
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
                   color: "var(--jood-accent)",
@@ -166,7 +166,7 @@ export default async function PropertyGuidePage({ params }: Props) {
                 <span
                   style={{
                     fontFamily: "var(--font-label)",
-                    fontSize: "9px",
+                    fontSize: "11px",
                     letterSpacing: "0.12em",
                     textTransform: "uppercase",
                     color: "var(--jood-ink-muted)",
@@ -179,7 +179,7 @@ export default async function PropertyGuidePage({ params }: Props) {
                 </span>
               )}
             </div>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--jood-ink-ghost)" }}>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)" }}>
               #{item.sort_order}
             </span>
           </div>
@@ -195,11 +195,11 @@ export default async function PropertyGuidePage({ params }: Props) {
 
           <div style={{ borderTop: "1px solid var(--jood-line)", paddingTop: "12px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
             <div>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "0.65rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>English</p>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "0.6875rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>English</p>
               <p style={{ fontSize: "0.875rem", color: "var(--jood-ink)", lineHeight: 1.6 }}>{item.body_en}</p>
             </div>
             <div dir="rtl">
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "0.65rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>عربي</p>
+              <p style={{ fontFamily: "var(--font-label)", fontSize: "0.6875rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>عربي</p>
               <p style={{ fontFamily: "var(--font-arabic)", fontSize: "0.875rem", color: "var(--jood-ink)", lineHeight: 1.7 }}>{item.body_ar}</p>
             </div>
           </div>

@@ -342,7 +342,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                     <option key={m.id} value={m.name}>{m.name}</option>
                   ))}
                 </select>
-                {savingAssign && <span style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)" }}>saving…</span>}
+                {savingAssign && <span style={{ fontSize: "0.75rem", color: "var(--jood-ink-subtle)" }}>saving…</span>}
               </div>
             ) : task.assigned_to === null ? (
               <div style={{ marginTop: "10px" }}>
@@ -371,7 +371,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
             )}
           </div>
           <div style={{ textAlign: "right", flexShrink: 0 }}>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "10px", letterSpacing: "0.1em", textTransform: "uppercase", color: statusColor, marginBottom: "2px" }}>
+            <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: statusColor, marginBottom: "2px" }}>
               Status
             </p>
             <p style={{ fontSize: "0.875rem", fontWeight: 600, color: statusColor }}>
@@ -607,12 +607,12 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                       <p style={{ fontSize: "0.8125rem", color: DAMAGE_COLORS[r.condition] ?? "var(--jood-ink-muted)" }}>
                         {DAMAGE_LABEL[r.condition] ?? r.condition}
                       </p>
-                      {r.notes && <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)", marginTop: "2px" }}>{r.notes}</p>}
+                      {r.notes && <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-subtle)", marginTop: "2px" }}>{r.notes}</p>}
                     </div>
                     <button
                       onClick={() => removeDamageItem(r.id)}
                       disabled={removingDamageId === r.id}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-ghost)", padding: "4px 8px", flexShrink: 0, display: "flex", alignItems: "center" }}
+                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-subtle)", padding: "4px 8px", flexShrink: 0, display: "flex", alignItems: "center" }}
                       title="Remove"
                     >
                       <X size={14} strokeWidth={1.75} />
@@ -703,7 +703,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                 </button>
               </div>
             ) : (
-              <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-ghost)" }}>
+              <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-subtle)" }}>
                 No inventory set up for this property.{" "}
                 <Link href="/admin/ops" style={{ color: "var(--jood-accent)" }}>Go to Ops → Inventory</Link>.
               </p>
@@ -714,7 +714,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
 
       {/* ── SUPERVISOR SECTION ── (condition + notes, clearly labeled as supervisor work) */}
       <div style={{ ...card, backgroundColor: "var(--jood-surface-raised)", opacity: 0.9 }}>
-        <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-ghost)", marginBottom: "4px" }}>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", marginBottom: "4px" }}>
           For supervisor
         </p>
         <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--jood-ink)", marginBottom: "14px" }}>Unit Condition & Notes</p>

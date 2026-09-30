@@ -170,7 +170,7 @@ export function NewBookingForm({ properties }: Props) {
       </div>
 
       {/* Guest name */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px" }}>
         <div>
           <label style={label}>First name</label>
           <input name="guestFirstName" required style={field} />
@@ -182,7 +182,7 @@ export function NewBookingForm({ properties }: Props) {
       </div>
 
       {/* Contact */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px" }}>
         <div>
           <label style={label}>Email</label>
           <input name="guestEmail" type="email" style={field} />
@@ -194,7 +194,7 @@ export function NewBookingForm({ properties }: Props) {
       </div>
 
       {/* Language & count */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px" }}>
         <div>
           <label style={label}>Guest language</label>
           <select name="guestLang" style={field} defaultValue="en">
@@ -209,7 +209,7 @@ export function NewBookingForm({ properties }: Props) {
       </div>
 
       {/* Dates */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px" }}>
         <div>
           <label style={label}>Check-in</label>
           <input name="checkIn" type="datetime-local" required style={field} />
@@ -231,7 +231,7 @@ export function NewBookingForm({ properties }: Props) {
       </div>
 
       {/* Source */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px" }}>
         <div>
           <label style={label}>Source</label>
           <select name="source" style={field} defaultValue="direct">

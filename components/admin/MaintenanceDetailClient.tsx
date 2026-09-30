@@ -103,13 +103,13 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>
         <div style={{ display: "flex", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[ticket.status], border: `1px solid ${STATUS_COLOR[ticket.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
+          <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[ticket.status], border: `1px solid ${STATUS_COLOR[ticket.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
             {ticket.status.replace("_", " ")}
           </span>
-          <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: PRIORITY_COLOR[ticket.priority], border: `1px solid ${PRIORITY_COLOR[ticket.priority]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
+          <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: PRIORITY_COLOR[ticket.priority], border: `1px solid ${PRIORITY_COLOR[ticket.priority]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
             {ticket.priority}
           </span>
-          <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
+          <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
             {ticket.category}
           </span>
         </div>
@@ -120,7 +120,7 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
 
       {/* Photos */}
       <div style={card}>
-        <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Photos</p>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Photos</p>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           {photos.map((url, i) => (
             <a key={i} href={url} target="_blank" rel="noopener noreferrer">
@@ -138,7 +138,7 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
 
       {/* Status */}
       <div style={card}>
-        <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "12px" }}>Status</p>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "12px" }}>Status</p>
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           {(["open", "in_progress", "resolved"] as const).map((s) => (
             <button
@@ -166,7 +166,7 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
 
       {/* Assign */}
       <div style={card}>
-        <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Assigned to</p>
+        <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Assigned to</p>
         <div style={{ display: "flex", gap: "8px" }}>
           <input value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} placeholder="Name or team" style={{ ...inputStyle, flex: 1 }} />
           <button onClick={() => patch({ assigned_to: assignedTo || null })} disabled={saving} style={{ padding: "9px 16px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer", opacity: saving ? 0.5 : 1 }}>
@@ -178,14 +178,14 @@ export function MaintenanceDetailClient({ ticket: initial }: Props) {
       {/* Resolution */}
       {ticket.status === "resolved" ? (
         <div style={{ ...card, borderColor: "var(--jood-success)" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-success)", marginBottom: "6px" }}>Resolved</p>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-success)", marginBottom: "6px" }}>Resolved</p>
           {ticket.resolved_by && <p style={{ fontSize: "0.875rem", color: "var(--jood-ink)" }}>By {ticket.resolved_by}</p>}
           {ticket.resolved_at && <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>{fmt(ticket.resolved_at)}</p>}
           {ticket.resolution_notes && <p style={{ marginTop: "8px", fontSize: "0.9375rem", color: "var(--jood-ink)", lineHeight: 1.6 }}>{ticket.resolution_notes}</p>}
         </div>
       ) : (
         <div style={card}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Resolution</p>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Resolution</p>
           <input value={resolvedBy} onChange={(e) => setResolvedBy(e.target.value)} placeholder="Resolved by" style={{ ...inputStyle, marginBottom: "8px" }} />
           <textarea value={resolutionNotes} onChange={(e) => setResolutionNotes(e.target.value)} placeholder="What was done?" style={{ ...inputStyle, resize: "vertical", minHeight: "70px", marginBottom: "10px" }} />
           <button

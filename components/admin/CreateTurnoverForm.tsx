@@ -108,7 +108,7 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
           <p id={titleId} style={{ fontSize: "1rem", fontWeight: 600, color: "var(--jood-ink)" }}>New cleaning task</p>
-          <button aria-label="Close" onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--jood-ink-ghost)", padding: "4px" }}>×</button>
+          <button aria-label="Close" onClick={() => setOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "1.25rem", color: "var(--jood-ink-subtle)", padding: "4px" }}>×</button>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
@@ -123,7 +123,7 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
 
           <div>
             <label style={{ display: "block", fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>
-              Assign to (housekeeping) <span style={{ color: "var(--jood-ink-ghost)" }}>(optional)</span>
+              Assign to (housekeeping) <span style={{ color: "var(--jood-ink-subtle)" }}>(optional)</span>
             </label>
             {teamMembers.filter((m) => m.role === "housekeeping" || m.role === "ops").length > 0 ? (
               <select value={assignTo} onChange={(e) => setAssignTo(e.target.value)} style={inputStyle}>
@@ -135,7 +135,7 @@ export function CreateTurnoverForm({ properties, teamMembers }: Props) {
                   ))}
               </select>
             ) : (
-              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-ghost)" }}>
+              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-subtle)" }}>
                 No housekeeping staff yet.{" "}
                 <Link href="/admin/team" style={{ color: "var(--jood-accent)" }}>Add staff →</Link>
               </p>

@@ -51,7 +51,7 @@ export default async function MaintenancePage() {
       </div>
 
       {/* Open */}
-      <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Open · {open.length}</p>
+      <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Open · {open.length}</p>
       {!open.length && <div style={{ ...card, color: "var(--jood-ink-muted)", textAlign: "center", padding: "32px", marginBottom: "24px" }}>No open tickets</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "32px" }}>
         {open.map((t) => {
@@ -67,8 +67,8 @@ export default async function MaintenancePage() {
                   {t.assigned_to && <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginTop: "2px" }}>→ {t.assigned_to}</p>}
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px" }}>
-                  <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: STATUS_COLOR[t.status] }}>{t.status.replace("_", " ")}</span>
-                  <span style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.1em", textTransform: "uppercase", color: PRIORITY_COLOR[t.priority] }}>{t.priority}</span>
+                  <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: STATUS_COLOR[t.status] }}>{t.status.replace("_", " ")}</span>
+                  <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: PRIORITY_COLOR[t.priority] }}>{t.priority}</span>
                 </div>
               </div>
             </Link>
@@ -79,7 +79,7 @@ export default async function MaintenancePage() {
       {/* Resolved */}
       {resolved.length > 0 && (
         <>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Resolved · {resolved.length}</p>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Resolved · {resolved.length}</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "8px", opacity: 0.55 }}>
             {resolved.slice(0, 10).map((t) => {
               const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;

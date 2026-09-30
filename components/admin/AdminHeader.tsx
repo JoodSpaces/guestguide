@@ -251,7 +251,7 @@ export function AdminHeader({ role, name }: Props) {
               ))}
               <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--jood-line)" }}>
                 <p style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--jood-ink)" }}>{name || "Admin"}</p>
-                <p style={{ fontSize: "0.7rem", color: "var(--jood-ink-ghost)", marginTop: "2px", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{role}</p>
+                <p style={{ fontSize: "0.7rem", color: "var(--jood-ink-subtle)", marginTop: "2px", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{role}</p>
               </div>
               <button onClick={handleLogout} style={{
                 display: "block", width: "100%", padding: "13px 18px",
@@ -274,7 +274,7 @@ export function AdminHeader({ role, name }: Props) {
               width: "32px", height: "32px", borderRadius: "50%",
               backgroundColor: ROLE_COLOR[role], border: "none", cursor: "pointer",
               fontFamily: "var(--font-label)", fontWeight: 700,
-              fontSize: "0.65rem", letterSpacing: "0.06em", color: "white",
+              fontSize: "0.6875rem", letterSpacing: "0.06em", color: "white",
               display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0, transition: "opacity 150ms",
             }}
@@ -290,7 +290,7 @@ export function AdminHeader({ role, name }: Props) {
             }}>
               <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--jood-line)" }}>
                 <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink)" }}>{name || "Admin"}</p>
-                <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)", marginTop: "2px", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{role}</p>
+                <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-subtle)", marginTop: "2px", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{role}</p>
               </div>
               <button onClick={handleLogout} style={{
                 display: "block", width: "100%", padding: "11px 16px",

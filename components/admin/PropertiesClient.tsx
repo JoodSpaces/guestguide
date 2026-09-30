@@ -195,11 +195,11 @@ export function PropertiesClient({ initialProperties }: Props) {
 
       {showForm && (
         <div style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "24px", marginBottom: "32px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "9px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "20px" }}>
+          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "20px" }}>
             {editing ? "Edit property" : "New property"}
           </p>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "16px" }}>
             <FormField label="Name (English)" value={form.name} onChange={(v) => field("name", v)} />
             <FormField label="Name (Arabic)" value={form.name_ar} onChange={(v) => field("name_ar", v)} dir="rtl" />
             <FormField label="Slug (URL identifier)" value={form.slug} onChange={(v) => field("slug", v)} placeholder="villa-dunes" mono />
@@ -409,8 +409,8 @@ export function PropertiesClient({ initialProperties }: Props) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         {properties.map((p) => (
-          <div key={p.id} style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", flex: 1, minWidth: 0 }}>
+          <div key={p.id} className="row-card" style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "20px" }}>
+            <div className="row-card__main" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
               {p.hero_image_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -420,7 +420,7 @@ export function PropertiesClient({ initialProperties }: Props) {
                 />
               ) : (
                 <div style={{ width: "56px", height: "40px", borderRadius: "8px", border: "1.5px dashed var(--jood-line)", backgroundColor: "var(--jood-ground)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--jood-ink-ghost)" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--jood-ink-subtle)" }}>
                     <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
                   </svg>
                 </div>
@@ -428,7 +428,7 @@ export function PropertiesClient({ initialProperties }: Props) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: "10px", flexWrap: "wrap" }}>
                   <p style={{ fontWeight: 500, fontSize: "1rem", color: "var(--jood-ink)" }}>{p.name}</p>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--jood-ink-ghost)", letterSpacing: "0.06em" }}>{p.slug}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem", color: "var(--jood-ink-subtle)", letterSpacing: "0.06em" }}>{p.slug}</span>
                 </div>
                 <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginTop: "2px" }}>{p.city} · {p.address}</p>
                 <div style={{ display: "flex", gap: "16px", marginTop: "6px", flexWrap: "wrap" }}>
@@ -441,7 +441,7 @@ export function PropertiesClient({ initialProperties }: Props) {
                 </div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
+            <div className="row-card__actions">
               <a href={`/admin/ops/inventory/${p.id}`} style={{ padding: "6px 14px", borderRadius: "var(--radius-pill)", border: "1px solid var(--jood-line)", fontSize: "0.8rem", color: "var(--jood-ink-muted)", textDecoration: "none" }}>
                 Inventory
               </a>
@@ -482,7 +482,7 @@ const selectStyle: React.CSSProperties = {
 
 function Chip({ label }: { label: string }) {
   return (
-    <span style={{ fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.08em", color: "var(--jood-ink-ghost)", textTransform: "uppercase" }}>
+    <span style={{ fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.08em", color: "var(--jood-ink-subtle)", textTransform: "uppercase" }}>
       {label}
     </span>
   );

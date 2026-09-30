@@ -201,7 +201,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
         <span
           style={{
             fontFamily: "var(--font-label)",
-            fontSize: "9px",
+            fontSize: "11px",
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             color: STATUS_COLOR[status] ?? "var(--jood-ink-muted)",
@@ -217,7 +217,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
       {/* Guest info */}
       <div style={card}>
         <p style={eyebrow}>Guest</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: "16px" }}>
           <InfoRow label="Email" value={booking.guestEmail ?? "—"} />
           <InfoRow label="Phone" value={booking.guestPhone ?? "—"} />
           <InfoRow label="Language" value={booking.guestLang === "ar" ? "Arabic" : "English"} />
@@ -270,7 +270,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
       {arrivalPrefs && (
         <div style={card}>
           <p style={eyebrow}>Pre-arrival preferences</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: arrivalPrefs.notes ? "14px" : 0 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "12px", marginBottom: arrivalPrefs.notes ? "14px" : 0 }}>
             {arrivalPrefs.occasion && (
               <div>
                 <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "4px" }}>Occasion</p>
@@ -419,7 +419,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
                   height={120}
                   style={{ display: "block", borderRadius: "8px", border: "1px solid var(--jood-line)" }}
                 />
-                <p style={{ fontSize: "0.7rem", color: "var(--jood-ink-ghost)", fontFamily: "var(--font-label)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "6px", textAlign: "center" }}>
+                <p style={{ fontSize: "0.7rem", color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", textTransform: "uppercase", letterSpacing: "0.1em", marginTop: "6px", textAlign: "center" }}>
                   Scan to open
                 </p>
               </div>
@@ -513,7 +513,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
       )}
 
       {/* Meta */}
-      <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-ghost)", marginTop: "8px" }}>
+      <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-subtle)", marginTop: "8px" }}>
         Booking {booking.id} · Created {fmt(booking.createdAt)}
       </p>
     </div>
@@ -523,7 +523,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p style={{ fontFamily: "var(--font-label)", fontSize: "0.65rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "3px" }}>
+      <p style={{ fontFamily: "var(--font-label)", fontSize: "0.6875rem", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "3px" }}>
         {label}
       </p>
       <p style={{ fontSize: "0.9rem", color: "var(--jood-ink)" }}>{value}</p>

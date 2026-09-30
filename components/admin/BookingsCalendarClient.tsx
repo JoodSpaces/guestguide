@@ -91,7 +91,7 @@ const STATUS_DOT: Record<string, string> = {
 const ROLE_META: Record<DayRole, { label: string; color: string }> = {
   checkin:  { label: "Check-in",   color: "var(--jood-accent)" },
   staying:  { label: "Staying",    color: "var(--jood-ink-muted)" },
-  checkout: { label: "Check-out",  color: "var(--jood-ink-ghost)" },
+  checkout: { label: "Check-out",  color: "var(--jood-ink-subtle)" },
 };
 
 const MONTH_NAMES = [
@@ -204,7 +204,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
 
             <div style={{ textAlign: "center" }}>
               <p style={styles.monthLabel}>{MONTH_NAMES[mo]}</p>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-ghost)", marginTop: "2px" }}>
+              <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)", marginTop: "2px" }}>
                 {yr}
               </p>
             </div>
@@ -226,7 +226,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
               {DOW.map((d, i) => (
                 <div key={i} style={{
                   textAlign: "center", padding: "10px 0",
-                  fontFamily: "var(--font-label)", fontSize: "9px",
+                  fontFamily: "var(--font-label)", fontSize: "11px",
                   letterSpacing: "0.12em", textTransform: "uppercase",
                   color: i === 0 || i === 6 ? "var(--jood-accent)" : "var(--jood-ink-ghost)",
                 }}>
@@ -377,7 +377,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
 
               {selBookings.length === 0 && selHeld.length === 0 && (
                 <div style={{ padding: "20px 16px" }}>
-                  <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-ghost)" }}>
+                  <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-subtle)" }}>
                     No bookings on this date.
                   </p>
                 </div>
@@ -453,8 +453,8 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                         {propName(b)}
                       </p>
                       <p style={{
-                        fontFamily: "var(--font-mono)", fontSize: "10px",
-                        color: "var(--jood-ink-ghost)",
+                        fontFamily: "var(--font-mono)", fontSize: "11px",
+                        color: "var(--jood-ink-subtle)",
                       }}>
                         {fmtShort(b.check_in)} → {fmtShort(b.check_out)} · {nights}n
                       </p>
@@ -478,7 +478,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                 border: "1px solid var(--jood-accent)",
                 borderRadius: "var(--radius-pill)",
                 background: "transparent", cursor: "pointer",
-                fontFamily: "var(--font-label)", fontSize: "9px",
+                fontFamily: "var(--font-label)", fontSize: "11px",
                 letterSpacing: "0.14em", textTransform: "uppercase",
                 color: "var(--jood-accent)",
                 transition: "background-color 150ms",
@@ -538,8 +538,8 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                     padding: "11px", border: "1px dashed var(--jood-line)",
                     borderRadius: "var(--radius-lg)", background: "none",
                     cursor: "pointer", fontFamily: "var(--font-label)",
-                    fontSize: "9px", letterSpacing: "0.14em",
-                    textTransform: "uppercase", color: "var(--jood-ink-ghost)",
+                    fontSize: "11px", letterSpacing: "0.14em",
+                    textTransform: "uppercase", color: "var(--jood-ink-subtle)",
                     transition: "border-color 150ms, color 150ms",
                   }}
                 >
@@ -558,7 +558,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
           <div style={{ position: "relative", marginBottom: "16px" }}>
             <span style={{
               position: "absolute", left: "14px", top: "50%",
-              transform: "translateY(-50%)", color: "var(--jood-ink-ghost)",
+              transform: "translateY(-50%)", color: "var(--jood-ink-subtle)",
               pointerEvents: "none", display: "flex",
             }}>
               <Search size={15} strokeWidth={1.75} />
@@ -585,7 +585,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                   position: "absolute", right: "14px", top: "50%",
                   transform: "translateY(-50%)", background: "none",
                   border: "none", cursor: "pointer",
-                  color: "var(--jood-ink-ghost)", padding: 0,
+                  color: "var(--jood-ink-subtle)", padding: 0,
                   display: "flex", alignItems: "center",
                 }}
               >
@@ -643,8 +643,8 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                         {propName(b)}
                       </p>
                       <p style={{
-                        fontFamily: "var(--font-mono)", fontSize: "10px",
-                        color: "var(--jood-ink-ghost)", marginTop: "3px",
+                        fontFamily: "var(--font-mono)", fontSize: "11px",
+                        color: "var(--jood-ink-subtle)", marginTop: "3px",
                       }}>
                         {fmtShort(b.check_in)} → {fmtShort(b.check_out)} · {nights}n · {b.source}
                       </p>
@@ -677,7 +677,7 @@ const styles = {
   eyebrow: {
     fontFamily: "var(--font-label)", fontSize: "8.5px",
     letterSpacing: "0.2em", textTransform: "uppercase",
-    color: "var(--jood-ink-ghost)",
+    color: "var(--jood-ink-subtle)",
   } satisfies CSSProperties,
 
   displayTitle: {
@@ -703,7 +703,7 @@ const styles = {
     flex: 1, padding: "9px 12px",
     border: "none", borderRadius: "var(--radius-pill)",
     cursor: "pointer", fontFamily: "var(--font-label)",
-    fontSize: "9px", letterSpacing: "0.14em",
+    fontSize: "11px", letterSpacing: "0.14em",
     textTransform: "uppercase", transition: "all 160ms",
   } satisfies CSSProperties,
 

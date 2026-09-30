@@ -72,7 +72,7 @@ export function WeatherStrip({ token, isAr }: Props) {
       <div style={stripStyle}>
         <div dir="ltr" className="jood-marquee-track" style={{ display: "inline-flex", gap: "18px", alignItems: "center", whiteSpace: "nowrap" }}>
           {[...STATIC_PLACES, ...STATIC_PLACES].flatMap((place, i) => [
-            <span key={`p-${i}`} style={{ fontFamily: "var(--font-label)", fontSize: "10px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-ink)", fontWeight: 500 }}>{place}</span>,
+            <span key={`p-${i}`} style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--jood-ink)", fontWeight: 500 }}>{place}</span>,
             <span key={`d-${i}`} style={{ color: "var(--jood-accent)", fontSize: "8px" }}>●</span>,
           ])}
         </div>
