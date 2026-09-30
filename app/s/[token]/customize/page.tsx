@@ -3,6 +3,7 @@ import { hashToken, isTokenExpired } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import { StayShell } from "@/components/stay/StayShell";
 import { CustomizeForm } from "@/components/stay/CustomizeForm";
+import { getLocale } from "next-intl/server";
 
 interface Props { params: Promise<{ token: string }> }
 
@@ -30,7 +31,8 @@ export default async function CustomizePage({ params }: Props) {
     .eq("booking_id", tokenRow.booking_id)
     .maybeSingle<{ occasion: string | null; temp_pref: string | null; notes: string | null }>();
 
-  const locale = booking.guest_lang === "ar" ? "ar" : "en";
+  // The guest's own choice (the language toggle), not the language the booking was made in.
+  const locale = (await getLocale()) === "ar" ? "ar" : "en";
 
   return (
     <StayShell token={token} title={locale === "ar" ? "خصّص إقامتك" : "Customize your stay"} back>

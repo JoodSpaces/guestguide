@@ -3,6 +3,7 @@ import { hashToken, isTokenExpired, computePhase } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import { StayShell } from "@/components/stay/StayShell";
 import { MemoryCard } from "@/components/stay/MemoryCard";
+import { getLocale } from "next-intl/server";
 
 interface Props { params: Promise<{ token: string }> }
 
@@ -36,7 +37,8 @@ export default async function MemoryPage({ params }: Props) {
 
   const phase = computePhase(booking.check_in, booking.check_out);
   const property = Array.isArray(booking.properties) ? booking.properties[0] : booking.properties;
-  const locale = booking.guest_lang === "ar" ? "ar" : "en";
+  // The guest's own choice (the language toggle), not the language the booking was made in.
+  const locale = (await getLocale()) === "ar" ? "ar" : "en";
 
   const checkIn = new Date(booking.check_in);
   const checkOut = new Date(booking.check_out);

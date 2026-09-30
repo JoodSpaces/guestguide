@@ -3,6 +3,7 @@ import { hashToken, isTokenExpired } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import { StayShell } from "@/components/stay/StayShell";
 import { ServicesClient } from "@/components/stay/ServicesClient";
+import { getLocale } from "next-intl/server";
 
 interface Props { params: Promise<{ token: string }> }
 
@@ -34,7 +35,8 @@ export default async function ServicesPage({ params }: Props) {
       .order("created_at", { ascending: false }),
   ]);
 
-  const locale = booking.guest_lang === "ar" ? "ar" : "en";
+  // The guest's own choice (the language toggle), not the language the booking was made in.
+  const locale = (await getLocale()) === "ar" ? "ar" : "en";
 
   return (
     <StayShell token={token} title={locale === "ar" ? "الخدمات" : "Services"} back activeTab="services">
