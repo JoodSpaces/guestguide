@@ -6,6 +6,7 @@ import * as Sentry from "@sentry/nextjs";
 import { createServiceClient } from "@/lib/supabase/server";
 import { getBookingFromToken } from "@/lib/guest-auth";
 import Anthropic from "@anthropic-ai/sdk";
+import { aiEnabled } from "@/lib/ai";
 
 let _limiter: Ratelimit | null = null;
 
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
     .order("sort_order")
     .returns<Entry[]>();
 
-  if (!entries?.length) {
+  if (!entries?.length || !aiEnabled()) {
     return NextResponse.json({ answer: null, entryIds: [] });
   }
 

@@ -5,6 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { getBookingFromToken } from "@/lib/guest-auth";
 import { computePhase } from "@/lib/token";
 import Anthropic from "@anthropic-ai/sdk";
+import { aiEnabled } from "@/lib/ai";
 import { hhmm } from "@/lib/time";
 
 const DAILY_CALL_LIMIT = 100;
@@ -46,6 +47,7 @@ const schema = z.object({
 const client = new Anthropic();
 
 export async function POST(req: NextRequest) {
+  if (!aiEnabled()) return new Response("AI not enabled", { status: 503 });
   const body = await req.json().catch(() => null);
   const parsed = schema.safeParse(body);
   if (!parsed.success) return new Response("Bad request", { status: 400 });

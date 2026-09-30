@@ -4,6 +4,7 @@ import { hashToken, isTokenExpired, computePhase } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
 import { StayShell } from "@/components/stay/StayShell";
 import { ConciergeClient } from "@/components/stay/ConciergeClient";
+import { aiEnabled } from "@/lib/ai";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -46,6 +47,29 @@ export default async function ConciergePage({ params }: Props) {
 
   const phase = computePhase(booking.check_in, booking.check_out);
   const propertyName = isAr ? property?.name_ar : property?.name;
+
+  if (!aiEnabled()) {
+    return (
+      <StayShell token={token} back title={isAr ? "فريق جود" : "JOOD team"} activeTab="concierge">
+        <div style={{ padding: "48px 24px", textAlign: "center", maxWidth: "420px", margin: "0 auto" }}>
+          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: "26px", color: "var(--jood-ink)", marginBottom: "12px" }}>
+            {isAr ? "نحن على بعد رسالة" : "We're one message away"}
+          </h2>
+          <p style={{ fontSize: "15px", lineHeight: 1.7, color: "var(--jood-ink-muted)", marginBottom: "24px" }}>
+            {isAr
+              ? "المساعد الذكي غير متاح بعد. اكتب لفريق جود في أي وقت وسيرد عليك شخص حقيقي."
+              : "The AI assistant isn't available yet. Message the JOOD team any time and a person will reply."}
+          </p>
+          <a
+            href={`/s/${token}/requests`}
+            style={{ display: "inline-block", padding: "12px 24px", borderRadius: "999px", background: "var(--jood-ink)", color: "var(--jood-ground)", fontSize: "14px", textDecoration: "none" }}
+          >
+            {isAr ? "تواصل مع فريق جود" : "Message the JOOD team"}
+          </a>
+        </div>
+      </StayShell>
+    );
+  }
 
   return (
     <StayShell token={token} back title={isAr ? "كونسيرج جود" : "JOOD Concierge"} activeTab="concierge">

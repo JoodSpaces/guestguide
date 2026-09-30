@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { aiEnabled } from "@/lib/ai";
 import * as Sentry from "@sentry/nextjs";
 
 export type GuestRequestCategory = "maintenance" | "housekeeping" | "supplies" | "service" | "other";
@@ -21,6 +22,7 @@ function getClient() {
 }
 
 export async function classifyGuestRequest(text: string): Promise<RequestClassification> {
+  if (!aiEnabled()) return FALLBACK;
   const response = await getClient().messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 64,
