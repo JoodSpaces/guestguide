@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
-import { cookies } from "next/headers";
-import { UI_COOKIE, parseUiMode } from "@/lib/ui-mode";
+import { cookies, headers } from "next/headers";
+import { UI_COOKIE, STAY_HEADER, parseUiMode } from "@/lib/ui-mode";
 import { UiModeProvider } from "@/components/ui/UiMode";
 import "./globals.css";
 
@@ -27,7 +27,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const messages = await getMessages();
   const dir = locale === "ar" ? "rtl" : "ltr";
-  const ui = parseUiMode((await cookies()).get(UI_COOKIE)?.value);
+  // The new look is the default on stay links only; admin and other pages stay classic whatever the cookie says.
+  const isStay = (await headers()).get(STAY_HEADER) === "1";
+  const ui = isStay ? parseUiMode((await cookies()).get(UI_COOKIE)?.value) : "classic";
 
   return (
     <html lang={locale} dir={dir} data-ui={ui}>
