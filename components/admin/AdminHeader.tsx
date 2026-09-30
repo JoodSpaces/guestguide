@@ -34,6 +34,7 @@ const PRIMARY_NAV = [
 const SECONDARY_NAV = [
   { href: "/admin/properties",  label: "Properties", roles: ["admin"] },
   { href: "/admin/team",        label: "Team",        roles: ["admin"] },
+  { href: "/admin/voice",       label: "Voice",       roles: ["admin"] },
 ];
 
 interface Props {

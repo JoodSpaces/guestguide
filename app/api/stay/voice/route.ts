@@ -1,39 +1,38 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hashToken, isTokenExpired } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getBookingFromToken } from "@/lib/guest-auth";
+import { isTokenExpired } from "@/lib/token";
 import { allow } from "@/lib/rate-limit";
-import { voiceEnabled } from "@/lib/voice";
+import { voiceEnabled, voiceMonthlyMinutes, monthStartIso } from "@/lib/voice";
+import { buildVoiceContext } from "@/lib/stay-context";
 
 /**
- * Hands a signed, short-lived ElevenLabs session URL to a guest with a live stay link. The API key never leaves the server, and
- * a booking can only start a handful of conversations a day so one link cannot drain the monthly minutes.
+ * Starts a voice conversation for a guest with a live stay link. Returns a signed, short-lived ElevenLabs session URL (the API
+ * key never leaves the server), the private context the agent needs about this guest and house, and a session id for the log.
+ * Guards: a handful of conversations per booking per day, and a site-wide monthly minutes cap so the free plan cannot be drained.
  */
 export async function POST(req: NextRequest) {
   if (!voiceEnabled()) return NextResponse.json({ error: "voice_off" }, { status: 503 });
 
   const body = await req.json().catch(() => null);
   const token: string | undefined = body?.token;
-  if (!token || typeof token !== "string" || !/^[A-Za-z0-9_-]{22}$/.test(token)) {
-    return NextResponse.json({ error: "invalid_token" }, { status: 400 });
+  const locale: "en" | "ar" = body?.locale === "ar" ? "ar" : "en";
+  if (!token || typeof token !== "string") return NextResponse.json({ error: "invalid_token" }, { status: 400 });
+
+  const booking = await getBookingFromToken(token);
+  if (!booking) return NextResponse.json({ error: "invalid_token" }, { status: 404 });
+  if (isTokenExpired(booking.check_out)) return NextResponse.json({ error: "expired" }, { status: 404 });
+
+  if (!(await allow({ name: "voice-session", limit: 15, windowSec: 24 * 3600 }, booking.id))) {
+    return NextResponse.json({ error: "daily_limit" }, { status: 429 });
   }
 
   const supabase = createServiceClient();
-  const { data: tokenRow } = await supabase
-    .from("stay_tokens")
-    .select("booking_id, revoked_at")
-    .eq("token_hash", hashToken(token))
-    .single<{ booking_id: string; revoked_at: string | null }>();
-  if (!tokenRow || tokenRow.revoked_at) return NextResponse.json({ error: "invalid_token" }, { status: 404 });
-
-  const { data: booking } = await supabase
-    .from("bookings")
-    .select("check_out, guest_first_name, properties(name)")
-    .eq("id", tokenRow.booking_id)
-    .single<{ check_out: string; guest_first_name: string; properties: { name: string } | { name: string }[] | null }>();
-  if (!booking || isTokenExpired(booking.check_out)) return NextResponse.json({ error: "expired" }, { status: 404 });
-
-  if (!(await allow({ name: "voice-session", limit: 15, windowSec: 24 * 3600 }, tokenRow.booking_id))) {
-    return NextResponse.json({ error: "daily_limit" }, { status: 429 });
+  // Monthly budget. If the table is not there yet (migration 032 not run) the cap simply cannot be measured.
+  const { data: used, error: usedErr } = await supabase.from("voice_sessions").select("duration_sec").gte("started_at", monthStartIso());
+  if (!usedErr) {
+    const seconds = (used ?? []).reduce((n, r) => n + (r.duration_sec ?? 0), 0);
+    if (seconds / 60 >= voiceMonthlyMinutes()) return NextResponse.json({ error: "budget" }, { status: 429 });
   }
 
   const res = await fetch(
@@ -44,6 +43,10 @@ export async function POST(req: NextRequest) {
   const { signed_url } = (await res.json()) as { signed_url?: string };
   if (!signed_url) return NextResponse.json({ error: "provider" }, { status: 502 });
 
-  const property = Array.isArray(booking.properties) ? booking.properties[0] : booking.properties;
-  return NextResponse.json({ signedUrl: signed_url, guestName: booking.guest_first_name, propertyName: property?.name ?? "" });
+  const [{ text }, session] = await Promise.all([
+    buildVoiceContext(booking, locale),
+    supabase.from("voice_sessions").insert({ booking_id: booking.id, locale }).select("id").single<{ id: string }>(),
+  ]);
+
+  return NextResponse.json({ signedUrl: signed_url, context: text, sessionId: session.data?.id ?? null });
 }
