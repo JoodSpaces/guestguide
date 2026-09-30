@@ -31,11 +31,12 @@ const COPY = {
 function Inner({ token, isAr }: Props) {
   const c = COPY[isAr ? "ar" : "en"];
   const [error, setError] = useState<string | null>(null);
+  const [detail, setDetail] = useState("");
   const [caption, setCaption] = useState("");
   const [amp, setAmp] = useState(0);
   const conv = useConversation({
     onMessage: (m: { source?: string; message?: string }) => { if (m.source === "ai" && m.message) setCaption(m.message); },
-    onError: () => setError(c.fail),
+    onError: (m: unknown) => { setError(c.fail); setDetail(String((m as { message?: string })?.message ?? m).slice(0, 120)); },
   });
   const { status, isSpeaking, isMuted } = conv;
   const live = status === "connected";
@@ -62,11 +63,11 @@ function Inner({ token, isAr }: Props) {
   useEffect(() => () => { try { convRef.current.endSession(); } catch { /* already closed */ } }, []);
 
   async function start() {
-    setError(null); setCaption("");
+    setError(null); setDetail(""); setCaption("");
     try { await navigator.mediaDevices.getUserMedia({ audio: true }); }
-    catch { setError(c.mic); return; }
+    catch (e) { setError(c.mic); setDetail(String((e as Error)?.name ?? "mic")); return; }
     const res = await fetch("/api/stay/voice", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token }) }).catch(() => null);
-    if (!res || !res.ok) { setError(res?.status === 429 ? c.limit : c.fail); return; }
+    if (!res || !res.ok) { setError(res?.status === 429 ? c.limit : c.fail); setDetail(`route ${res?.status ?? "network"}`); return; }
     const { signedUrl } = (await res.json()) as { signedUrl: string };
     conv.startSession({ signedUrl, libsampleratePath: "/vendor/libsamplerate.worklet.js" });
   }
@@ -82,6 +83,7 @@ function Inner({ token, isAr }: Props) {
       <p aria-live="polite" style={{ minHeight: 72, margin: "14px 0", fontSize: 16, lineHeight: 1.6, color: "var(--jood-ink)" }}>
         {error ?? (caption || (live ? "" : c.hint))}
       </p>
+      {error && detail && <p style={{ fontSize: 11, color: "var(--jood-ink-subtle)", marginTop: -8, wordBreak: "break-word" }}>{detail}</p>}
       {live && (
         <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
           <button type="button" onClick={() => conv.setMuted(!isMuted)} style={btn(false)}>{isMuted ? c.unmute : c.mute}</button>
