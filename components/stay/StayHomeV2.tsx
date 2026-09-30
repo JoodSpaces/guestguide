@@ -42,7 +42,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
   const [hour, setHour] = useState(() => cairoHour());
   useEffect(() => { const id = setInterval(() => setHour(cairoHour()), 60_000); return () => clearInterval(id); }, []);
 
-  const greeting = isAr ? "أهلاً،" : hour < 12 ? "Good morning," : hour < 17 ? "Good afternoon," : "Good evening,";
+  const greeting = isAr ? "أهلاً،" : hour >= 5 && hour < 12 ? "Good morning," : hour >= 12 && hour < 17 ? "Good afternoon," : "Good evening,";
   const isDeparture = payload.phase === "departure";
   const isAfterOrDeparture = isDeparture || payload.phase === "afterglow";
   const isPreArrival = payload.phase === "anticipation" || payload.phase === "preparation";
