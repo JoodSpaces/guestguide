@@ -16,7 +16,11 @@ export interface Booking {
   properties: { id: string; name: string } | { id: string; name: string }[];
 }
 
+/** A stretch of nights held outside the Guest App (Airbnb, Booking.com, a staff hold). `to` is the check-out day. */
+export interface ExternalRange { propertyId: string; propertyName: string; label: string; from: string; to: string }
+
 interface Props {
+  externalBlocks?: ExternalRange[];
   initialBookings: Booking[];
   properties: { id: string; name: string }[];
 }
@@ -97,7 +101,7 @@ const MONTH_NAMES = [
 const DOW = ["S","M","T","W","T","F","S"];
 
 // ── Component ─────────────────────────────────────────────────────────────
-export function BookingsCalendarClient({ initialBookings }: Props) {
+export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }: Props) {
   const now       = new Date();
   const todayISO  = now.toISOString().slice(0, 10);
   const todayDate = now.getDate();
@@ -129,8 +133,12 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
     ));
   }
 
+  // Nights held outside the Guest App, per day (the check-out day itself is free)
+  const externalOn = (iso: string) => externalBlocks.filter((x) => iso >= x.from && iso < x.to);
+
   // Bookings on selected day
   const selISO = selDay !== null ? dayISO(yr, mo, selDay) : null;
+  const selHeld = selISO ? externalOn(selISO) : [];
   const selBookings = selISO
     ? initialBookings
         .map((b) => ({ b, role: roleOnDay(b, selISO) }))
@@ -249,6 +257,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                 const dow       = (firstDow + day - 1) % 7;
                 const isWeekend = dow === 0 || dow === 6;
                 const dots      = dotMap.get(iso) ?? [];
+                const held      = externalOn(iso).length > 0;
 
                 // Cell background priority: selected > today > weekend > default
                 const cellBg = isSel
@@ -297,8 +306,14 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                       <span style={{ height: "4px" }} />
                     )}
 
-                    {/* Booking dots */}
+                    {/* Booking dots (a ring = held on another channel) */}
                     <div style={{ display: "flex", gap: "2px", alignItems: "center", minHeight: "7px" }}>
+                      {held && (
+                        <span aria-label="Held on another channel" style={{
+                          width: "5px", height: "5px", borderRadius: "50%", flexShrink: 0, boxSizing: "border-box",
+                          border: `1.5px solid ${isSel ? "rgba(245,244,237,0.75)" : "var(--jood-ink-muted)"}`,
+                        }} />
+                      )}
                       {dots.slice(0, 3).map((b, i) => (
                         <span key={b.id + i} style={{
                           width: "5px", height: "5px", borderRadius: "50%",
@@ -336,7 +351,7 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                 display: "flex", alignItems: "flex-start",
                 justifyContent: "space-between",
                 padding: "14px 16px",
-                borderBottom: selBookings.length > 0 ? "1px solid var(--jood-line)" : "none",
+                borderBottom: selBookings.length > 0 || selHeld.length > 0 ? "1px solid var(--jood-line)" : "none",
               }}>
                 <div>
                   <p style={{ ...styles.eyebrow, marginBottom: "3px" }}>
@@ -356,17 +371,30 @@ export function BookingsCalendarClient({ initialBookings }: Props) {
                 }}>
                   {selBookings.length > 0
                     ? `${selBookings.length} booking${selBookings.length > 1 ? "s" : ""}`
-                    : "Vacant"}
+                    : selHeld.length > 0 ? "Held elsewhere" : "Vacant"}
                 </span>
               </div>
 
-              {selBookings.length === 0 && (
+              {selBookings.length === 0 && selHeld.length === 0 && (
                 <div style={{ padding: "20px 16px" }}>
                   <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-ghost)" }}>
                     No bookings on this date.
                   </p>
                 </div>
               )}
+
+              {/* Nights taken outside the Guest App: read-only */}
+              {selHeld.map((x, i) => (
+                <div key={`held-${i}`} style={{ padding: "12px 16px", borderTop: selBookings.length > 0 || i > 0 ? "1px solid var(--jood-line)" : "none", display: "flex", gap: "10px", alignItems: "center" }}>
+                  <span aria-hidden style={{ width: "8px", height: "8px", borderRadius: "50%", border: "1.5px solid var(--jood-ink-muted)", boxSizing: "border-box", flexShrink: 0 }} />
+                  <div>
+                    <p style={{ fontSize: "0.875rem", color: "var(--jood-ink)" }}>{x.label} · {x.propertyName}</p>
+                    <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", fontFamily: "var(--font-mono)" }}>
+                      {fmtShort(x.from)} → {fmtShort(x.to)} · held outside this app
+                    </p>
+                  </div>
+                </div>
+              ))}
 
               {/* Booking cards for selected day */}
               {selBookings.map(({ b, role }, i) => {
