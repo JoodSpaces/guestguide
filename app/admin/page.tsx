@@ -245,23 +245,12 @@ export default async function AdminTodayPage() {
               </div>
             </div>
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-start" }}>
-              {/* Decorative J — with the property O-rings forms "JOOOOD" */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "none", userSelect: "none" }}>
-                <div style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{
-                    fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300,
-                    fontSize: "2rem", color: "#4ade80", lineHeight: 1,
-                  }}>J</span>
-                </div>
-                <p style={{ fontSize: "0.6875rem", color: "transparent", lineHeight: 1.3 }}>·</p>
-              </div>
-
               {properties!.map((p) => {
                 const s = status(p.id);
                 const col = STATUS_COLOR[s];
                 const r = 18;
                 const circ = 2 * Math.PI * r;
-                const pct = s === "clear" ? 1 : s === "amber" ? 0.6 : 0.85;
+                const pct = 1;   // a full ring in the status colour; partial arcs read as progress, which they never were
                 return (
                   <Link
                     key={p.id}
@@ -288,24 +277,14 @@ export default async function AdminTodayPage() {
                         display: "flex", alignItems: "center", justifyContent: "center",
                         fontSize: "0.75rem",
                       }}>
-                        {s === "clear" ? "✓" : s === "red" ? "!" : "~"}
+                        {s === "clear" ? "✓" : "!"}
                       </span>
                     </div>
-                    <p style={{ fontSize: "0.6875rem", color: "var(--jood-ink-muted)", textAlign: "center", maxWidth: "64px", lineHeight: 1.3 }}>{p.name}</p>
+                    <p style={{ fontSize: "0.6875rem", color: "var(--jood-ink-muted)", textAlign: "center", maxWidth: "88px", lineHeight: 1.3 }}>{p.name}</p>
                   </Link>
                 );
               })}
 
-              {/* Decorative D */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "none", userSelect: "none" }}>
-                <div style={{ width: "52px", height: "52px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <span style={{
-                    fontFamily: "var(--font-display)", fontStyle: "italic", fontWeight: 300,
-                    fontSize: "2rem", color: "#4ade80", lineHeight: 1,
-                  }}>d</span>
-                </div>
-                <p style={{ fontSize: "0.6875rem", color: "transparent", lineHeight: 1.3 }}>·</p>
-              </div>
             </div>
           </div>
         );
