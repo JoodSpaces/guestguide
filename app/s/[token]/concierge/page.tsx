@@ -7,6 +7,8 @@ import { ConciergeClient } from "@/components/stay/ConciergeClient";
 import { aiEnabled } from "@/lib/ai";
 import { getUiMode } from "@/lib/ui-mode-server";
 import { Orb } from "@/components/ui/Orb";
+import { VoiceConcierge } from "@/components/stay/VoiceConcierge";
+import { voiceEnabled } from "@/lib/voice";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -49,6 +51,14 @@ export default async function ConciergePage({ params }: Props) {
 
   const phase = computePhase(booking.check_in, booking.check_out);
   const propertyName = isAr ? property?.name_ar : property?.name;
+
+  if (voiceEnabled() && (await getUiMode()) === "next") {
+    return (
+      <StayShell token={token} back title={isAr ? "كونسيرج جود" : "JOOD Concierge"} activeTab="concierge">
+        <VoiceConcierge token={token} isAr={isAr} guestFirstName={booking.guest_first_name} />
+      </StayShell>
+    );
+  }
 
   if (!aiEnabled()) {
     return (
