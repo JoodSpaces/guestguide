@@ -4,6 +4,7 @@ import { hashToken, computePhase, isArrivalUnlocked, isTokenExpired } from "@/li
 import { createServiceClient } from "@/lib/supabase/server";
 import { StayHome } from "@/components/stay/StayHome";
 import type { TokenPayload } from "@/lib/token";
+import { shouldSyncLocale } from "@/lib/locale";
 
 interface Props {
   params: Promise<{ token: string }>;
@@ -63,12 +64,10 @@ export default async function StayPage({ params }: Props) {
     redirect(`/s/${token}/expired`);
   }
 
-  // Sync the UI locale to the booking's recorded guest language.
-  // If they differ, redirect through sync-locale (one-shot, sets the cookie,
-  // redirects back) so next-intl serves the correct language on reload.
+  // First visit only: open in the language the guest booked in (sync-locale sets the cookie once and
+  // redirects back). After that the cookie is the guest's own choice and is never overridden.
   const cookieStore = await cookies();
-  const currentLocale = cookieStore.get("jood_locale")?.value ?? "en";
-  if (booking.guest_lang !== currentLocale) {
+  if (shouldSyncLocale(cookieStore.get("jood_locale")?.value, booking.guest_lang)) {
     redirect(`/api/stay/sync-locale?lang=${booking.guest_lang}&return=/s/${token}`);
   }
 
