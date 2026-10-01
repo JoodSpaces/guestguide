@@ -31,10 +31,10 @@ export async function POST(req: NextRequest) {
   const booking = Array.isArray(tokenRow.bookings) ? tokenRow.bookings[0] : tokenRow.bookings;
   if (!booking || isTokenExpired(booking.check_out)) return NextResponse.json({ error: "expired" }, { status: 410 });
 
-  await supabase.from("push_subscriptions").upsert(
-    { booking_id: tokenRow.booking_id, endpoint, p256dh, auth },
-    { onConflict: "booking_id,endpoint" },
-  );
+  const row = { booking_id: tokenRow.booking_id, endpoint, p256dh, auth };
+  // stay_path (migration 034) lets a push open the voice concierge; until that column exists, subscribe without it.
+  const withPath = await supabase.from("push_subscriptions").upsert({ ...row, stay_path: `/s/${token}/concierge` }, { onConflict: "booking_id,endpoint" });
+  if (withPath.error) await supabase.from("push_subscriptions").upsert(row, { onConflict: "booking_id,endpoint" });
 
   return NextResponse.json({ ok: true });
 }
