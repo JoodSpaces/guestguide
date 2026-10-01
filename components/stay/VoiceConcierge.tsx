@@ -7,7 +7,7 @@ import { Orb, type OrbState } from "@/components/ui/Orb";
 
 interface Props { token: string; isAr: boolean; guestFirstName: string }
 type Line = { role: "guest" | "agent"; text: string };
-type Chip = { label: string; href?: string };
+type Chip = { label: string; href?: string; pay?: boolean };
 
 const COPY = {
   en: {
@@ -85,8 +85,8 @@ function Inner({ token, isAr }: Props) {
     const res = await fetch("/api/stay/voice/action", {
       method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, ...body }),
     }).catch(() => null);
-    const j = (await res?.json().catch(() => ({}))) as { result?: string; onCallPhone?: string | null; ok?: boolean } | undefined;
-    return { ok: !!res?.ok, result: j?.result, phone: j?.onCallPhone ?? null, saved: j?.ok };
+    const j = (await res?.json().catch(() => ({}))) as { result?: string; onCallPhone?: string | null; ok?: boolean; pay?: { url: string; label: string } | null } | undefined;
+    return { ok: !!res?.ok, result: j?.result, phone: j?.onCallPhone ?? null, saved: j?.ok, pay: j?.pay ?? null };
   }
 
   const conv = useConversation({
@@ -137,6 +137,17 @@ function Inner({ token, isAr }: Props) {
         actions.current.push("lookup:check_extension");
         const r = await act({ action: "check_extension", nights: Math.round(Number(p.nights)) });
         return r.ok && r.result ? r.result : "The availability check failed. Say so, and offer to send an extension request to the team with request_service.";
+      },
+      start_extension: async (p: Record<string, unknown>) => {
+        actions.current.push("start_extension");
+        const r = await act({ action: "start_extension", nights: Math.round(Number(p.nights)), currency: String(p.currency ?? ""), locale: isAr ? "ar" : "en" });
+        // Only a payment page the server vetted (Stripe or Paymob over https) ever becomes a button.
+        if (r.pay && /^https:\/\/(checkout\.stripe\.com|accept\.paymob\.com)\//.test(r.pay.url)) {
+          const pay = r.pay;
+          setChips((x) => [...x.filter((y) => !y.pay), { label: pay.label, href: pay.url, pay: true }]);
+          pulse();
+        }
+        return r.ok && r.result ? r.result : "The payment page could not be opened. Say so, and offer to send the request to the team with request_service (service Extend stay).";
       },
       report_emergency: async (p: Record<string, unknown>) => {
         const r = await act({ action: "report_emergency", kind: String(p.kind ?? "other"), details: String(p.details ?? "") });

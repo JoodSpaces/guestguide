@@ -32,8 +32,8 @@ export type ReserveResult =
   | { kind: "conflict"; message: string }
   | { kind: "unavailable" };     // could not reach / trust the website: do not guess
 
-async function call(payload: Record<string, unknown>): Promise<{ status: number; json: Record<string, unknown> } | null> {
-  const url = calendarUrl();
+async function call(payload: Record<string, unknown>, target: { url: string | null; path: string } = { url: calendarUrl(), path: CALENDAR_PATH }): Promise<{ status: number; json: Record<string, unknown> } | null> {
+  const url = target.url;
   const secret = process.env.BRIDGE_SHARED_SECRET;
   if (!url || !secret) return null;
   const body = JSON.stringify(payload);
@@ -44,7 +44,7 @@ async function call(payload: Record<string, unknown>): Promise<{ status: number;
       headers: {
         "content-type": "application/json",
         "x-jood-timestamp": ts,
-        "x-jood-signature": bridgeSignature(secret, ts, "POST", CALENDAR_PATH, body),
+        "x-jood-signature": bridgeSignature(secret, ts, "POST", target.path, body),
       },
       body,
       signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -117,4 +117,39 @@ export async function quoteNightsOnWebsite(slug: string, from: string, to: strin
   const q = r.json.quote as { nights?: number; totalUsd?: number; totalEgp?: number | null } | null | undefined;
   if (!q || typeof q.totalUsd !== "number") return { kind: "no_rate" };
   return { kind: "ok", available: true, nights: Number(q.nights ?? 0), totalUsd: q.totalUsd, totalEgp: typeof q.totalEgp === "number" ? q.totalEgp : null };
+}
+
+// ─── paying for extra nights ─────────────────────────────────────────────────
+
+export const CHECKOUT_PATH = "/create-checkout";
+/** The website's create-checkout function lives next to ops-calendar. */
+export function checkoutUrl(): string | null {
+  const u = calendarUrl();
+  if (!u || !/\/ops-calendar\/?$/.test(u)) return null;
+  return u.replace(/\/ops-calendar\/?$/, "/create-checkout");
+}
+
+/** Payment pages we are willing to show a guest as a button. Anything else the website might return is dropped. */
+export const PAY_HOSTS = ["checkout.stripe.com", "accept.paymob.com"];
+export const isPayUrl = (u: unknown): u is string => {
+  try { const x = new URL(String(u)); return x.protocol === "https:" && PAY_HOSTS.includes(x.hostname); } catch { return false; }
+};
+
+export type ExtensionPay =
+  | { kind: "ok"; url: string; amount: number; currency: "EGP" | "USD"; totalUsd: number; nights: number; from: string; to: string; holdMinutes: number }
+  | { kind: "conflict"; message: string }
+  | { kind: "not_extendable" }   // not a paid website stay, or already over
+  | { kind: "unavailable" };     // not configured / unreachable / refused: say the team will arrange it
+
+/** Opens a payment page for the nights after check-out of a paid website stay. The website prices it and holds the nights. */
+export async function createExtensionCheckout(i: { ref: string; nights: number; currency: "EGP" | "USD"; locale: "en" | "ar"; returnTo: string }): Promise<ExtensionPay> {
+  const url = checkoutUrl();
+  if (!url || !process.env.BRIDGE_SHARED_SECRET) return { kind: "unavailable" };
+  const r = await call({ extendsRef: i.ref, nights: i.nights, provider: i.currency === "EGP" ? "paymob" : "stripe", locale: i.locale, returnTo: i.returnTo }, { url, path: CHECKOUT_PATH });
+  if (!r) return { kind: "unavailable" };
+  if (r.status === 409 && (r.json.error === "date_conflict" || r.json.error === "no_rate")) return { kind: "conflict", message: String(r.json.message ?? "Those nights are not available.") };
+  if (r.status === 404 || (r.status === 400 && r.json.error === "stay_over")) return { kind: "not_extendable" };
+  const j = r.json as { ok?: boolean; redirectUrl?: string; amount?: number; currency?: string; totalUsd?: number; nights?: number; from?: string; to?: string; holdMinutes?: number };
+  if (r.status !== 200 || !j.ok || !isPayUrl(j.redirectUrl) || typeof j.amount !== "number" || (j.currency !== "EGP" && j.currency !== "USD")) return { kind: "unavailable" };
+  return { kind: "ok", url: j.redirectUrl, amount: j.amount, currency: j.currency, totalUsd: Number(j.totalUsd ?? 0), nights: Number(j.nights ?? i.nights), from: String(j.from ?? ""), to: String(j.to ?? ""), holdMinutes: Number(j.holdMinutes ?? 30) };
 }
