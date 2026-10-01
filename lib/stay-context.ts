@@ -42,6 +42,7 @@ export async function buildVoiceContext(booking: GuestBooking, locale: "en" | "a
     property?.wifi_ssid ? `Wi-Fi network name: ${property.wifi_ssid}. The password and the door code are NOT available to you: say they are on the House guide and Door code screens, and offer to open that screen with open_screen.` : "The door code and Wi-Fi password are NOT available to you: offer to open the Door code or House guide screen with open_screen.",
     "",
     "TOOLS: use report_problem for anything broken, unsafe or urgent; request_service when the guest wants something added (late check-out, transfer, meals, extra cleaning), never promise a price or that it is approved; message_team for anything you cannot do; open_screen to show a screen; flag_unanswered whenever you do not know the answer. After a tool succeeds, tell the guest in one short sentence what was sent.",
+    "LOOKUP TOOLS (read-only, call them instead of guessing): get_services {query?} for the menu, prices and notice times; get_request_status for whether the guest's earlier requests were picked up or done; get_nearby {category?} for JOOD's local recommendations; get_my_stay for nights left and times; search_house_guide {query} for any house question not answered below. Never invent prices, places or availability that a lookup did not return. Late check-out and extensions: never promise, use request_service.",
     "",
     "HOUSE GUIDE (only state facts found here; if it is not here, call flag_unanswered and offer to message the team):",
     manual,
