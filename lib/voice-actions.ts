@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { cairoDay, cairoToUtcIso } from "@/lib/cairo-time";
 import { hhmm } from "@/lib/time";
-import { externalBlocksOrNull, quoteNightsOnWebsite, type QuoteResult } from "@/lib/website-calendar";
+import { externalBlocksOrNull, quoteNightsOnWebsite, createExtensionCheckout, checkoutUrl, type QuoteResult, type ExtensionPay } from "@/lib/website-calendar";
 import { notifyAdminEmergency } from "@/lib/email";
 import type { GuestBooking } from "@/lib/guest-auth";
 
@@ -186,8 +186,10 @@ export function extendVerdict(i: { nights: number; from: string; appClash: strin
   return { kind: "unknown" };
 }
 
-export function describeExtend(v: ExtendVerdict, isAr = false): string {
-  const filing = (when: string, price: string) => `If the guest wants it, call request_service with service "Extend stay" and details "${when}${price}". Never say it is booked or confirmed: the team confirms and arranges payment. Do not send a payment link.`;
+export function describeExtend(v: ExtendVerdict, canPay = false): string {
+  const filing = (when: string, price: string) => canPay && v.kind === "available" && v.usd != null
+    ? `If the guest wants it, ask whether they prefer to pay by card in Egyptian pounds (EGP) or in US dollars (USD), then call start_extension with the nights and that currency. A pay button then appears on their screen; tell them to tap it and that the nights are held for 30 minutes and the extension is confirmed only once the payment goes through. Never say it is booked before that. Do not read out or invent any link.`
+    : `If the guest wants it, call request_service with service "Extend stay" and details "${when}${price}". Never say it is booked or confirmed: the team confirms and arranges payment. Do not send a payment link.`;
   switch (v.kind) {
     case "invalid": return "Ask the guest how many extra nights they want (a whole number).";
     case "too_long": return `Longer than ${MAX_EXTENSION_NIGHTS} extra nights is arranged by the team. Offer to send a request with message_team.`;
@@ -213,6 +215,54 @@ export async function checkExtension(booking: GuestBooking, nights: number): Pro
       .lt("check_in", cairoToUtc(to)).gt("check_out", cairoToUtc(from)).limit(1).returns<{ check_in: string }[]>(),
   ]);
   const website: QuoteResult = prop?.slug ? await quoteNightsOnWebsite(prop.slug, from, addDaysIso(from, nights)) : { kind: "not_on_website" };
-  return describeExtend(extendVerdict({ nights, from, appClash: clash?.length ? (prop?.name ?? "The house") : null, website }));
+  const verdict = extendVerdict({ nights, from, appClash: clash?.length ? (prop?.name ?? "The house") : null, website });
+  return describeExtend(verdict, await canPayOnline(booking.id));
 }
 const cairoToUtc = (date: string): string => cairoToUtcIso(date, "12:00");
+
+/** Only a stay that came from a paid website booking can be extended by paying online: its stay is the website's to extend. */
+export const isWebsiteRef = (ref: string | null | undefined): boolean => /^JOOD-[A-Z0-9]{6}$/.test(ref ?? "");
+
+async function websiteRefOf(bookingId: string): Promise<string | null> {
+  const { data } = await createServiceClient().from("bookings").select("source, external_ref, status").eq("id", bookingId)
+    .single<{ source: string; external_ref: string | null; status: string }>();
+  return data && data.source === "direct" && data.status === "confirmed" && isWebsiteRef(data.external_ref) ? data.external_ref : null;
+}
+const canPayOnline = async (bookingId: string): Promise<boolean> => !!checkoutUrl() && !!(await websiteRefOf(bookingId));
+
+export type StartExtension = { result: string; pay: { url: string; label: string } | null };
+
+export function describeExtensionPay(p: ExtensionPay, isAr: boolean): StartExtension {
+  switch (p.kind) {
+    case "ok": {
+      const amount = p.currency === "EGP" ? `${Math.round(p.amount).toLocaleString("en")} EGP` : `${p.amount} USD`;
+      const label = isAr ? `ادفع ${amount} لـ ${p.nights} ${p.nights === 1 ? "ليلة" : "ليالٍ"} إضافية` : `Pay ${amount} for ${p.nights} extra night${p.nights === 1 ? "" : "s"}`;
+      return {
+        pay: { url: p.url, label },
+        result: `A pay button for ${amount} (${p.from} to ${p.to}, room only, no cleaning fee) is now on the guest's screen. Tell them to tap it. The nights are held for ${p.holdMinutes} minutes. The extension is confirmed only when the payment goes through: do not say it is booked yet, and do not read out any link.`,
+      };
+    }
+    case "conflict": return { pay: null, result: `Not possible: ${p.message} Say the house is taken after their check-out, and offer to message the team in case something can be arranged.` };
+    case "not_extendable": return { pay: null, result: "This stay cannot be extended online. Offer to send the request to the team with request_service (service \"Extend stay\"); the team will arrange it." };
+    case "unavailable": return { pay: null, result: "The payment page could not be opened right now. Do not guess. Say so, and offer to send the request to the team with request_service (service \"Extend stay\")." };
+  }
+}
+
+export async function startExtension(booking: GuestBooking, token: string, nights: number, currency: string, isAr: boolean): Promise<StartExtension> {
+  if (!Number.isInteger(nights) || nights < 1 || nights > MAX_EXTENSION_NIGHTS) return { pay: null, result: `Ask for a whole number of extra nights, from 1 to ${MAX_EXTENSION_NIGHTS}.` };
+  if (currency !== "EGP" && currency !== "USD") return { pay: null, result: "Ask the guest whether they want to pay in Egyptian pounds (EGP) or US dollars (USD)." };
+  const ref = await websiteRefOf(booking.id);
+  if (!ref) return describeExtensionPay({ kind: "not_extendable" }, isAr);
+  const origin = appOrigin();
+  if (!origin) return describeExtensionPay({ kind: "unavailable" }, isAr);
+  const p = await createExtensionCheckout({ ref, nights, currency, locale: isAr ? "ar" : "en", returnTo: `${origin}/s/${token}/concierge` });
+  return describeExtensionPay(p, isAr);
+}
+
+/** This app's own origin, for the page a guest returns to after paying. */
+export function appOrigin(): string | null {
+  const configured = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "");
+  if (configured && !configured.includes("localhost")) return configured;
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  return vercel ? `https://${vercel}` : null;
+}
