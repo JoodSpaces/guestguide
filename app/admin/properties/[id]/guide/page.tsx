@@ -10,6 +10,7 @@ interface Props {
 
 const SECTION_LABELS: Record<string, string> = {
   wifi: "Wi-Fi",
+  faq: "Guest questions",
   ac: "AC & Heating",
   pool: "Pool & Outdoor",
   rules: "House Rules",
