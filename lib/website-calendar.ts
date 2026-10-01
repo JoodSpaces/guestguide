@@ -98,3 +98,23 @@ export async function externalBlocksOrNull(slugs: string[], from: string, to: st
 export async function externalBlocks(slugs: string[], from: string, to: string): Promise<ExternalBlock[]> {
   return (await externalBlocksOrNull(slugs, from, to)) ?? [];
 }
+
+export type QuoteResult =
+  | { kind: "ok"; available: true; nights: number; totalUsd: number; totalEgp: number | null }
+  | { kind: "ok"; available: false; message: string }
+  | { kind: "no_rate" }          // house found but no usable rate: do not invent a price
+  | { kind: "not_on_website" }   // no website house uses this property
+  | { kind: "unavailable" };     // not configured / unreachable / refused: say the team will check
+
+/** Are these nights free on the website, and what would they cost (rooms only, no cleaning fee)? Read-only. */
+export async function quoteNightsOnWebsite(slug: string, from: string, to: string): Promise<QuoteResult> {
+  if (!calendarUrl() || !process.env.BRIDGE_SHARED_SECRET) return { kind: "unavailable" };
+  const r = await call({ action: "quote", slug, from, to });
+  if (!r) return { kind: "unavailable" };
+  if (r.status === 404 && r.json.error === "house_not_found") return { kind: "not_on_website" };
+  if (r.status !== 200 || r.json.ok !== true) return { kind: "unavailable" };
+  if (r.json.available === false) return { kind: "ok", available: false, message: String(r.json.message ?? "Those nights are not available.") };
+  const q = r.json.quote as { nights?: number; totalUsd?: number; totalEgp?: number | null } | null | undefined;
+  if (!q || typeof q.totalUsd !== "number") return { kind: "no_rate" };
+  return { kind: "ok", available: true, nights: Number(q.nights ?? 0), totalUsd: q.totalUsd, totalEgp: typeof q.totalEgp === "number" ? q.totalEgp : null };
+}

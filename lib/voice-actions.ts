@@ -1,7 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
-import { cairoDay } from "@/lib/cairo-time";
+import { cairoDay, cairoToUtcIso } from "@/lib/cairo-time";
 import { hhmm } from "@/lib/time";
-import { externalBlocksOrNull } from "@/lib/website-calendar";
+import { externalBlocksOrNull, quoteNightsOnWebsite, type QuoteResult } from "@/lib/website-calendar";
 import { notifyAdminEmergency } from "@/lib/email";
 import type { GuestBooking } from "@/lib/guest-auth";
 
@@ -159,3 +159,60 @@ export async function raiseEmergency(booking: GuestBooking, kind: EmergencyKind,
     text: `Emergency logged and the office has been emailed. ${SAFETY[kind]} ${phone ? "A Call button for the on-call phone is now on the guest's screen: tell them to tap it." : "No on-call phone is set: tell them the team has been alerted."} Keep the guest calm and keep your sentences short.`,
   };
 }
+
+// ─── extend stay ─────────────────────────────────────────────────────────────
+
+export const MAX_EXTENSION_NIGHTS = 14;
+const addDaysIso = (date: string, n: number): string => new Date(Date.parse(date + "T00:00:00Z") + n * 86_400_000).toISOString().slice(0, 10);
+
+export type ExtendVerdict =
+  | { kind: "invalid" }
+  | { kind: "too_long" }
+  | { kind: "conflict"; message: string }
+  | { kind: "available"; from: string; to: string; nights: number; usd: number | null; egp: number | null }
+  | { kind: "unknown" };
+
+/** Pure: turn the website's answer and our own bookings into one verdict. The app's own bookings always win a disagreement. */
+export function extendVerdict(i: { nights: number; from: string; appClash: string | null; website: QuoteResult }): ExtendVerdict {
+  if (!Number.isInteger(i.nights) || i.nights < 1) return { kind: "invalid" };
+  if (i.nights > MAX_EXTENSION_NIGHTS) return { kind: "too_long" };
+  const to = addDaysIso(i.from, i.nights);
+  if (i.appClash) return { kind: "conflict", message: `${i.appClash} has another stay on those nights.` };
+  const w = i.website;
+  if (w.kind === "ok" && !w.available) return { kind: "conflict", message: w.message };
+  if (w.kind === "ok" && w.available) return { kind: "available", from: i.from, to, nights: i.nights, usd: w.totalUsd, egp: w.totalEgp };
+  // Not on the website at all (or no rate): the app's calendar is clear but nobody has priced it. Never invent a number.
+  if (w.kind === "not_on_website" || w.kind === "no_rate") return { kind: "available", from: i.from, to, nights: i.nights, usd: null, egp: null };
+  return { kind: "unknown" };
+}
+
+export function describeExtend(v: ExtendVerdict, isAr = false): string {
+  const filing = (when: string, price: string) => `If the guest wants it, call request_service with service "Extend stay" and details "${when}${price}". Never say it is booked or confirmed: the team confirms and arranges payment. Do not send a payment link.`;
+  switch (v.kind) {
+    case "invalid": return "Ask the guest how many extra nights they want (a whole number).";
+    case "too_long": return `Longer than ${MAX_EXTENSION_NIGHTS} extra nights is arranged by the team. Offer to send a request with message_team.`;
+    case "conflict": return `Not possible: ${v.message} Say that the house is taken after their check-out, and offer to message the team in case something can be arranged.`;
+    case "unknown": return `Availability could not be checked right now. Do not guess. Say the team will check, then: ${filing("extra nights after check-out", "")}`;
+    case "available": {
+      const price = v.usd != null ? `Estimated price for the room: about ${v.egp != null ? `${Math.round(v.egp)} EGP (${v.usd} USD)` : `${v.usd} USD`}, no cleaning fee; the team confirms the final price.` : "No price is available: do not quote one, the team confirms it.";
+      const when = `${v.nights} extra night${v.nights === 1 ? "" : "s"}, ${v.from} to ${v.to}`;
+      return `Those ${v.nights} night${v.nights === 1 ? " is" : "s are"} free (${v.from} to ${v.to}). ${price} ${filing(when, v.usd != null ? `, estimated ${v.usd} USD` : "")}`;
+    }
+  }
+}
+
+export async function checkExtension(booking: GuestBooking, nights: number): Promise<string> {
+  const supabase = createServiceClient();
+  const from = cairoDay(new Date(booking.check_out).getTime()).date;
+  const to = addDaysIso(from, Math.min(Math.max(Math.trunc(nights) || 0, 0), MAX_EXTENSION_NIGHTS + 1));
+  if (!(nights >= 1) || nights > MAX_EXTENSION_NIGHTS) return describeExtend(extendVerdict({ nights: Math.trunc(nights), from, appClash: null, website: { kind: "unavailable" } }));
+
+  const [{ data: prop }, { data: clash }] = await Promise.all([
+    supabase.from("properties").select("name, slug").eq("id", booking.property_id).single<{ name: string; slug: string | null }>(),
+    supabase.from("bookings").select("check_in").eq("property_id", booking.property_id).neq("id", booking.id).neq("status", "cancelled")
+      .lt("check_in", cairoToUtc(to)).gt("check_out", cairoToUtc(from)).limit(1).returns<{ check_in: string }[]>(),
+  ]);
+  const website: QuoteResult = prop?.slug ? await quoteNightsOnWebsite(prop.slug, from, addDaysIso(from, nights)) : { kind: "not_on_website" };
+  return describeExtend(extendVerdict({ nights, from, appClash: clash?.length ? (prop?.name ?? "The house") : null, website }));
+}
+const cairoToUtc = (date: string): string => cairoToUtcIso(date, "12:00");
