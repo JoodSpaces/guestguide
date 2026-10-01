@@ -48,8 +48,10 @@ const schema = z
   .object({
     doorCode: z.string().max(20).nullable().optional(),
     status: z.enum(["confirmed", "cancelled", "completed"]).optional(),
+    /** Voice conversations allowed for this stay; null = no per-stay cap (the daily and monthly limits still apply). */
+    voiceLimit: z.number().int().min(0).max(100).nullable().optional(),
   })
-  .refine((d) => d.doorCode !== undefined || d.status !== undefined, {
+  .refine((d) => d.doorCode !== undefined || d.status !== undefined || d.voiceLimit !== undefined, {
     message: "At least one field required",
   });
 
@@ -86,6 +88,9 @@ export async function PATCH(
   }
   if (parsed.data.status !== undefined) {
     updates.status = parsed.data.status;
+  }
+  if (parsed.data.voiceLimit !== undefined) {
+    updates.voice_limit = parsed.data.voiceLimit;
   }
 
   // Pre-fetch current booking state for status-transition guards

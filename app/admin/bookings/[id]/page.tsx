@@ -19,7 +19,7 @@ export default async function BookingDetailPage({ params }: Props) {
    supabase
     .from("bookings")
     .select(
-      "id, guest_first_name, guest_last_name, guest_email, guest_phone, guest_lang, guest_count, check_in, check_out, status, source, external_ref, door_code_encrypted, created_at, property_id, dnd_active, properties(id, name, name_ar)"
+      "id, guest_first_name, guest_last_name, guest_email, guest_phone, guest_lang, guest_count, check_in, check_out, status, source, external_ref, door_code_encrypted, created_at, property_id, dnd_active, voice_limit, properties(id, name, name_ar)"
     )
     .eq("id", id)
     .single<{
@@ -39,6 +39,7 @@ export default async function BookingDetailPage({ params }: Props) {
       created_at: string;
       property_id: string;
       dnd_active: boolean;
+      voice_limit: number | null;
       properties: { id: string; name: string; name_ar: string } | { id: string; name: string; name_ar: string }[];
     }>(),
    supabase
@@ -76,6 +77,9 @@ export default async function BookingDetailPage({ params }: Props) {
     try { guestPhone = decrypt(booking.guest_phone); } catch { guestPhone = booking.guest_phone; }
   }
 
+  // Table may not exist yet (migration 032): then nothing has been used.
+  const { count: voiceUsed } = await supabase.from("voice_sessions").select("id", { count: "exact", head: true }).eq("booking_id", id);
+
   const property = Array.isArray(booking.properties) ? booking.properties[0] : booking.properties;
 
   return (
@@ -97,6 +101,8 @@ export default async function BookingDetailPage({ params }: Props) {
         createdAt: booking.created_at,
         propertyId: booking.property_id,
         dndActive: booking.dnd_active,
+        voiceLimit: booking.voice_limit,
+        voiceUsed: voiceUsed ?? 0,
       }}
       property={property ?? null}
       tokens={tokens ?? []}

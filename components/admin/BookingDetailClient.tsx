@@ -23,6 +23,8 @@ export interface BookingData {
   createdAt: string;
   propertyId: string;
   dndActive?: boolean;
+  voiceLimit?: number | null;
+  voiceUsed?: number;
 }
 
 interface TokenRow {
@@ -113,6 +115,10 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
   const [savingCode, setSavingCode] = useState(false);
   const [codeMsg, setCodeMsg] = useState<string | null>(null);
 
+  const [voiceLimit, setVoiceLimit] = useState<string>(booking.voiceLimit == null ? "" : String(booking.voiceLimit));
+  const [savingVoice, setSavingVoice] = useState(false);
+  const [voiceMsg, setVoiceMsg] = useState<string | null>(null);
+
   const [status, setStatus] = useState<Status>(booking.status);
   const [savingStatus, setSavingStatus] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
@@ -137,6 +143,20 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
     } else {
       setCodeMsg("Save failed");
     }
+  }
+
+  async function saveVoiceLimit() {
+    setSavingVoice(true);
+    setVoiceMsg(null);
+    const n = voiceLimit.trim() === "" ? null : Number(voiceLimit);
+    if (n !== null && (!Number.isInteger(n) || n < 0 || n > 100)) { setSavingVoice(false); setVoiceMsg("Enter a whole number from 0 to 100, or leave empty"); return; }
+    const res = await fetch(`/api/admin/bookings/${booking.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ voiceLimit: n }),
+    });
+    setSavingVoice(false);
+    setVoiceMsg(res.ok ? "Saved" : "Save failed");
   }
 
   async function saveStatus(newStatus: Status) {
@@ -353,6 +373,32 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
             )}
           </div>
         )}
+      </div>
+
+      {/* Voice concierge allowance */}
+      <div style={card}>
+        <p style={eyebrow}>Voice conversations</p>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            value={voiceLimit}
+            onChange={(e) => setVoiceLimit(e.target.value)}
+            inputMode="numeric"
+            placeholder="No cap"
+            aria-label="Voice conversations allowed for this stay"
+            style={{ ...field, width: "110px" }}
+          />
+          <button
+            onClick={saveVoiceLimit}
+            disabled={savingVoice}
+            style={{ padding: "8px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", background: "none", cursor: "pointer", fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}
+          >
+            {savingVoice ? "Saving…" : "Save"}
+          </button>
+          <span style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
+            {booking.voiceUsed ?? 0} used. Empty = no cap for this stay (the daily and monthly limits still apply).
+          </span>
+          {voiceMsg && <span style={{ fontSize: "0.8125rem", color: voiceMsg === "Saved" ? "var(--jood-success)" : "var(--jood-danger)" }}>{voiceMsg}</span>}
+        </div>
       </div>
 
       {/* Status */}

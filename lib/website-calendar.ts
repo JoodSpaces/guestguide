@@ -86,10 +86,15 @@ export const BLOCK_LABEL: Record<ExternalBlockKind, string> = {
   airbnb: "Airbnb", booking: "Booking.com", vrbo: "VRBO", channel: "Another booking site", hold: "Held by JOOD", maintenance: "Maintenance",
 };
 
+/** Like externalBlocks, but `null` means "could not find out" (not configured, unreachable, refused) instead of "nothing taken". */
+export async function externalBlocksOrNull(slugs: string[], from: string, to: string): Promise<ExternalBlock[] | null> {
+  if (!calendarUrl() || !process.env.BRIDGE_SHARED_SECRET || !slugs.length) return null;
+  const r = await call({ action: "blocks", from, to, slugs });
+  if (!r || r.status !== 200 || !Array.isArray(r.json.ranges)) return null;
+  return (r.json.ranges as ExternalBlock[]).filter((b) => b && typeof b.slug === "string" && typeof b.from === "string" && typeof b.to === "string");
+}
+
 /** What the other channels have taken, for the calendar. Any trouble means "show nothing extra", never an error page. */
 export async function externalBlocks(slugs: string[], from: string, to: string): Promise<ExternalBlock[]> {
-  if (!calendarUrl() || !process.env.BRIDGE_SHARED_SECRET || !slugs.length) return [];
-  const r = await call({ action: "blocks", from, to, slugs });
-  if (!r || r.status !== 200 || !Array.isArray(r.json.ranges)) return [];
-  return (r.json.ranges as ExternalBlock[]).filter((b) => b && typeof b.slug === "string" && typeof b.from === "string" && typeof b.to === "string");
+  return (await externalBlocksOrNull(slugs, from, to)) ?? [];
 }
