@@ -68,6 +68,18 @@ function Inner({ token, isAr }: Props) {
   }
   function done(kind: string) { actions.current.push(kind); pulse(); setChips((x) => [...x.filter((y) => y.href), { label: c.sent }]); }
 
+  // Read-only lookups run on the server against this guest's own stay; the agent gets short text back and speaks it.
+  async function lookup(tool: string, args: Record<string, unknown>) {
+    actions.current.push(`lookup:${tool}`);
+    const res = await fetch("/api/stay/voice/tool", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token, tool, args, locale: isAr ? "ar" : "en" }),
+    }).catch(() => null);
+    if (!res?.ok) return "That lookup failed. Say so briefly and offer to message the team.";
+    const j = (await res.json().catch(() => ({}))) as { result?: string };
+    return j.result ?? "No result.";
+  }
+
   const conv = useConversation({
     onMessage: (m: { source?: string; message?: string }) => {
       // The voice model marks its tone with tags like [Warmly]; they are for the voice, not for reading.
@@ -102,6 +114,11 @@ function Inner({ token, isAr }: Props) {
         pulse();
         return "A button to open it is now on the guest's screen. Tell them to tap it.";
       },
+      get_services: (p: Record<string, unknown>) => lookup("get_services", p),
+      get_request_status: (p: Record<string, unknown>) => lookup("get_request_status", p),
+      get_nearby: (p: Record<string, unknown>) => lookup("get_nearby", p),
+      get_my_stay: (p: Record<string, unknown>) => lookup("get_my_stay", p),
+      search_house_guide: (p: Record<string, unknown>) => lookup("search_house_guide", p),
       flag_unanswered: async (p: Record<string, unknown>) => {
         const q = String(p.question ?? "").slice(0, 300);
         if (q) unanswered.current.push(q);
