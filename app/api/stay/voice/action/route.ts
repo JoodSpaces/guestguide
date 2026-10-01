@@ -4,10 +4,11 @@ import { getBookingFromToken } from "@/lib/guest-auth";
 import { isTokenExpired } from "@/lib/token";
 import { allow } from "@/lib/rate-limit";
 import { voiceEnabled } from "@/lib/voice";
-import { checkLateCheckout, isEmergencyKind, raiseEmergency } from "@/lib/voice-actions";
+import { checkExtension, checkLateCheckout, isEmergencyKind, raiseEmergency } from "@/lib/voice-actions";
 
 const schema = z.discriminatedUnion("action", [
   z.object({ token: z.string(), action: z.literal("check_late_checkout"), until: z.string().max(40) }),
+  z.object({ token: z.string(), action: z.literal("check_extension"), nights: z.number().int().min(1).max(60) }),
   z.object({ token: z.string(), action: z.literal("report_emergency"), kind: z.string().max(20), details: z.string().max(800).default("") }),
 ]);
 
@@ -28,6 +29,10 @@ export async function POST(req: NextRequest) {
       if (!(await allow({ name: "voice-emergency", limit: 6, windowSec: 3600 }, booking.id))) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
       const r = await raiseEmergency(booking, d.kind, d.details);
       return NextResponse.json({ result: r.text, onCallPhone: r.onCallPhone, ok: r.ok });
+    }
+    if (d.action === "check_extension") {
+      if (!(await allow({ name: "voice-extension", limit: 20, windowSec: 3600 }, booking.id))) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+      return NextResponse.json({ result: await checkExtension(booking, d.nights) });
     }
     if (!(await allow({ name: "voice-latecheckout", limit: 20, windowSec: 3600 }, booking.id))) return NextResponse.json({ error: "rate_limited" }, { status: 429 });
     return NextResponse.json({ result: await checkLateCheckout(booking, d.until) });

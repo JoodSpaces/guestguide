@@ -1,10 +1,12 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { voiceMonthlyMinutes, monthStartIso } from "@/lib/voice";
+import { groupGaps } from "@/lib/voice-gaps";
+import { VoiceGaps } from "@/components/admin/VoiceGaps";
 
 interface Row {
   id: string; started_at: string; duration_sec: number; locale: string;
   transcript: { role: "guest" | "agent"; text: string }[]; unanswered: string[]; actions: string[];
-  bookings: { guest_first_name: string; guest_last_name: string; properties: { name: string } | { name: string }[] | null } | null;
+  bookings: { property_id: string; guest_first_name: string; guest_last_name: string; properties: { name: string } | { name: string }[] | null } | null;
 }
 
 const card: React.CSSProperties = { border: "1px solid var(--jood-line)", borderRadius: 12, padding: "16px 18px", background: "var(--jood-surface, transparent)" };
@@ -14,7 +16,7 @@ export default async function VoicePage() {
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from("voice_sessions")
-    .select("id, started_at, duration_sec, locale, transcript, unanswered, actions, bookings(guest_first_name, guest_last_name, properties(name))")
+    .select("id, started_at, duration_sec, locale, transcript, unanswered, actions, bookings(property_id, guest_first_name, guest_last_name, properties(name))")
     .order("started_at", { ascending: false })
     .limit(60)
     .returns<Row[]>();
@@ -34,8 +36,9 @@ export default async function VoicePage() {
   const cap = voiceMonthlyMinutes();
   const usedMin = monthSec / 60;
   const pct = Math.min(100, Math.round((usedMin / cap) * 100));
-  const unanswered = rows.flatMap((r) => r.unanswered.map((q) => ({ q, at: r.started_at, who: r.bookings?.guest_first_name ?? "" })));
   const prop = (r: Row) => { const p = r.bookings?.properties; return (Array.isArray(p) ? p[0] : p)?.name ?? ""; };
+  const gaps = groupGaps(rows.flatMap((r) => r.unanswered.map((q) => ({ q, propertyId: r.bookings?.property_id ?? "", propertyName: prop(r), at: r.started_at, who: r.bookings?.guest_first_name ?? "" })))
+    .filter((x) => x.propertyId));
 
   return (
     <main style={{ maxWidth: 820, margin: "0 auto", padding: "32px 20px 80px", display: "grid", gap: 20 }}>
@@ -56,11 +59,8 @@ export default async function VoicePage() {
 
       <section style={card}>
         <h2 style={{ fontSize: 16, margin: "0 0 10px" }}>Questions it couldn&apos;t answer</h2>
-        {unanswered.length === 0 ? <p style={{ margin: 0, color: "var(--jood-ink-muted)", fontSize: 14 }}>None yet. Each one is a gap in a house guide.</p> : (
-          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, lineHeight: 1.7 }}>
-            {unanswered.map((u, i) => <li key={i}>{u.q} <span style={{ color: "var(--jood-ink-subtle)" }}>· {u.who} · {when(u.at)}</span></li>)}
-          </ul>
-        )}
+        <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--jood-ink-muted)" }}>Answer one and it goes straight into that house&apos;s guide, so the concierge knows it on the next call.</p>
+        <VoiceGaps groups={gaps} />
       </section>
 
       <section style={{ display: "grid", gap: 10 }}>

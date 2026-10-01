@@ -52,3 +52,43 @@ describe("emergencies", () => {
     expect(emergencyGuidance("security")).toMatch(/122/);
   });
 });
+
+import { extendVerdict, describeExtend, MAX_EXTENSION_NIGHTS } from "@/lib/voice-actions";
+
+describe("extend stay", () => {
+  const from = "2026-11-13";
+  const ok = { kind: "ok" as const, available: true as const, nights: 2, totalUsd: 250, totalEgp: 13000 };
+  it("quotes a free stretch with the website's price, no cleaning fee", () => {
+    const v = extendVerdict({ nights: 2, from, appClash: null, website: ok });
+    expect(v).toEqual({ kind: "available", from, to: "2026-11-15", nights: 2, usd: 250, egp: 13000 });
+    const t = describeExtend(v);
+    expect(t).toMatch(/13000 EGP \(250 USD\)/);
+    expect(t).toMatch(/no cleaning fee/);
+    expect(t).toMatch(/Do not send a payment link/);
+  });
+  it("refuses when the website says the nights are taken", () => {
+    const v = extendVerdict({ nights: 2, from, appClash: null, website: { kind: "ok", available: false, message: "2026-11-14 is already taken by a booking on Airbnb." } });
+    expect(v.kind).toBe("conflict");
+    expect(describeExtend(v)).toMatch(/Airbnb/);
+  });
+  it("the app's own bookings win over a clear website", () => {
+    expect(extendVerdict({ nights: 1, from, appClash: "Villa", website: ok }).kind).toBe("conflict");
+  });
+  it("never invents a price when the house has none or is not on the website", () => {
+    for (const website of [{ kind: "no_rate" as const }, { kind: "not_on_website" as const }]) {
+      const v = extendVerdict({ nights: 1, from, appClash: null, website });
+      expect(v).toMatchObject({ kind: "available", usd: null });
+      expect(describeExtend(v)).toMatch(/do not quote one/);
+    }
+  });
+  it("does not guess when the website cannot be reached", () => {
+    const v = extendVerdict({ nights: 1, from, appClash: null, website: { kind: "unavailable" } });
+    expect(v).toEqual({ kind: "unknown" });
+    expect(describeExtend(v)).toMatch(/Do not guess/);
+  });
+  it("limits the length and rejects nonsense", () => {
+    expect(extendVerdict({ nights: MAX_EXTENSION_NIGHTS + 1, from, appClash: null, website: ok }).kind).toBe("too_long");
+    expect(extendVerdict({ nights: 0, from, appClash: null, website: ok }).kind).toBe("invalid");
+    expect(extendVerdict({ nights: 1.5, from, appClash: null, website: ok }).kind).toBe("invalid");
+  });
+});

@@ -133,6 +133,11 @@ function Inner({ token, isAr }: Props) {
         const r = await act({ action: "check_late_checkout", until: String(p.until ?? "") });
         return r.ok && r.result ? r.result : "The calendar check failed. Say so, and offer to send a late check-out request to the team with request_service.";
       },
+      check_extension: async (p: Record<string, unknown>) => {
+        actions.current.push("lookup:check_extension");
+        const r = await act({ action: "check_extension", nights: Math.round(Number(p.nights)) });
+        return r.ok && r.result ? r.result : "The availability check failed. Say so, and offer to send an extension request to the team with request_service.";
+      },
       report_emergency: async (p: Record<string, unknown>) => {
         const r = await act({ action: "report_emergency", kind: String(p.kind ?? "other"), details: String(p.details ?? "") });
         if (r.phone) {
