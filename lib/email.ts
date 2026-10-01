@@ -102,3 +102,24 @@ export function confirmGuestRequest({
     ].join("\n"),
   }), "confirmGuestRequest");
 }
+
+/** An emergency raised through the voice concierge. Goes to the office at once; the guest is told to call the on-call phone too. */
+export function notifyAdminEmergency({
+  guestName, propertyName, kind, details, onCallPhone, requestId,
+}: {
+  guestName: string; propertyName: string; kind: string; details: string; onCallPhone: string | null; requestId: string;
+}) {
+  safe((r) => r.emails.send({
+    from: FROM,
+    to: ADMIN,
+    subject: `🚨 EMERGENCY (${kind}) — ${propertyName}`,
+    text: [
+      `${guestName} reported an emergency at ${propertyName} through the voice concierge: ${kind}.`,
+      "",
+      details || "(no details given)",
+      "",
+      onCallPhone ? `The guest was told to call the on-call phone: ${onCallPhone}` : "No on-call phone is set for this property.",
+      APP_URL ? `Open: ${APP_URL}/admin/requests/guest/${requestId}` : `Request ID: ${requestId}`,
+    ].join("\n"),
+  }), "notifyAdminEmergency");
+}

@@ -20,7 +20,7 @@ const COPY = {
     budget: "Voice chat is resting for this month. The team is one message away.",
     fail: "Voice isn't available right now. You can message the team any time.",
     privacy: "Your voice is processed by our voice provider during the conversation. See the privacy notice.",
-    sent: "Sent to the team", screens: { door_code: "Open the door code", house_guide: "Open the house guide", services: "Open services", discover: "Open Discover", requests: "Open messages" },
+    sent: "Sent to the team", call: "Call the on-call team", screens: { door_code: "Open the door code", house_guide: "Open the house guide", services: "Open services", discover: "Open Discover", requests: "Open messages" },
   },
   ar: {
     start: "اضغط للتحدث", connecting: "جارٍ الاتصال…", listening: "أستمع", speaking: "أتحدث", end: "إنهاء المحادثة",
@@ -32,7 +32,7 @@ const COPY = {
     budget: "المحادثة الصوتية في استراحة هذا الشهر. الفريق على بعد رسالة.",
     fail: "المحادثة الصوتية غير متاحة الآن. يمكنك مراسلة الفريق في أي وقت.",
     privacy: "يعالج مزوّد الصوت صوتك أثناء المحادثة. راجع إشعار الخصوصية.",
-    sent: "أُرسل إلى الفريق", screens: { door_code: "افتح رمز الباب", house_guide: "افتح دليل البيت", services: "افتح الخدمات", discover: "افتح استكشف", requests: "افتح الرسائل" },
+    sent: "أُرسل إلى الفريق", call: "اتصل بفريق الطوارئ", screens: { door_code: "افتح رمز الباب", house_guide: "افتح دليل البيت", services: "افتح الخدمات", discover: "افتح استكشف", requests: "افتح الرسائل" },
   },
 } as const;
 
@@ -80,6 +80,15 @@ function Inner({ token, isAr }: Props) {
     return j.result ?? "No result.";
   }
 
+  // Actions beyond a lookup (late check-out check, emergency). Same server-side guard as lookups; the agent gets plain text back.
+  async function act(body: Record<string, unknown>) {
+    const res = await fetch("/api/stay/voice/action", {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token, ...body }),
+    }).catch(() => null);
+    const j = (await res?.json().catch(() => ({}))) as { result?: string; onCallPhone?: string | null; ok?: boolean } | undefined;
+    return { ok: !!res?.ok, result: j?.result, phone: j?.onCallPhone ?? null, saved: j?.ok };
+  }
+
   const conv = useConversation({
     onMessage: (m: { source?: string; message?: string }) => {
       // The voice model marks its tone with tags like [Warmly]; they are for the voice, not for reading.
@@ -119,6 +128,20 @@ function Inner({ token, isAr }: Props) {
       get_nearby: (p: Record<string, unknown>) => lookup("get_nearby", p),
       get_my_stay: (p: Record<string, unknown>) => lookup("get_my_stay", p),
       search_house_guide: (p: Record<string, unknown>) => lookup("search_house_guide", p),
+      check_late_checkout: async (p: Record<string, unknown>) => {
+        actions.current.push("lookup:check_late_checkout");
+        const r = await act({ action: "check_late_checkout", until: String(p.until ?? "") });
+        return r.ok && r.result ? r.result : "The calendar check failed. Say so, and offer to send a late check-out request to the team with request_service.";
+      },
+      report_emergency: async (p: Record<string, unknown>) => {
+        const r = await act({ action: "report_emergency", kind: String(p.kind ?? "other"), details: String(p.details ?? "") });
+        if (r.phone) {
+          const tel = `tel:${r.phone.replace(/[^\d+]/g, "")}`;
+          setChips((x) => [...x.filter((y) => y.href !== tel), { label: c.call, href: tel }]);
+        }
+        if (r.ok && r.saved) { actions.current.push(`emergency:${String(p.kind ?? "other")}`); pulse(); }
+        return r.ok && r.result ? r.result : `The alert could not be sent. Tell the guest to call the on-call number now${r.phone ? ` (${r.phone})` : " or use Contact the team"}.`;
+      },
       flag_unanswered: async (p: Record<string, unknown>) => {
         const q = String(p.question ?? "").slice(0, 300);
         if (q) unanswered.current.push(q);
