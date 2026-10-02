@@ -7,6 +7,8 @@ import { computePhase } from "@/lib/token";
 import Anthropic from "@anthropic-ai/sdk";
 import { aiEnabled } from "@/lib/ai";
 import { hhmm } from "@/lib/time";
+import { detectEmergency } from "@/lib/emergency-rules";
+import { emergencyGuidance } from "@/lib/voice-actions";
 
 const DAILY_CALL_LIMIT = 100;
 
@@ -118,6 +120,16 @@ export async function POST(req: NextRequest) {
     ? (isAr ? `- الواي فاي: ${property.wifi_ssid}` : `- WiFi SSID: ${property.wifi_ssid} (password shown on your stay page)`)
     : "";
 
+  // Time awareness and the emergency backstop are computed here, not left to the model.
+  const nowCairo = new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-GB", {
+    timeZone: "Africa/Cairo", weekday: "long", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).format(new Date());
+  const lastUser = parsed.data.messages.at(-1)?.content ?? "";
+  const emergencyKind = detectEmergency(lastUser);
+  const emergencyNote = emergencyKind
+    ? `\n\n## URGENT\nThe guest's last message may describe an emergency (${emergencyKind}). Start your reply with this safety step in the guest's language, then tell them to send an urgent request on the Requests screen and call the on-call number on their stay page: ${emergencyGuidance(emergencyKind)} Do not troubleshoot.`
+    : "";
+
   const systemPrompt = isAr
     ? `أنت "كونسيرج جود"، مساعد ذكاء اصطناعي للضيوف في ${propertyName}. أجب دائماً بالعربية.
 
@@ -125,6 +137,7 @@ export async function POST(req: NextRequest) {
 - الوصول: ${fmt(booking.check_in)} في ${hhmm(property.checkin_time)}
 - المغادرة: ${fmt(booking.check_out)} في ${hhmm(property.checkout_time)}
 - الحالة: ${phaseNote[phase] ?? ""}
+- الوقت الآن في القاهرة: ${nowCairo}
 ${wifiLine}
 
 ## دليل العقار
@@ -133,13 +146,16 @@ ${manualText}
 ## إرشادات
 - كن دافئاً وموجزاً (أقل من 120 كلمة ما لم يكن التفصيل ضرورياً).
 - للمشاكل التشغيلية أو الطلبات الخاصة، اقترح صفحة الطلبات للتواصل مع فريق جود.
-- لا تخترع معلومات غير موجودة في الدليل أعلاه.`
+- لا تخترع معلومات غير موجودة في الدليل أعلاه.
+- مصادر المعلومات بالترتيب: تفاصيل الإقامة أعلاه ثم دليل العقار. لا تتجاوزها بمعرفة عامة (مثلاً لا تَعِد بتسجيل خروج متأخر: الفريق يؤكده).
+- إن لم تكن متأكداً، لا تخمّن: قل إنك لا تملك معلومة مؤكدة وأنك تستطيع إرسال الطلب لفريق جود الآن عبر شاشة الطلبات.${emergencyNote}`
     : `You are JOOD Concierge, an AI assistant for guests staying at ${propertyName}. Always respond in English.
 
 ## Stay Details
 - Check-in: ${fmt(booking.check_in)} at ${hhmm(property.checkin_time)}
 - Check-out: ${fmt(booking.check_out)} at ${hhmm(property.checkout_time)}
 - Status: ${phaseNote[phase] ?? ""}
+- Time now in Cairo: ${nowCairo}
 ${wifiLine}
 
 ## Property Manual
@@ -148,7 +164,9 @@ ${manualText}
 ## Guidelines
 - Be warm and concise (under 120 words unless detail is genuinely needed).
 - For operational issues or special requests, suggest the Requests screen to reach the JOOD team.
-- Never invent information not in the manual above.`;
+- Never invent information not in the manual above.
+- Sources, in order: the stay details above, then the property manual. Never override them with general knowledge (for example never promise a late check-out: the team confirms it).
+- If you are not sure, do not guess: say you don't have confirmed information and that you can send it to the JOOD team now from the Requests screen.${emergencyNote}`;
 
   let stream;
   try {

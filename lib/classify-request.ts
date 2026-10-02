@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { aiEnabled } from "@/lib/ai";
 import * as Sentry from "@sentry/nextjs";
+import { detectEmergency } from "@/lib/emergency-rules";
 
 export type GuestRequestCategory = "maintenance" | "housekeeping" | "supplies" | "service" | "other";
 export type GuestRequestUrgency = "normal" | "urgent";
@@ -21,7 +22,14 @@ function getClient() {
   return _client;
 }
 
+/** The emergency rules decide urgency; the model only sorts the category. Rules win even when the model says "normal" or is off. */
 export async function classifyGuestRequest(text: string): Promise<RequestClassification> {
+  const emergency = detectEmergency(text) !== null;
+  const result = await classifyWithModel(text);
+  return emergency ? { ...result, urgency: "urgent" } : result;
+}
+
+async function classifyWithModel(text: string): Promise<RequestClassification> {
   if (!aiEnabled()) return FALLBACK;
   const response = await getClient().messages.create({
     model: "claude-haiku-4-5-20251001",
