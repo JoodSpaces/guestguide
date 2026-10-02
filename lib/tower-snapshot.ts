@@ -25,11 +25,13 @@ export interface TowerSnapshot {
   door_code: DoorCodes | null;
   fast_turnovers: FastTurnover[];
   trend: Trend | null;
+  daily: Daily | null;
 }
 
 export interface Access { failed_logins_24h: number; logins_24h: number; team_changes_7d: { action: string; name: string; at: string }[] }
 export interface DoorCodes { failures_24h: { property: string; failures: number }[]; reveals_24h: number }
 export interface FastTurnover { task_id: string; property: string; assigned_to: string | null; minutes: number; items: number }
+export interface Daily { from: string; to: string; rows: { day: string; property: string; urgent: number; maintenance: number }[] }
 export interface Trend { properties: { name: string; urgent_30d: number; urgent_prior: number; maintenance_30d: number; maintenance_prior: number }[] }
 
 export interface AuditRow { action: string; entity_id: string | null; meta: Record<string, unknown> | null; created_at: string }
@@ -69,6 +71,18 @@ export function findFastTurnovers(tasks: { id: string; property_id: string; assi
     if (minutes >= 0 && minutes < 15 && items >= 8) out.push({ task_id: t.id, property: propertyName(t.property_id), assigned_to: t.assigned_to, minutes, items });
   }
   return out;
+}
+
+/** Urgent requests and maintenance tickets per property per Cairo day over the last 90 days (days with nothing are simply absent). */
+export function buildDaily(urgent: { created_at: string; property_id: string | null }[], maintenance: { created_at: string; property_id: string }[], propertyName: (id: string) => string, now: number): Daily {
+  const cairo = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
+  const to = cairo(new Date(now - 24 * HOUR).toISOString());                           // the last full day
+  const from = cairo(new Date(now - 90 * 24 * HOUR).toISOString());
+  const by = new Map<string, { day: string; property: string; urgent: number; maintenance: number }>();
+  const row = (day: string, id: string) => { const k = `${day}|${id}`; return by.get(k) ?? by.set(k, { day, property: propertyName(id), urgent: 0, maintenance: 0 }).get(k)!; };
+  for (const u of urgent) if (u.property_id) { const d = cairo(u.created_at); if (d >= from && d <= to) row(d, u.property_id).urgent++; }
+  for (const m of maintenance) { const d = cairo(m.created_at); if (d >= from && d <= to) row(d, m.property_id).maintenance++; }
+  return { from, to, rows: [...by.values()].sort((a, b) => a.day.localeCompare(b.day)) };
 }
 
 export function buildTrend(urgent: { created_at: string; property_id: string | null }[], maintenance: { created_at: string; property_id: string }[], propertyName: (id: string) => string, now: number): Trend {
@@ -155,7 +169,7 @@ export function buildTowerSnapshot(raw: RawTowerData): TowerSnapshot {
     stays: live.filter((b) => /^JOOD-[A-Z0-9]{6}$/.test(b.external_ref ?? "") && Date.parse(b.check_out) > now - 7 * 24 * HOUR).map((b) => ({ ref: b.external_ref as string, check_out: day(b.check_out) })),
     ai: { text_configured: aiEnabled(), voice_configured: voiceEnabled() },
     errors: raw.errors ?? [],
-    ai_probe: null, access: null, door_code: null, fast_turnovers: [], trend: null,
+    ai_probe: null, access: null, door_code: null, fast_turnovers: [], trend: null, daily: null,
   };
 }
 
@@ -202,8 +216,8 @@ export async function loadTowerSnapshot(supabase: SupabaseClient, now = Date.now
     read<AuditRow>("audit", supabase.from("audit_log").select("action, entity_id, meta, created_at").gte("created_at", new Date(now - 7 * 24 * HOUR).toISOString()).in("action", ["login.failed", "login.success", "team.created", "team.updated", "team.deleted", "door_code_second_factor_failed", "door_code_revealed"]).limit(5000)),
     read<{ id: string; name: string }>("team", supabase.from("team_members").select("id, name").limit(500)),
     read<{ id: string; property_id: string; assigned_to: string | null; started_at: string | null; completed_at: string | null }>("fast turnovers", supabase.from("turnover_tasks").select("id, property_id, assigned_to, started_at, completed_at").not("completed_at", "is", null).gte("completed_at", since).limit(500)),
-    supabase.from("guest_requests").select("created_at, bookings(property_id)").eq("urgency", "urgent").gte("created_at", new Date(now - 60 * 24 * HOUR).toISOString()).limit(5000),
-    read<{ created_at: string; property_id: string }>("maintenance history", supabase.from("maintenance_tickets").select("created_at, property_id").gte("created_at", new Date(now - 60 * 24 * HOUR).toISOString()).limit(5000)),
+    supabase.from("guest_requests").select("created_at, bookings(property_id)").eq("urgency", "urgent").gte("created_at", new Date(now - 91 * 24 * HOUR).toISOString()).limit(5000),
+    read<{ created_at: string; property_id: string }>("maintenance history", supabase.from("maintenance_tickets").select("created_at, property_id").gte("created_at", new Date(now - 91 * 24 * HOUR).toISOString()).limit(5000)),
     getAiProbe(now).catch(() => null),
   ]);
   snapshot.errors = errors;
@@ -226,6 +240,7 @@ export async function loadTowerSnapshot(supabase: SupabaseClient, now = Date.now
     const urgent = ((urgentRows.data ?? []) as unknown as { created_at: string; bookings: { property_id: string } | { property_id: string }[] | null }[])
       .map((u) => ({ created_at: u.created_at, property_id: (Array.isArray(u.bookings) ? u.bookings[0]?.property_id : u.bookings?.property_id) ?? null }));
     snapshot.trend = buildTrend(urgent, maintRows, pname, now);
+    snapshot.daily = buildDaily(urgent, maintRows, pname, now);
   } else errors.push(`urgent history: ${urgentRows.error.message.slice(0, 80)}`);
   return snapshot;
 }

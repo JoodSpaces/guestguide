@@ -137,3 +137,17 @@ describe("audit helper and AI probe", () => {
     expect(b.checked_at).toBe(a.checked_at);
   });
 });
+
+import { buildDaily } from "@/lib/tower-snapshot";
+describe("daily counts for baselines", () => {
+  it("counts urgent requests and maintenance per property per Cairo day, ignores the current day and anything older than 90 days", () => {
+    const d = buildDaily(
+      [{ created_at: iso(-24 * 3), property_id: "p1" }, { created_at: iso(-24 * 3 - 1), property_id: "p1" }, { created_at: iso(-1), property_id: "p1" }, { created_at: iso(-24 * 120), property_id: "p1" }, { created_at: iso(-24 * 2), property_id: null }],
+      [{ created_at: iso(-24 * 3), property_id: "p2" }], (id) => (id === "p1" ? "Dunes Villa" : "A04"), NOW);
+    const total = (k: "urgent" | "maintenance", name: string) => d.rows.filter((r) => r.property === name).reduce((n, r) => n + r[k], 0);
+    expect(total("urgent", "Dunes Villa")).toBe(2);          // the one from an hour ago is today, the 120-day-old one is outside the window
+    expect(total("maintenance", "A04")).toBe(1);
+    expect(d.rows.every((r) => r.day >= d.from && r.day <= d.to)).toBe(true);
+    expect(d.rows.some((r) => r.property === "Dunes Villa" && r.day === d.rows.find((x) => x.urgent === 2)?.day)).toBe(true);
+  });
+});
