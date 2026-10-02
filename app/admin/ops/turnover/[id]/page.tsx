@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
+import { viewableUrl } from "@/lib/ops-photos";
 import { TurnoverClient } from "@/components/admin/TurnoverClient";
 import type { TurnoverTask, TurnoverItem } from "@/components/admin/TurnoverClient";
 
@@ -18,7 +19,7 @@ export default async function TurnoverPage({ params }: Props) {
   const [{ data: task }, { data: items }, { data: teamMembers }] = await Promise.all([
     supabase
       .from("turnover_tasks")
-      .select("id, status, assigned_to, notes, condition, damage_notes, created_at, started_at, completed_at, approved_at, approved_by, properties(id, name), bookings(id, check_in, check_out, guest_first_name, guest_last_name)")
+      .select("id, status, assigned_to, notes, condition, damage_notes, created_at, started_at, completed_at, approved_at, approved_by, photo_review, properties(id, name), bookings(id, check_in, check_out, guest_first_name, guest_last_name)")
       .eq("id", id)
       .single<TurnoverTask>(),
     supabase
@@ -37,5 +38,7 @@ export default async function TurnoverPage({ params }: Props) {
 
   if (!task) notFound();
 
-  return <TurnoverClient task={task} items={items ?? []} teamMembers={teamMembers ?? []} myRole={myRole} myName={myName} />;
+  const signedItems = await Promise.all((items ?? []).map(async (i) => ({ ...i, photo_url: await viewableUrl(supabase, i.photo_url) })));
+
+  return <TurnoverClient task={task} items={signedItems} teamMembers={teamMembers ?? []} myRole={myRole} myName={myName} />;
 }

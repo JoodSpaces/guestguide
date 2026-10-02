@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
+import { PRIVATE_PATH_RE } from "@/lib/ops-photos";
 
 const schema = z.object({
   checked: z.boolean().optional(),
-  photo_url: z.string().url().nullable().optional(),
+  photo_url: z.union([z.string().url(), z.string().regex(PRIVATE_PATH_RE)]).nullable().optional(),
   notes: z.string().max(500).nullable().optional(),
 });
 

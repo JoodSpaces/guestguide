@@ -6,6 +6,7 @@ import { Check, X, User, AlertTriangle, Camera, Loader, Sparkles, CheckCircle2, 
 import Link from "next/link";
 import { toast } from "@/components/admin/Toaster";
 import { ROOM_LABELS } from "@/lib/ops-checklist";
+import type { PhotoReview } from "@/lib/photo-review";
 
 export interface TurnoverItem {
   id: string;
@@ -30,6 +31,7 @@ export interface TurnoverTask {
   completed_at: string | null;
   approved_at: string | null;
   approved_by: string | null;
+  photo_review?: PhotoReview | null;
   properties: { id: string; name: string };
   bookings: { id: string; check_in: string; check_out: string; guest_first_name: string; guest_last_name: string } | null;
 }
@@ -144,6 +146,8 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
   const [condition, setCondition]       = useState<string>(task.condition ?? "good");
   const [savingAssess, setSavingAssess] = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [review, setReview]             = useState<PhotoReview | null>(initialTask.photo_review ?? null);
+  const [reviewing, setReviewing]       = useState(false);
 
   // Inventory damage state
   const [damageRecords, setDamageRecords]     = useState<DamageRecord[]>([]);
@@ -250,16 +254,25 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
     setUploadingFor(itemId);
     const fd = new FormData();
     fd.append("file", file);
+    fd.append("private", "1"); // cleaning photos are staff-only
     const res = await fetch("/api/admin/ops/upload", { method: "POST", body: fd });
     setUploadingFor(null);
     if (!res.ok) { alert("Upload failed"); return; }
-    const { url } = await res.json();
+    const { url, path } = await res.json();
     setItems((prev) => prev.map((i) => i.id === itemId ? { ...i, photo_url: url } : i));
     await fetch(`/api/admin/ops/turnover/${task.id}/items/${itemId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ photo_url: url }),
+      body: JSON.stringify({ photo_url: path ?? url }),
     });
+  }
+
+  async function runReview() {
+    setReviewing(true);
+    const res = await fetch(`/api/admin/ops/turnover/${task.id}/review`, { method: "POST" });
+    setReviewing(false);
+    if (res.ok) { setReview((await res.json()).review); toast("Photos reviewed"); }
+    else toast(res.status === 503 ? "AI review is not switched on" : res.status === 422 ? "No reviewable photos yet" : "Review failed", "error");
   }
 
   async function saveAssign(name: string) {
@@ -528,7 +541,9 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                   <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                     {item.photo_url && (
                       <a href={item.photo_url} target="_blank" rel="noopener noreferrer">
-                        <Image src={item.photo_url} alt="" width={36} height={36} style={{ objectFit: "cover", borderRadius: "6px", border: "1px solid var(--jood-line)" }} />
+                        {/* Plain img: private photos are signed links, which next/image's public-only allow-list would reject. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={item.photo_url} alt="" width={36} height={36} style={{ objectFit: "cover", borderRadius: "6px", border: "1px solid var(--jood-line)" }} />
                       </a>
                     )}
                     <input
@@ -559,6 +574,34 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
           </div>
         );
       })}
+
+      {/* ── PHOTO REVIEW (flags only; a person decides) ── */}
+      <div style={card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: "0.9375rem" }}>Photo review</div>
+            <div style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
+              {review
+                ? `${review.photos_reviewed} of ${review.photos_received} photos checked · ${review.flags.length ? `${review.flags.length} to look at` : "nothing flagged"}`
+                : `${items.filter((i) => i.photo_url).length} photos so far · reviewed automatically when the job is marked done`}
+            </div>
+          </div>
+          <button onClick={runReview} disabled={reviewing || !items.some((i) => i.photo_url)} style={{ background: "none", border: "1px solid var(--jood-line)", borderRadius: "8px", padding: "8px 14px", cursor: "pointer", fontSize: "0.8125rem" }}>
+            {reviewing ? "Reviewing…" : review ? "Review again" : "Review photos"}
+          </button>
+        </div>
+        {review && review.flags.length > 0 && (
+          <ul style={{ margin: "12px 0 0", paddingLeft: "18px", fontSize: "0.875rem", lineHeight: 1.6 }}>
+            {review.flags.map((f, i) => (
+              <li key={i}><strong>{ROOM_LABELS[f.room as keyof typeof ROOM_LABELS] ?? f.room}</strong> · {f.label}: {f.kind.replace(/_/g, " ")}{f.note ? ` — ${f.note}` : ""}</li>
+            ))}
+          </ul>
+        )}
+        {review && review.skipped.length > 0 && (
+          <div style={{ marginTop: "8px", fontSize: "0.75rem", color: "var(--jood-ink-muted)" }}>{review.skipped.length} photo(s) not reviewed (e.g. HEIC or too large).</div>
+        )}
+        <div style={{ marginTop: "10px", fontSize: "0.75rem", color: "var(--jood-ink-muted)" }}>The AI only points out what it can see. It never marks a room clean: you decide.</div>
+      </div>
 
       {/* ── REPORT MISSING / DAMAGED ITEMS ── */}
       <div style={{ ...card, borderColor: damageRecords.length > 0 ? "var(--jood-accent)" : "var(--jood-line)" }}>

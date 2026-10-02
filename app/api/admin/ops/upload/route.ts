@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireSession, forbidden } from "@/lib/admin-auth";
+import { PRIVATE_PHOTO_BUCKET, privatePhotoPath } from "@/lib/ops-photos";
 
 export async function POST(req: NextRequest) {
   if (!(await requireSession(req, ["admin", "ops", "housekeeping", "maintenance"]))) return forbidden();
@@ -18,6 +19,19 @@ export async function POST(req: NextRequest) {
   const allowed = ["image/jpeg", "image/png", "image/webp", "image/heic"];
   if (!allowed.includes(file.type)) {
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+  }
+
+  // Cleaning photos are staff-only: private bucket, returned as a path plus a short-lived signed link.
+  if (formData.get("private") === "1") {
+    const supabasePriv = createServiceClient();
+    await supabasePriv.storage.createBucket(PRIVATE_PHOTO_BUCKET, { public: false }).catch(() => null);
+    const privPath = privatePhotoPath(file.name);
+    const { error: privErr } = await supabasePriv.storage
+      .from(PRIVATE_PHOTO_BUCKET)
+      .upload(privPath, Buffer.from(await file.arrayBuffer()), { contentType: file.type, upsert: false });
+    if (privErr) return NextResponse.json({ error: privErr.message }, { status: 500 });
+    const { data: signed } = await supabasePriv.storage.from(PRIVATE_PHOTO_BUCKET).createSignedUrl(privPath, 3600);
+    return NextResponse.json({ path: privPath, url: signed?.signedUrl ?? null });
   }
 
   const ext = file.name.split(".").pop() ?? "jpg";

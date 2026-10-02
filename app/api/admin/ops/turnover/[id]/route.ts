@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { requireSession, forbidden, checkPropertyAccess } from "@/lib/admin-auth";
+import { viewableUrl } from "@/lib/ops-photos";
+import { runTurnoverReview } from "@/lib/photo-review";
 
 const patchSchema = z.object({
   status: z.enum(["scheduled", "pending", "in_progress", "ready", "approved"]).optional(),
@@ -25,7 +27,7 @@ export async function GET(
   const [{ data: task }, { data: items }] = await Promise.all([
     supabase
       .from("turnover_tasks")
-      .select(`id, status, assigned_to, notes, condition, damage_notes, created_at, started_at, completed_at, approved_at, approved_by, property_id, properties(id, name), bookings(id, check_in, check_out, guest_first_name, guest_last_name)`)
+      .select(`id, status, assigned_to, notes, condition, damage_notes, created_at, started_at, completed_at, approved_at, approved_by, photo_review, property_id, properties(id, name), bookings(id, check_in, check_out, guest_first_name, guest_last_name)`)
       .eq("id", id)
       .single(),
     supabase
@@ -37,7 +39,8 @@ export async function GET(
 
   if (!task) return NextResponse.json({ error: "not_found" }, { status: 404 });
   if (!checkPropertyAccess(session, task.property_id)) return forbidden();
-  return NextResponse.json({ task, items: items ?? [] });
+  const signed = await Promise.all((items ?? []).map(async (i) => ({ ...i, photo_url: await viewableUrl(supabase, i.photo_url) })));
+  return NextResponse.json({ task, items: signed });
 }
 
 export async function PATCH(
@@ -77,6 +80,9 @@ export async function PATCH(
 
   const { error } = await supabase.from("turnover_tasks").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // When the cleaner marks the job done, the photos get a second pair of eyes in the background (flags only; a person decides).
+  if (parsed.data.status === "ready") after(() => runTurnoverReview(createServiceClient(), id).then(() => undefined));
 
   if (parsed.data.status) {
     await supabase.from("audit_log").insert({
