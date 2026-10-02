@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { auditAdmin } from "@/lib/audit";
 import { requireSession, forbidden } from "@/lib/admin-auth";
 
 const roomSpecSchema = z.object({
@@ -30,7 +31,8 @@ const updateSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireSession(req, ["admin"]))) return forbidden();
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
   const { id } = await params;
 
   const body = await req.json().catch(() => null);
@@ -49,17 +51,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditAdmin(supabase, { actorType: "admin", actorId: session.id, action: "property.updated", entity: "properties", entityId: id, meta: { fields: Object.keys(update).join(",") } });
   return NextResponse.json(data);
 }
 
 // "Delete" archives: the property leaves every list and stops taking bookings, but its bookings, requests,
 // turnovers and stock history are kept, and it can be restored (PATCH { archived: false }). Nothing cascades.
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireSession(req, ["admin"]))) return forbidden();
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
   const { id } = await params;
 
   const supabase = createServiceClient();
   const { error } = await supabase.from("properties").update({ archived_at: new Date().toISOString() }).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditAdmin(supabase, { actorType: "admin", actorId: session.id, action: "property.archived", entity: "properties", entityId: id });
   return NextResponse.json({ ok: true });
 }

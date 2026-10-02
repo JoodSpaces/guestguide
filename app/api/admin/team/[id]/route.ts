@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { auditAdmin } from "@/lib/audit";
 import { hashPassword, requireSession, forbidden } from "@/lib/admin-auth";
 
 const patchSchema = z.object({
@@ -10,7 +11,8 @@ const patchSchema = z.object({
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireSession(req, ["admin"]))) return forbidden();
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
 
   const { id } = await params;
   const body = await req.json().catch(() => null);
@@ -40,12 +42,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const { error } = await supabase.from("team_members").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditAdmin(supabase, {
+    actorType: "admin", actorId: session.id, action: "team.updated", entity: "team_members", entityId: id,
+    meta: { role: parsed.data.role, is_active: parsed.data.is_active, password_changed: !!parsed.data.password },
+  });
 
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  if (!(await requireSession(req, ["admin"]))) return forbidden();
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
 
   const { id } = await params;
   const supabase = createServiceClient();
@@ -60,8 +67,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     return NextResponse.json({ error: "The master admin account cannot be deleted." }, { status: 403 });
   }
 
+  const { data: gone } = await supabase.from("team_members").select("name, role").eq("id", id).maybeSingle<{ name: string; role: string }>();
   const { error } = await supabase.from("team_members").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  await auditAdmin(supabase, { actorType: "admin", actorId: session.id, action: "team.deleted", entity: "team_members", entityId: id, meta: { name: gone?.name, role: gone?.role } });
 
   return NextResponse.json({ ok: true });
 }

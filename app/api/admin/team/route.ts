@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
+import { auditAdmin } from "@/lib/audit";
 import { hashPassword, requireSession, forbidden } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
@@ -22,7 +23,8 @@ const createSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  if (!(await requireSession(req, ["admin"]))) return forbidden();
+  const session = await requireSession(req, ["admin"]);
+  if (!session) return forbidden();
 
   const body = await req.json().catch(() => null);
   const parsed = createSchema.safeParse(body);
@@ -42,5 +44,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  await auditAdmin(supabase, { actorType: "admin", actorId: session.id, action: "team.created", entity: "team_members", entityId: (data as { id: string }).id, meta: { name: parsed.data.name, role: parsed.data.role } });
   return NextResponse.json(data, { status: 201 });
 }

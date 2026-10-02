@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { auditAdmin } from "@/lib/audit";
 import { verifyPassword, signAdminCookie, storeSessionJti, revokeSession, requireSession, ROLE_HOME, type AdminSession } from "@/lib/admin-auth";
 
 function setCookie(res: NextResponse, token: string) {
@@ -44,12 +45,15 @@ export async function POST(req: NextRequest) {
       exp,
       propertyIds: member.property_ids ?? null,
     };
+    await auditAdmin(supabase, { actorType: "admin", actorId: member.id, action: "login.success", entity: "team_members", entityId: member.id, meta: { role: member.role } });
     const token = await signAdminCookie(session);
     const res = NextResponse.json({ ok: true, role: member.role, redirect: ROLE_HOME[member.role], token, session });
     setCookie(res, token);
     return res;
   }
 
+  // Only whether the name exists is recorded, never the name or the password that was typed.
+  await auditAdmin(supabase, { actorType: "anon", action: "login.failed", entity: "team_members", meta: { known_account: !!member } });
   return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 }
 
