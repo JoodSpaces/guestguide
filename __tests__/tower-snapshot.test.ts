@@ -213,7 +213,7 @@ describe("buildStaffRecords", () => {
 describe("buildOps: stock, damage, services and ratings as counts and amounts", () => {
   const name = (id: string) => (id === "p1" ? "Dunes Villa" : id === "p2" ? "Acasia Penthouse" : "a property");
   const input = (over: Partial<OpsInput> = {}): OpsInput => ({
-    now: NOW, propertyName: name, alertsOpen: 2,
+    now: NOW, propertyName: name, alertsOpen: 2, stays30d: 12,
     stock: [
       { property_id: "p1", item_name: "Towels", quantity: 3, reorder_threshold: 6, default_threshold: 4, archived: false },
       { property_id: "p1", item_name: "Soap", quantity: 0, reorder_threshold: null, default_threshold: 5, archived: false },
@@ -247,7 +247,7 @@ describe("buildOps: stock, damage, services and ratings as counts and amounts", 
   });
   it("services: paid revenue in the last 30 days, what is paid but not fulfilled after a day, and rejections; old requests do not count", () => {
     const o = buildOps(input());
-    expect(o.services).toEqual({ active: 1, requests_30d: 3, paid_30d: 2, revenue_egp_30d: 1500, paid_not_fulfilled: 2, rejected_30d: 1 });
+    expect(o.services).toEqual({ active: 1, stays_30d: 12, requests_30d: 3, paid_30d: 2, revenue_egp_30d: 1500, paid_not_fulfilled: 2, rejected_30d: 1 });
   });
   it("ratings: the average, how many were low, and by property, only from the last 30 days", () => {
     const o = buildOps(input());
@@ -255,8 +255,8 @@ describe("buildOps: stock, damage, services and ratings as counts and amounts", 
     expect(o.ratings.by_property[0]).toEqual({ property: "Dunes Villa", count: 2, avg: 2.5 });
   });
   it("with nothing recorded it says so with zeros and nulls, never an invented figure", () => {
-    const o = buildOps(input({ stock: [], damage: [], services: [], requests: [], ratings: [], alertsOpen: 0 }));
-    expect(o).toEqual({ inventory: { tracked: 0, low: [], out_of_stock: 0, open_alerts: 0 }, damage: { items_30d: 0, items_prior: 0, by_property: [], top_items: [] }, services: { active: 0, requests_30d: 0, paid_30d: 0, revenue_egp_30d: 0, paid_not_fulfilled: 0, rejected_30d: 0 }, ratings: { count_30d: 0, avg_30d: null, low_30d: 0, by_property: [] } });
+    const o = buildOps(input({ stock: [], damage: [], services: [], requests: [], ratings: [], alertsOpen: 0, stays30d: 0 }));
+    expect(o).toEqual({ inventory: { tracked: 0, low: [], out_of_stock: 0, open_alerts: 0 }, damage: { items_30d: 0, items_prior: 0, by_property: [], top_items: [] }, services: { active: 0, stays_30d: 0, requests_30d: 0, paid_30d: 0, revenue_egp_30d: 0, paid_not_fulfilled: 0, rejected_30d: 0 }, ratings: { count_30d: 0, avg_30d: null, low_30d: 0, by_property: [] } });
   });
   it("never carries anything a guest wrote or identifies a guest: only the fields of the contract", () => {
     const dirty = { ...input(), requests: [{ ...input().requests[0], guest_notes: "Maria wants a late towel +201000", paymob_payment_url: "https://pay.example/x" }], ratings: [{ ...input().ratings[0], comment: "Maria Lopez was rude", booking_id: "b9" }] } as unknown as OpsInput;
