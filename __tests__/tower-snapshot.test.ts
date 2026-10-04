@@ -83,7 +83,7 @@ describe("buildTowerSnapshot", () => {
   });
 });
 
-import { summariseAccess, summariseDoorCodes, findFastTurnovers, buildTrend } from "@/lib/tower-snapshot";
+import { summariseAccess, summariseDoorCodes, findFastTurnovers, buildTrend, buildOps, type OpsInput } from "@/lib/tower-snapshot";
 import { cleanMeta } from "@/lib/audit";
 import { getAiProbe, _resetProbeCache } from "@/lib/ai-probe";
 
@@ -207,5 +207,60 @@ describe("buildStaffRecords", () => {
   it("a snapshot with no staff data still carries empty lists, so an older reader is unaffected", () => {
     const s = buildTowerSnapshot(base());
     expect(s.staff).toEqual([]); expect(s.actions).toEqual([]);
+  });
+});
+
+describe("buildOps: stock, damage, services and ratings as counts and amounts", () => {
+  const name = (id: string) => (id === "p1" ? "Dunes Villa" : id === "p2" ? "Acasia Penthouse" : "a property");
+  const input = (over: Partial<OpsInput> = {}): OpsInput => ({
+    now: NOW, propertyName: name, alertsOpen: 2,
+    stock: [
+      { property_id: "p1", item_name: "Towels", quantity: 3, reorder_threshold: 6, default_threshold: 4, archived: false },
+      { property_id: "p1", item_name: "Soap", quantity: 0, reorder_threshold: null, default_threshold: 5, archived: false },
+      { property_id: "p2", item_name: "Towels", quantity: 20, reorder_threshold: 6, default_threshold: 4, archived: false },
+      { property_id: "p2", item_name: "Old lamp", quantity: 0, reorder_threshold: 2, default_threshold: 2, archived: true },
+    ],
+    damage: [
+      { property_id: "p1", item_name: "Glass", quantity: 2, created_at: iso(-24 * 5) }, { property_id: "p1", item_name: "Glass", quantity: 1, created_at: iso(-24 * 9) },
+      { property_id: "p2", item_name: "Towels", quantity: 1, created_at: iso(-24 * 40) }, { property_id: "p1", item_name: "Chair", quantity: 4, created_at: iso(-24 * 45) },
+    ],
+    services: [{ id: "s1", price_egp: 500, is_active: true }, { id: "s2", price_egp: 300, is_active: false }],
+    requests: [
+      { service_id: "s1", quantity: 2, status: "paid", created_at: iso(-24 * 3), paid_at: iso(-24 * 3), fulfilled_at: null, rejected_at: null },
+      { service_id: "s1", quantity: 1, status: "fulfilled", created_at: iso(-24 * 6), paid_at: iso(-24 * 6), fulfilled_at: iso(-24 * 5), rejected_at: null },
+      { service_id: "s2", quantity: 1, status: "rejected", created_at: iso(-24 * 2), paid_at: null, fulfilled_at: null, rejected_at: iso(-24 * 2) },
+      { service_id: "s1", quantity: 1, status: "paid", created_at: iso(-24 * 70), paid_at: iso(-24 * 70), fulfilled_at: null, rejected_at: null },
+    ],
+    ratings: [{ property_id: "p1", stars: 2, created_at: iso(-24) }, { property_id: "p1", stars: 3, created_at: iso(-48) }, { property_id: "p2", stars: 5, created_at: iso(-72) }, { property_id: "p2", stars: 5, created_at: iso(-24 * 50) }],
+    ...over,
+  });
+  it("lists what is at or under its reorder line, ignoring archived items, and counts what is out", () => {
+    const o = buildOps(input());
+    expect(o.inventory.low.map((l) => `${l.property}:${l.item}:${l.stock}/${l.reorder_at}`)).toEqual(["Dunes Villa:Soap:0/5", "Dunes Villa:Towels:3/6"]);
+    expect(o.inventory).toMatchObject({ tracked: 3, out_of_stock: 1, open_alerts: 2 });
+  });
+  it("damage is counted by units over the last 30 days against the 30 before, by property and by item", () => {
+    const o = buildOps(input());
+    expect(o.damage).toMatchObject({ items_30d: 3, items_prior: 5 });
+    expect(o.damage.by_property.find((p) => p.property === "Dunes Villa")).toEqual({ property: "Dunes Villa", items_30d: 3, items_prior: 4 });
+    expect(o.damage.top_items[0]).toEqual({ item: "Glass", qty: 3 });
+  });
+  it("services: paid revenue in the last 30 days, what is paid but not fulfilled after a day, and rejections; old requests do not count", () => {
+    const o = buildOps(input());
+    expect(o.services).toEqual({ active: 1, requests_30d: 3, paid_30d: 2, revenue_egp_30d: 1500, paid_not_fulfilled: 2, rejected_30d: 1 });
+  });
+  it("ratings: the average, how many were low, and by property, only from the last 30 days", () => {
+    const o = buildOps(input());
+    expect(o.ratings).toMatchObject({ count_30d: 3, avg_30d: 3.3, low_30d: 2 });
+    expect(o.ratings.by_property[0]).toEqual({ property: "Dunes Villa", count: 2, avg: 2.5 });
+  });
+  it("with nothing recorded it says so with zeros and nulls, never an invented figure", () => {
+    const o = buildOps(input({ stock: [], damage: [], services: [], requests: [], ratings: [], alertsOpen: 0 }));
+    expect(o).toEqual({ inventory: { tracked: 0, low: [], out_of_stock: 0, open_alerts: 0 }, damage: { items_30d: 0, items_prior: 0, by_property: [], top_items: [] }, services: { active: 0, requests_30d: 0, paid_30d: 0, revenue_egp_30d: 0, paid_not_fulfilled: 0, rejected_30d: 0 }, ratings: { count_30d: 0, avg_30d: null, low_30d: 0, by_property: [] } });
+  });
+  it("never carries anything a guest wrote or identifies a guest: only the fields of the contract", () => {
+    const dirty = { ...input(), requests: [{ ...input().requests[0], guest_notes: "Maria wants a late towel +201000", paymob_payment_url: "https://pay.example/x" }], ratings: [{ ...input().ratings[0], comment: "Maria Lopez was rude", booking_id: "b9" }] } as unknown as OpsInput;
+    const json = JSON.stringify(buildOps(dirty));
+    expect(json).not.toMatch(/Maria|Lopez|\+201000|pay\.example|b9|comment|notes/i);
   });
 });

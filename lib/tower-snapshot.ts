@@ -29,10 +29,19 @@ export interface TowerSnapshot {
   actions: TowerAction[];
   trend: Trend | null;
   daily: Daily | null;
+  /** Optional: stock, damage, services and ratings (see TowerOps). Missing when it could not be read. */
+  ops?: TowerOps | null;
 }
 
 export interface Access { failed_logins_24h: number; logins_24h: number; team_changes_7d: { action: string; name: string; at: string }[] }
 export interface DoorCodes { failures_24h: { property: string; failures: number }[]; reveals_24h: number }
+/** What runs the houses day to day, as counts and amounts only: stock, damage, paid services and guest ratings. No guest name, note, comment or payment link. */
+export interface TowerOps {
+  inventory: { tracked: number; low: { property: string; item: string; stock: number; reorder_at: number }[]; out_of_stock: number; open_alerts: number };
+  damage: { items_30d: number; items_prior: number; by_property: { property: string; items_30d: number; items_prior: number }[]; top_items: { item: string; qty: number }[] };
+  services: { active: number; requests_30d: number; paid_30d: number; revenue_egp_30d: number; paid_not_fulfilled: number; rejected_30d: number };
+  ratings: { count_30d: number; avg_30d: number | null; low_30d: number; by_property: { property: string; count: number; avg: number }[] };
+}
 export interface TowerStaff { id: string; name: string; job: string }
 export interface TowerAction { id: string; at: string; actor_id: string; kind: string; property: string | null; booking_ref: string | null; detail: string | null }
 export interface FastTurnover { task_id: string; property: string; assigned_to: string | null; minutes: number; items: number }
@@ -148,6 +157,37 @@ export interface RawTowerData {
 }
 
 const HOUR = 3_600_000;
+
+export interface OpsInput {
+  now: number; propertyName: (id: string) => string;
+  stock: { property_id: string; item_name: string; quantity: number; reorder_threshold: number | null; default_threshold: number | null; archived: boolean }[];
+  alertsOpen: number;
+  damage: { property_id: string | null; item_name: string; quantity: number; created_at: string }[];
+  services: { id: string; price_egp: number; is_active: boolean }[];
+  requests: { service_id: string; quantity: number; status: string; created_at: string; paid_at: string | null; fulfilled_at: string | null; rejected_at: string | null }[];
+  ratings: { property_id: string | null; stars: number; created_at: string }[];
+}
+const r1 = (n: number) => Math.round(n * 10) / 10;
+/** Pure: counts and amounts from raw operations rows. Nothing a guest wrote, and no guest identity, ever enters. */
+export function buildOps(i: OpsInput): TowerOps {
+  const { now } = i, d30 = now - 30 * 24 * HOUR, d60 = now - 60 * 24 * HOUR, inWin = (iso: string, from: number, to: number) => { const t = Date.parse(iso); return Number.isFinite(t) && t >= from && t < to; };
+  const live = i.stock.filter((s) => !s.archived), line = (s: typeof live[number]) => s.reorder_threshold ?? s.default_threshold ?? 0;
+  const low = live.filter((s) => s.quantity <= line(s) && line(s) > 0).sort((a, b) => a.quantity - b.quantity).slice(0, 12).map((s) => ({ property: i.propertyName(s.property_id), item: s.item_name, stock: s.quantity, reorder_at: line(s) }));
+  const dm = (from: number, to: number) => i.damage.filter((x) => inWin(x.created_at, from, to));
+  const byProp = new Map<string, { a: number; b: number }>(); for (const x of dm(d30, now + 1)) { const k = x.property_id ? i.propertyName(x.property_id) : "a property"; byProp.set(k, { a: (byProp.get(k)?.a ?? 0) + x.quantity, b: byProp.get(k)?.b ?? 0 }); }
+  for (const x of dm(d60, d30)) { const k = x.property_id ? i.propertyName(x.property_id) : "a property"; byProp.set(k, { a: byProp.get(k)?.a ?? 0, b: (byProp.get(k)?.b ?? 0) + x.quantity }); }
+  const topMap = new Map<string, number>(); for (const x of dm(d30, now + 1)) topMap.set(x.item_name, (topMap.get(x.item_name) ?? 0) + x.quantity);
+  const price = new Map(i.services.map((s) => [s.id, s.price_egp])), req30 = i.requests.filter((r) => inWin(r.created_at, d30, now + 1));
+  const paid = req30.filter((r) => r.paid_at && !r.rejected_at);
+  const rt = i.ratings.filter((r) => inWin(r.created_at, d30, now + 1) && r.stars >= 1 && r.stars <= 5), ratedBy = new Map<string, number[]>();
+  for (const r of rt) { const k = r.property_id ? i.propertyName(r.property_id) : "a property"; (ratedBy.get(k) ?? ratedBy.set(k, []).get(k)!).push(r.stars); }
+  return {
+    inventory: { tracked: live.length, low, out_of_stock: live.filter((s) => s.quantity <= 0).length, open_alerts: i.alertsOpen },
+    damage: { items_30d: dm(d30, now + 1).reduce((t, x) => t + x.quantity, 0), items_prior: dm(d60, d30).reduce((t, x) => t + x.quantity, 0), by_property: [...byProp].map(([property, v]) => ({ property, items_30d: v.a, items_prior: v.b })).sort((a, b) => b.items_30d - a.items_30d).slice(0, 12), top_items: [...topMap].map(([item, qty]) => ({ item, qty })).sort((a, b) => b.qty - a.qty).slice(0, 5) },
+    services: { active: i.services.filter((s) => s.is_active).length, requests_30d: req30.length, paid_30d: paid.length, revenue_egp_30d: paid.reduce((t, r) => t + (price.get(r.service_id) ?? 0) * Math.max(1, r.quantity), 0), paid_not_fulfilled: i.requests.filter((r) => r.paid_at && !r.fulfilled_at && !r.rejected_at && now - Date.parse(r.paid_at) > 24 * HOUR).length, rejected_30d: req30.filter((r) => r.rejected_at).length },
+    ratings: { count_30d: rt.length, avg_30d: rt.length ? r1(rt.reduce((t, r) => t + r.stars, 0) / rt.length) : null, low_30d: rt.filter((r) => r.stars <= 3).length, by_property: [...ratedBy].map(([property, a]) => ({ property, count: a.length, avg: r1(a.reduce((t, x) => t + x, 0) / a.length) })).sort((a, b) => a.avg - b.avg).slice(0, 12) },
+  };
+}
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
 
 /** Pure: turn raw rows into the snapshot. Everything the engine needs, nothing personal. */
@@ -291,6 +331,30 @@ export async function loadTowerSnapshot(supabase: SupabaseClient, now = Date.now
     const refOf = new Map(bookingRefs.map((b) => [b.id, /^JOOD-[A-Z0-9]{6}$/.test(b.external_ref ?? "") ? b.external_ref : null]));
     const rec = buildStaffRecords({ team: (team as unknown as TeamRow[]), tasks: doneTasks, itemCounts: sizes, tickets: resolved, propertyName: pname, bookingRef: (id) => refOf.get(id) ?? null, now });
     snapshot.staff = rec.staff; snapshot.actions = rec.actions;
+  }
+  // Stock, damage, services and ratings (optional: a failing read leaves ops out and is reported, never a crash)
+  {
+    const since60 = new Date(now - 60 * 24 * HOUR).toISOString();
+    const [stock, items, alerts, dmg, services, requests, ratings] = await Promise.all([
+      read<{ property_id: string; item_id: string; quantity: number; reorder_threshold: number | null }>("stock", supabase.from("property_inventory").select("property_id, item_id, quantity, reorder_threshold").limit(3000)),
+      read<{ id: string; name: string; reorder_threshold_default: number | null; archived_at: string | null }>("stock items", supabase.from("inventory_items").select("id, name, reorder_threshold_default, archived_at").limit(1000)),
+      read<{ id: string }>("stock alerts", supabase.from("inventory_alerts").select("id").is("resolved_at", null).limit(2000)),
+      read<{ turnover_task_id: string; item_id: string; quantity: number; created_at: string }>("damage", supabase.from("turnover_damage_items").select("turnover_task_id, item_id, quantity, created_at").gte("created_at", since60).limit(3000)),
+      read<{ id: string; price_egp: number; is_active: boolean }>("services", supabase.from("services").select("id, price_egp, is_active").limit(500)),
+      read<{ service_id: string; quantity: number; status: string; created_at: string; paid_at: string | null; fulfilled_at: string | null; rejected_at: string | null }>("service requests", supabase.from("service_requests").select("service_id, quantity, status, created_at, paid_at, fulfilled_at, rejected_at").gte("created_at", since60).limit(3000)),
+      read<{ booking_id: string; stars: number; created_at: string }>("ratings", supabase.from("stay_ratings").select("booking_id, stars, created_at").gte("created_at", since60).limit(3000)),
+    ]);
+    const itemOf = new Map(items.map((x) => [x.id, x]));
+    const taskIds = [...new Set(dmg.map((x) => x.turnover_task_id))];
+    const taskProp = new Map<string, string>(); if (taskIds.length) for (const t of await read<{ id: string; property_id: string }>("damage places", supabase.from("turnover_tasks").select("id, property_id").in("id", taskIds).limit(3000))) taskProp.set(t.id, t.property_id);
+    const bookingIds = [...new Set(ratings.map((x) => x.booking_id))];
+    const bookingProp = new Map<string, string>(); if (bookingIds.length) for (const b of await read<{ id: string; property_id: string }>("rating places", supabase.from("bookings").select("id, property_id").in("id", bookingIds).limit(3000))) bookingProp.set(b.id, b.property_id);
+    snapshot.ops = buildOps({
+      now, propertyName: pname, alertsOpen: alerts.length,
+      stock: stock.map((s) => ({ property_id: s.property_id, item_name: itemOf.get(s.item_id)?.name ?? "an item", quantity: s.quantity, reorder_threshold: s.reorder_threshold, default_threshold: itemOf.get(s.item_id)?.reorder_threshold_default ?? null, archived: !!itemOf.get(s.item_id)?.archived_at })),
+      damage: dmg.map((x) => ({ property_id: taskProp.get(x.turnover_task_id) ?? null, item_name: itemOf.get(x.item_id)?.name ?? "an item", quantity: x.quantity, created_at: x.created_at })),
+      services, requests, ratings: ratings.map((x) => ({ property_id: bookingProp.get(x.booking_id) ?? null, stars: x.stars, created_at: x.created_at })),
+    });
   }
   if (!urgentRows.error) {
     const urgent = ((urgentRows.data ?? []) as unknown as { created_at: string; bookings: { property_id: string } | { property_id: string }[] | null }[])
