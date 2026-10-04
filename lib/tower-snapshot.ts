@@ -24,12 +24,17 @@ export interface TowerSnapshot {
   access: Access | null;
   door_code: DoorCodes | null;
   fast_turnovers: FastTurnover[];
+  /** The staff roster and what they did lately (cleanings, inspections, repairs), for the Control Tower's map. Names of staff only: never a guest. */
+  staff: TowerStaff[];
+  actions: TowerAction[];
   trend: Trend | null;
   daily: Daily | null;
 }
 
 export interface Access { failed_logins_24h: number; logins_24h: number; team_changes_7d: { action: string; name: string; at: string }[] }
 export interface DoorCodes { failures_24h: { property: string; failures: number }[]; reveals_24h: number }
+export interface TowerStaff { id: string; name: string; job: string }
+export interface TowerAction { id: string; at: string; actor_id: string; kind: string; property: string | null; booking_ref: string | null; detail: string | null }
 export interface FastTurnover { task_id: string; property: string; assigned_to: string | null; minutes: number; items: number }
 export interface Daily { from: string; to: string; rows: { day: string; property: string; urgent: number; maintenance: number }[] }
 export interface Trend { properties: { name: string; urgent_30d: number; urgent_prior: number; maintenance_30d: number; maintenance_prior: number }[] }
@@ -59,6 +64,43 @@ export function summariseDoorCodes(rows: AuditRow[], bookingProperty: Map<string
     if (r.action === "door_code_second_factor_failed") { const p = bookingProperty.get(r.entity_id ?? "") ?? "a property"; fails.set(p, (fails.get(p) ?? 0) + 1); }
   }
   return { failures_24h: [...fails.entries()].map(([property, failures]) => ({ property, failures })).sort((a, b) => b.failures - a.failures), reveals_24h: reveals };
+}
+
+
+// ── Staff and what they did (tested) ─────────────────────────────────────
+const JOB: Record<string, string> = { housekeeping: "Housekeeping", maintenance: "Maintenance", concierge: "Guest support", ops: "Operations" };
+export interface TeamRow { id: string; name: string; role: string; is_active?: boolean }
+export interface DoneTask { id: string; property_id: string; booking_id: string | null; assigned_to: string | null; started_at: string | null; completed_at: string | null; approved_at: string | null; approved_by: string | null }
+export interface ResolvedTicket { id: string; property_id: string; category: string | null; resolved_at: string | null; resolved_by: string | null }
+
+/**
+ * The roster (housekeeping, maintenance, guest support, operations: not the admins, who are partners in the Control Tower) and the last 30 days of what each
+ * did. `assigned_to`, `approved_by` and `resolved_by` are free text here, so a person is matched by id or by name (case-insensitive); an action nobody can be
+ * named for is left out rather than guessed. Only the person's name and role, a property name, a booking reference and a few facts about the work leave this
+ * function: no guest names, contact details, door codes or message text.
+ */
+export function buildStaffRecords(input: { team: TeamRow[]; tasks: DoneTask[]; itemCounts: Map<string, number>; tickets: ResolvedTicket[]; propertyName: (id: string) => string; bookingRef: (id: string) => string | null; now: number }): { staff: TowerStaff[]; actions: TowerAction[] } {
+  const roster = input.team.filter((t) => t.is_active !== false && JOB[t.role]);
+  const staff: TowerStaff[] = roster.map((t) => ({ id: t.id, name: t.name.slice(0, 60), job: JOB[t.role] }));
+  const byKey = new Map<string, string>(); for (const t of roster) { byKey.set(t.id, t.id); byKey.set(t.name.trim().toLowerCase(), t.id); }
+  const who = (v: string | null) => (v ? byKey.get(v) ?? byKey.get(v.trim().toLowerCase()) ?? null : null);
+  const since = input.now - 30 * 24 * HOUR, inWindow = (iso: string | null) => !!iso && Date.parse(iso) >= since && Date.parse(iso) <= input.now + HOUR;
+  const actions: TowerAction[] = [];
+  for (const t of input.tasks) {
+    const ref = t.booking_id ? input.bookingRef(t.booking_id) : null, items = input.itemCounts.get(t.id) ?? 0, property = input.propertyName(t.property_id);
+    const done = who(t.assigned_to);
+    if (done && inWindow(t.completed_at)) {
+      const minutes = t.started_at && t.completed_at ? Math.round((Date.parse(t.completed_at) - Date.parse(t.started_at)) / 60000) : null;
+      actions.push({ id: `turnover:${t.id}`, at: t.completed_at as string, actor_id: done, kind: "cleaning done", property, booking_ref: ref, detail: [minutes != null && minutes >= 0 ? `${minutes} min` : null, items ? `${items} items` : null].filter(Boolean).join(", ") || null });
+    }
+    const checked = who(t.approved_by);
+    if (checked && inWindow(t.approved_at)) actions.push({ id: `inspect:${t.id}`, at: t.approved_at as string, actor_id: checked, kind: "inspection", property, booking_ref: ref, detail: "checked after cleaning" });
+  }
+  for (const k of input.tickets) {
+    const fixer = who(k.resolved_by);
+    if (fixer && inWindow(k.resolved_at)) actions.push({ id: `repair:${k.id}`, at: k.resolved_at as string, actor_id: fixer, kind: "repair done", property: input.propertyName(k.property_id), booking_ref: null, detail: k.category ? String(k.category).slice(0, 30) : null });
+  }
+  return { staff, actions: actions.sort((a, b) => a.at.localeCompare(b.at)).slice(-3000) };
 }
 
 /** A cleaning marked done far faster than a full checklist normally takes. A prompt to look at the photos, never a verdict. */
@@ -169,7 +211,7 @@ export function buildTowerSnapshot(raw: RawTowerData): TowerSnapshot {
     stays: live.filter((b) => /^JOOD-[A-Z0-9]{6}$/.test(b.external_ref ?? "") && Date.parse(b.check_out) > now - 7 * 24 * HOUR).map((b) => ({ ref: b.external_ref as string, check_out: day(b.check_out) })),
     ai: { text_configured: aiEnabled(), voice_configured: voiceEnabled() },
     errors: raw.errors ?? [],
-    ai_probe: null, access: null, door_code: null, fast_turnovers: [], trend: null, daily: null,
+    ai_probe: null, access: null, door_code: null, fast_turnovers: [], staff: [], actions: [], trend: null, daily: null,
   };
 }
 
@@ -214,7 +256,7 @@ export async function loadTowerSnapshot(supabase: SupabaseClient, now = Date.now
   // Access, door codes, cleaning speed and trends. Each is optional: a failure leaves that part out and is reported.
   const [audit, team, tasks, urgentRows, maintRows, probe] = await Promise.all([
     read<AuditRow>("audit", supabase.from("audit_log").select("action, entity_id, meta, created_at").gte("created_at", new Date(now - 7 * 24 * HOUR).toISOString()).in("action", ["login.failed", "login.success", "team.created", "team.updated", "team.deleted", "door_code_second_factor_failed", "door_code_revealed"]).limit(5000)),
-    read<{ id: string; name: string }>("team", supabase.from("team_members").select("id, name").limit(500)),
+    read<{ id: string; name: string; role: string; is_active: boolean }>("team", supabase.from("team_members").select("id, name, role, is_active").limit(500)),
     read<{ id: string; property_id: string; assigned_to: string | null; started_at: string | null; completed_at: string | null }>("fast turnovers", supabase.from("turnover_tasks").select("id, property_id, assigned_to, started_at, completed_at").not("completed_at", "is", null).gte("completed_at", since).limit(500)),
     supabase.from("guest_requests").select("created_at, bookings(property_id)").eq("urgency", "urgent").gte("created_at", new Date(now - 91 * 24 * HOUR).toISOString()).limit(5000),
     read<{ created_at: string; property_id: string }>("maintenance history", supabase.from("maintenance_tickets").select("created_at, property_id").gte("created_at", new Date(now - 91 * 24 * HOUR).toISOString()).limit(5000)),
@@ -235,6 +277,20 @@ export async function loadTowerSnapshot(supabase: SupabaseClient, now = Date.now
     const counts = new Map<string, number>();
     for (const i of items) counts.set(i.task_id, (counts.get(i.task_id) ?? 0) + 1);
     snapshot.fast_turnovers = findFastTurnovers(tasks, counts, pname);
+  }
+  // Staff and what they did (optional: a failing read leaves it out and is reported, never a crash)
+  {
+    const since30 = new Date(now - 30 * 24 * HOUR).toISOString();
+    const [doneTasks, resolved, bookingRefs] = await Promise.all([
+      read<DoneTask>("staff cleanings", supabase.from("turnover_tasks").select("id, property_id, booking_id, assigned_to, started_at, completed_at, approved_at, approved_by").or(`completed_at.gte.${since30},approved_at.gte.${since30}`).limit(3000)),
+      read<ResolvedTicket>("staff repairs", supabase.from("maintenance_tickets").select("id, property_id, category, resolved_at, resolved_by").eq("status", "resolved").gte("resolved_at", since30).limit(2000)),
+      read<{ id: string; external_ref: string | null }>("staff booking refs", supabase.from("bookings").select("id, external_ref").gte("check_out", since30).limit(3000)),
+    ]);
+    const sizes = new Map<string, number>();
+    if (doneTasks.length) { const items = await read<{ task_id: string }>("staff checklist sizes", supabase.from("turnover_items").select("task_id").in("task_id", doneTasks.map((t) => t.id)).limit(30000)); for (const i of items) sizes.set(i.task_id, (sizes.get(i.task_id) ?? 0) + 1); }
+    const refOf = new Map(bookingRefs.map((b) => [b.id, /^JOOD-[A-Z0-9]{6}$/.test(b.external_ref ?? "") ? b.external_ref : null]));
+    const rec = buildStaffRecords({ team: (team as unknown as TeamRow[]), tasks: doneTasks, itemCounts: sizes, tickets: resolved, propertyName: pname, bookingRef: (id) => refOf.get(id) ?? null, now });
+    snapshot.staff = rec.staff; snapshot.actions = rec.actions;
   }
   if (!urgentRows.error) {
     const urgent = ((urgentRows.data ?? []) as unknown as { created_at: string; bookings: { property_id: string } | { property_id: string }[] | null }[])

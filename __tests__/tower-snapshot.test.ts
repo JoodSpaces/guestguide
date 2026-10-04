@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTowerSnapshot, type RawTowerData } from "@/lib/tower-snapshot";
+import { buildStaffRecords, buildTowerSnapshot, type RawTowerData } from "@/lib/tower-snapshot";
 
 const NOW = Date.parse("2026-10-02T10:00:00Z");
 const H = 3_600_000;
@@ -149,5 +149,63 @@ describe("daily counts for baselines", () => {
     expect(total("maintenance", "A04")).toBe(1);
     expect(d.rows.every((r) => r.day >= d.from && r.day <= d.to)).toBe(true);
     expect(d.rows.some((r) => r.property === "Dunes Villa" && r.day === d.rows.find((x) => x.urgent === 2)?.day)).toBe(true);
+  });
+});
+
+describe("buildStaffRecords", () => {
+  const team = [
+    { id: "t1", name: "Ali", role: "housekeeping", is_active: true },
+    { id: "t2", name: "Mona", role: "housekeeping", is_active: true },
+    { id: "t3", name: "Sami", role: "maintenance", is_active: true },
+    { id: "t4", name: "Boss", role: "admin", is_active: true },
+    { id: "t5", name: "Gone", role: "housekeeping", is_active: false },
+  ];
+  const input = (over: Record<string, unknown> = {}) => ({
+    team, tasks: [], itemCounts: new Map<string, number>(), tickets: [], now: NOW,
+    propertyName: (id: string) => (id === "p1" ? "Dunes Villa" : "Acasia Penthouse"), bookingRef: (id: string) => (id === "b1" ? "JOOD-AAA111" : null), ...over,
+  });
+
+  it("lists housekeeping, maintenance, support and operations as staff, and leaves out admins and inactive people", () => {
+    const r = buildStaffRecords(input());
+    expect(r.staff.map((x) => [x.name, x.job])).toEqual([["Ali", "Housekeeping"], ["Mona", "Housekeeping"], ["Sami", "Maintenance"]]);
+  });
+
+  it("turns a finished cleaning into an action with its minutes, items, property and booking reference", () => {
+    const r = buildStaffRecords(input({ tasks: [{ id: "k1", property_id: "p1", booking_id: "b1", assigned_to: "ali", started_at: iso(-10), completed_at: iso(-9.85), approved_at: iso(-9), approved_by: "t2" }], itemCounts: new Map([["k1", 30]]) }));
+    expect(r.actions.map((a) => [a.kind, a.actor_id, a.property, a.booking_ref, a.detail])).toEqual([["cleaning done", "t1", "Dunes Villa", "JOOD-AAA111", "9 min, 30 items"], ["inspection", "t2", "Dunes Villa", "JOOD-AAA111", "checked after cleaning"]]);
+  });
+
+  it("matches a person by id or by name, and leaves out an action nobody can be named for", () => {
+    const r = buildStaffRecords(input({ tasks: [
+      { id: "a", property_id: "p1", booking_id: null, assigned_to: "t3", started_at: null, completed_at: iso(-5), approved_at: null, approved_by: null },
+      { id: "b", property_id: "p1", booking_id: null, assigned_to: "someone who left", started_at: null, completed_at: iso(-5), approved_at: null, approved_by: null },
+      { id: "c", property_id: "p1", booking_id: null, assigned_to: null, started_at: null, completed_at: iso(-5), approved_at: null, approved_by: null }] }));
+    expect(r.actions.map((a) => a.id)).toEqual(["turnover:a"]);
+  });
+
+  it("keeps only the last 30 days and nothing in the future", () => {
+    const r = buildStaffRecords(input({ tasks: [
+      { id: "old", property_id: "p1", booking_id: null, assigned_to: "t1", started_at: null, completed_at: iso(-24 * 40), approved_at: null, approved_by: null },
+      { id: "future", property_id: "p1", booking_id: null, assigned_to: "t1", started_at: null, completed_at: iso(24 * 3), approved_at: null, approved_by: null },
+      { id: "fine", property_id: "p1", booking_id: null, assigned_to: "t1", started_at: null, completed_at: iso(-24 * 3), approved_at: null, approved_by: null }] }));
+    expect(r.actions.map((a) => a.id)).toEqual(["turnover:fine"]);
+  });
+
+  it("turns a resolved repair into an action with only its category, and uses a booking reference only of our own shape", () => {
+    const r = buildStaffRecords(input({ tickets: [{ id: "m1", property_id: "p2", category: "ac", resolved_at: iso(-3), resolved_by: "Sami" }], bookingRef: () => null }));
+    expect(r.actions).toEqual([{ id: "repair:m1", at: iso(-3), actor_id: "t3", kind: "repair done", property: "Acasia Penthouse", booking_ref: null, detail: "ac" }]);
+  });
+
+  it("never carries a guest name, contact detail, door code or message text: only the fields the Control Tower asked for", () => {
+    const r = buildStaffRecords(input({ tasks: [{ id: "k1", property_id: "p1", booking_id: "b1", assigned_to: "t1", started_at: iso(-10), completed_at: iso(-9), approved_at: null, approved_by: null, notes: "Guest Maria Lopez maria@mail.test +201000", damage_notes: "door code 4821" }] as never }));
+    const json = JSON.stringify(r);
+    expect(json).not.toMatch(/Maria|maria@|\+201000|4821|notes/i);
+    expect(Object.keys(r.actions[0]).sort()).toEqual(["actor_id", "at", "booking_ref", "detail", "id", "kind", "property"]);
+    expect(Object.keys(r.staff[0]).sort()).toEqual(["id", "job", "name"]);
+  });
+
+  it("a snapshot with no staff data still carries empty lists, so an older reader is unaffected", () => {
+    const s = buildTowerSnapshot(base());
+    expect(s.staff).toEqual([]); expect(s.actions).toEqual([]);
   });
 });
