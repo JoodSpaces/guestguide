@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import type { Phase } from "@/lib/token";
 import { WEBSITE_URL } from "@/lib/site";
 import { AppIcon } from "@/components/ui/AppIcon";
+import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
 
 interface Message {
   role: "user" | "assistant";
@@ -46,6 +47,9 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [proposal, setProposal] = useState<RequestDraft | null>(null);
+  const [sendingReq, setSendingReq] = useState(false);
+  const [reqError, setReqError] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -90,7 +94,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
         const { done, value } = await reader.read();
         if (done) break;
         accumulated += decoder.decode(value, { stream: true });
-        const snap = accumulated;
+        const snap = accumulated.split("\u001e")[0];                // what follows the separator is a prepared request, not text
         setMessages((prev) => {
           const next = [...prev];
           const last = next[next.length - 1];
@@ -99,12 +103,21 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
         });
       }
 
+      const [shown, tail] = accumulated.split("\u001e");
+      let prepared: RequestDraft | null = null;
+      if (tail) {
+        try {
+          const j = JSON.parse(tail) as { summary?: string; category?: string; urgent?: boolean };
+          if (j.summary) prepared = { text: j.summary, category: (["maintenance", "housekeeping", "supplies", "service", "other"].includes(String(j.category)) ? j.category : "other") as RequestCategory, urgent: j.urgent === true };
+        } catch { /* ignore a damaged tail */ }
+      }
       setMessages((prev) => {
         const next = [...prev];
         const last = next[next.length - 1];
-        if (last?.streaming) next[next.length - 1] = { ...last, streaming: false };
+        if (last?.streaming) next[next.length - 1] = { ...last, content: shown.trim() || (prepared ? (isAr ? "جهّزتُ هذا الطلب لفريق جود. راجعه وأكّده." : "I have prepared this for the JOOD team. Please review and confirm it.") : shown), streaming: false };
         return next;
       });
+      if (prepared) { setReqError(null); setProposal(prepared); }
     } catch {
       setMessages((prev) => {
         const next = [...prev];
@@ -126,6 +139,24 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
     }
   }
 
+  async function sendPrepared(d: RequestDraft) {
+    if (sendingReq) return;
+    setSendingReq(true); setReqError(null);
+    const res = await fetch("/api/guest/requests", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token, category: d.category, body: `[Concierge chat] ${d.text}`.slice(0, 2000), urgency: d.urgent ? "urgent" : "normal" }),
+    }).catch(() => null);
+    setSendingReq(false);
+    if (!res?.ok) { setReqError(isAr ? "تعذّر الإرسال. حاول مرة أخرى أو راسل الفريق من شاشة الطلبات." : "We couldn't send it. Try again, or message the team from the Requests screen."); return; }
+    setProposal(null);
+    setMessages((m) => [...m, { role: "assistant", content: isAr ? "تم الإرسال إلى فريق جود. سترى ردّهم في شاشة الطلبات." : "Sent to the JOOD team. You will see their reply on the Requests screen." }]);
+  }
+  function cancelPrepared() {
+    if (sendingReq) return;
+    setProposal(null);
+    setMessages((m) => [...m, { role: "assistant", content: isAr ? "لا مشكلة، لم يُرسل شيء. أخبرني إن أردتَ تغيير الصياغة." : "No problem, nothing was sent. Tell me if you want to change the wording." }]);
+  }
+
   function handleKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -138,6 +169,12 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 120px)" }}>
+      {proposal && (
+        <RequestConfirm
+          isAr={isAr} draft={proposal} source="chat" propertyName={propertyName} busy={sendingReq} error={reqError}
+          onConfirm={(d) => sendPrepared(d)} onCancel={cancelPrepared}
+        />
+      )}
       {/* Header */}
       <div
         style={{

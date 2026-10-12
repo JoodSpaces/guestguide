@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
 import { createClient } from "@supabase/supabase-js";
 import { AppIcon } from "@/components/ui/AppIcon";
+import { detectEmergency } from "@/lib/emergency-rules";
+import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -77,6 +79,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
   const classifyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [predictedCategory, setPredictedCategory] = useState<string | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [confirmDraft, setConfirmDraft] = useState<RequestDraft | null>(null);
 
   /* Realtime subscription */
   useEffect(() => {
@@ -123,17 +126,27 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
     return () => { if (classifyTimer.current) clearTimeout(classifyTimer.current); };
   }, [body, token]);
 
-  async function submitRequest() {
+  // Pressing Send opens the confirmation card; the request is only made when the guest confirms there.
+  function openConfirm() {
     if (!body.trim() || inFlight.current) return;
+    const known = ["maintenance", "housekeeping", "supplies", "service", "other"];
+    setSendError(null);
+    // An emergency is never held behind a card: it goes at once, marked urgent.
+    if (detectEmergency(body)) { void submitRequest({ text: body.trim(), category: "maintenance", urgent: true }); return; }
+    setConfirmDraft({ text: body.trim(), category: (predictedCategory && known.includes(predictedCategory) ? predictedCategory : "other") as RequestCategory, urgent });
+  }
+
+  async function submitRequest(d: RequestDraft) {
+    if (!d.text.trim() || inFlight.current) return;
     inFlight.current = true;
     setSending(true);
     setSendError(null);
     try {
-      const text = body.trim();
+      const text = d.text.trim();
       const res = await fetch("/api/guest/requests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, body: text, isUrgent: urgent }),
+        body: JSON.stringify({ token, body: text, category: d.category, urgency: d.urgent ? "urgent" : "normal" }),
       }).catch(() => null);
       if (res?.ok) {
         // The server answers with only the id, category and urgency: build the rest here, so the new entry shows its
@@ -147,6 +160,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
         setBody("");
         setUrgent(false);
         setPredictedCategory(null);
+        setConfirmDraft(null);
       } else if (res?.status === 429) {
         setSendError(isAr ? "رسائل كثيرة في وقت قصير. حاول بعد دقيقة." : "Too many messages in a short time. Please try again in a minute.");
       } else {
@@ -163,6 +177,12 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
 
   return (
     <div>
+      {confirmDraft && (
+        <RequestConfirm
+          isAr={isAr} draft={confirmDraft} source="form" busy={sending} error={sendError}
+          onConfirm={(d) => submitRequest(d)} onCancel={() => { if (!sending) setConfirmDraft(null); }}
+        />
+      )}
       {/* ── Compose ─────────────────────────────────────────────────────── */}
       <div style={{
         border: "1px solid var(--jood-line)",
@@ -226,7 +246,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
           )}
 
           <button
-            onClick={submitRequest}
+            onClick={openConfirm}
             disabled={sending || !body.trim()}
             style={{
               fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em",

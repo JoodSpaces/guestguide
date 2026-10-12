@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { WEBSITE_URL } from "@/lib/site";
 import { Orb, type OrbState } from "@/components/ui/Orb";
+import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
 
 interface Props { token: string; isAr: boolean; guestFirstName: string }
 type Line = { role: "guest" | "agent"; text: string };
@@ -59,7 +60,24 @@ function Inner({ token, isAr }: Props) {
 
   function pulse() { setFlash(true); setTimeout(() => setFlash(false), 1600); }
 
-  async function post(category: "maintenance" | "service" | "other", text: string, urgent: boolean) {
+  // Anything the agent wants to send to the team is first shown to the guest on a card (what, type, urgency) and goes only if they tap Send.
+  // Emergencies are the one exception: they are never held back.
+  type Decision = { ok: true; draft: RequestDraft } | { ok: false; reason: "cancelled" | "no_answer" | "ended" };
+  const [ask, setAsk] = useState<{ draft: RequestDraft; settle: (d: Decision) => void } | null>(null);
+  const askRef = useRef(ask);
+  useEffect(() => { askRef.current = ask; });
+  function askConfirm(draft: RequestDraft): Promise<Decision> {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => { setAsk(null); resolve({ ok: false, reason: "no_answer" }); }, 90_000);
+      setAsk({ draft, settle: (d) => { clearTimeout(timer); setAsk(null); resolve(d); } });
+      try { convRef.current.sendContextualUpdate("A confirmation card with the request is now open on the guest's screen. Tell them in one short sentence to read it and tap Send, or Cancel. Do not say it has been sent until the result comes back."); } catch { /* the call may have just ended */ }
+    });
+  }
+  const notSent = (d: { reason: string }) => d.reason === "no_answer"
+    ? "The guest did not answer the confirmation card, so NOTHING was sent. Say that, and offer to try again."
+    : "The guest chose not to send it, so NOTHING was sent. Say that is fine and offer to change the wording or help another way.";
+
+  async function post(category: RequestCategory, text: string, urgent: boolean) {
     const res = await fetch("/api/guest/requests", {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ token, category, body: `[Voice concierge] ${text}`.slice(0, 2000), urgency: urgent ? "urgent" : "normal" }),
@@ -102,17 +120,23 @@ function Inner({ token, isAr }: Props) {
     onError: (m: unknown) => { setError(c.fail); setDetail(String((m as { message?: string })?.message ?? m).slice(0, 120)); },
     clientTools: {
       report_problem: async (p: Record<string, unknown>) => {
-        const ok = await post("maintenance", String(p.description ?? ""), p.urgent === true);
+        const d = await askConfirm({ text: String(p.description ?? ""), category: "maintenance", urgent: p.urgent === true });
+        if (!d.ok) { actions.current.push(`declined:report_problem:${d.reason}`); return notSent(d); }
+        const ok = await post(d.draft.category, d.draft.text, d.draft.urgent);
         if (ok) done("report_problem");
         return ok ? "Reported to the JOOD team." : "Could not send; tell the guest to use Contact the team.";
       },
       request_service: async (p: Record<string, unknown>) => {
-        const ok = await post("service", `${p.service ?? ""}${p.details ? ` — ${p.details}` : ""}`, false);
+        const d = await askConfirm({ text: `${p.service ?? ""}${p.details ? ` — ${p.details}` : ""}`, category: "service", urgent: false });
+        if (!d.ok) { actions.current.push(`declined:request_service:${d.reason}`); return notSent(d); }
+        const ok = await post(d.draft.category, d.draft.text, d.draft.urgent);
         if (ok) done("request_service");
         return ok ? "Requested. The team will confirm; nothing is charged until they do." : "Could not send; tell the guest to use Order a service.";
       },
       message_team: async (p: Record<string, unknown>) => {
-        const ok = await post("other", String(p.message ?? ""), p.urgent === true);
+        const d = await askConfirm({ text: String(p.message ?? ""), category: "other", urgent: p.urgent === true });
+        if (!d.ok) { actions.current.push(`declined:message_team:${d.reason}`); return notSent(d); }
+        const ok = await post(d.draft.category, d.draft.text, d.draft.urgent);
         if (ok) done("message_team");
         return ok ? "Message sent to the team." : "Could not send; tell the guest to use Contact the team.";
       },
@@ -169,6 +193,8 @@ function Inner({ token, isAr }: Props) {
   const live = status === "connected";
   const convRef = useRef(conv);
   useEffect(() => { convRef.current = conv; });
+  // If the call ends with a card still open, close it and tell the waiting tool call nothing was sent.
+  useEffect(() => { if (!live && askRef.current) askRef.current.settle({ ok: false, reason: "ended" }); }, [live]);
 
   // Hand the agent the private stay context the moment the call is up.
   useEffect(() => {
@@ -232,6 +258,12 @@ function Inner({ token, isAr }: Props) {
 
   return (
     <div style={{ padding: "36px 24px 24px", textAlign: "center", maxWidth: 420, margin: "0 auto" }}>
+      {ask && (
+        <RequestConfirm
+          isAr={isAr} draft={ask.draft} source="voice"
+          onConfirm={(d) => ask.settle({ ok: true, draft: d })} onCancel={() => ask.settle({ ok: false, reason: "cancelled" })}
+        />
+      )}
       <Orb size={200} state={state} amp={live ? amp : 0} label={label} onClick={live || busy ? undefined : start} />
       <p aria-live="polite" style={{ marginTop: 22, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-ink-subtle)" }}>{label}</p>
       <p aria-live="polite" style={{ minHeight: 72, margin: "14px 0", fontSize: 16, lineHeight: 1.6, color: "var(--jood-ink)" }}>

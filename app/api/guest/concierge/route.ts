@@ -145,7 +145,7 @@ ${manualText}
 
 ## إرشادات
 - كن دافئاً وموجزاً (أقل من 120 كلمة ما لم يكن التفصيل ضرورياً).
-- للمشاكل التشغيلية أو الطلبات الخاصة، اقترح صفحة الطلبات للتواصل مع فريق جود.
+- عندما يبلّغ الضيف عن مشكلة أو يطلب أمراً يجب على الفريق تنفيذه (إصلاح، تنظيف إضافي، تأخير المغادرة…)، استدعِ الأداة prepare_team_request بملخص قصير بلغة الضيف، واطلب منه مراجعة البطاقة التي ستظهر وتأكيدها. لا تقل أبداً إنه أُرسل: القرار للضيف.
 - لا تخترع معلومات غير موجودة في الدليل أعلاه.
 - مصادر المعلومات بالترتيب: تفاصيل الإقامة أعلاه ثم دليل العقار. لا تتجاوزها بمعرفة عامة (مثلاً لا تَعِد بتسجيل خروج متأخر: الفريق يؤكده).
 - إن لم تكن متأكداً، لا تخمّن: قل إنك لا تملك معلومة مؤكدة وأنك تستطيع إرسال الطلب لفريق جود الآن عبر شاشة الطلبات.${emergencyNote}`
@@ -163,7 +163,7 @@ ${manualText}
 
 ## Guidelines
 - Be warm and concise (under 120 words unless detail is genuinely needed).
-- For operational issues or special requests, suggest the Requests screen to reach the JOOD team.
+- When the guest reports a problem or asks for something the team must do (a repair, extra cleaning, a late check-out…), call the prepare_team_request tool with a short summary in the guest's own language, and ask them to review and confirm the card that appears. Never say it has been sent: the guest decides.
 - Never invent information not in the manual above.
 - Sources, in order: the stay details above, then the property manual. Never override them with general knowledge (for example never promise a late check-out: the team confirms it).
 - If you are not sure, do not guess: say you don't have confirmed information and that you can send it to the JOOD team now from the Requests screen.${emergencyNote}`;
@@ -175,6 +175,20 @@ ${manualText}
       max_tokens: 512,
       system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
       messages: parsed.data.messages.map((m) => ({ role: m.role, content: m.content })),
+      // The model can only PREPARE a request: the guest sees it on a card and decides. Nothing is created here.
+      tools: [{
+        name: "prepare_team_request",
+        description: "Prepare a request for the JOOD team for the guest to review and confirm. Use it when the guest reports a problem or asks for something that needs the team. It does not send anything.",
+        input_schema: {
+          type: "object",
+          properties: {
+            summary: { type: "string", description: "What the guest needs, in their language, one or two plain sentences with the key details (what, where, when)." },
+            category: { type: "string", enum: ["maintenance", "housekeeping", "supplies", "service", "other"] },
+            urgent: { type: "boolean", description: "True only for a safety risk, being locked out, flooding or something truly time-critical." },
+          },
+          required: ["summary", "category"],
+        },
+      }],
     });
   } catch (err) {
     console.error("[concierge] stream init error:", err);
@@ -189,6 +203,20 @@ ${manualText}
             controller.enqueue(new TextEncoder().encode(chunk.delta.text));
           }
         }
+        // A prepared request travels after the text, behind a record-separator character the app strips and turns into the confirmation card.
+        try {
+          const final = await stream.finalMessage();
+          const tu = final.content.find((b) => b.type === "tool_use" && b.name === "prepare_team_request");
+          if (tu && tu.type === "tool_use") {
+            const inp = (tu.input ?? {}) as { summary?: unknown; category?: unknown; urgent?: unknown };
+            const cats = ["maintenance", "housekeeping", "supplies", "service", "other"];
+            const summary = String(inp.summary ?? "").trim().slice(0, 600);
+            if (summary) {
+              const payload = { summary, category: cats.includes(String(inp.category)) ? String(inp.category) : "other", urgent: inp.urgent === true };
+              controller.enqueue(new TextEncoder().encode("\u001e" + JSON.stringify(payload)));
+            }
+          }
+        } catch { /* no prepared request: the text is the whole answer */ }
         controller.close();
       } catch (err) {
         console.error("[concierge] stream error:", err);
