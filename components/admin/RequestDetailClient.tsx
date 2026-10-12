@@ -228,6 +228,18 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
     }
   }
 
+  const [drafting, setDrafting] = useState(false);
+  async function suggest() {
+    if (adminNotes.trim() && !confirm("Replace what you have written with a suggested reply?")) return;
+    setDrafting(true);
+    const res = await fetch(`/api/admin/requests/guest/${req.id}/draft`, { method: "POST" }).catch(() => null);
+    setDrafting(false);
+    if (!res?.ok) { toast("Could not write a draft. Try again.", "error"); return; }
+    const data = (await res.json()) as { draft: string; ai: boolean };
+    setAdminNotes(data.draft);
+    toast(data.ai ? "Draft ready: read it, edit it, then save" : "Standard reply added (AI is off): edit it, then save");
+  }
+
   const router = useRouter();
   const [ticketing, setTicketing] = useState(false);
   const canTicket = !!booking?.property_id && req.status !== "resolved";
@@ -289,7 +301,14 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
             </button>
           ))}
         </div>
-        <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Internal notes for this request…" style={{ ...inputStyle, resize: "vertical", minHeight: "70px", marginBottom: "10px" }} />
+        <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", marginBottom: "6px", lineHeight: 1.5 }}>The guest sees this as the team&rsquo;s reply on their request, and gets a notification when you save it.</p>
+        <textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} placeholder="Reply to the guest…" style={{ ...inputStyle, resize: "vertical", minHeight: "70px", marginBottom: "10px" }} />
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", alignItems: "center", marginBottom: "10px" }}>
+          <button onClick={suggest} disabled={drafting || saving} style={{ padding: "7px 14px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer", opacity: drafting ? 0.6 : 1 }}>
+            {drafting ? "Writing a draft…" : "Suggest a reply"}
+          </button>
+          <span style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)" }}>A draft in the guest&rsquo;s language. Read and edit it before you save: nothing is sent until you do.</span>
+        </div>
         <button onClick={() => patch()} disabled={saving} style={{ padding: "8px 16px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer" }}>Save notes</button>
       </div>
 
