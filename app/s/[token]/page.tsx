@@ -1,4 +1,6 @@
+import { after } from "next/server";
 import { notFound, redirect } from "next/navigation";
+import { sendOwnerLog, stayFingerprint } from "@/lib/owner-log";
 import { cookies } from "next/headers";
 import { hashToken, computePhase, isArrivalUnlocked, isTokenExpired } from "@/lib/token";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -61,6 +63,14 @@ export default async function StayPage({ params }: Props) {
   ]);
 
   if (!booking || booking.status === "cancelled") notFound();
+
+  // Owner activity log: which guest, which house, which dates. The link's key is never sent, only its fingerprint.
+  const prop = Array.isArray(booking.properties) ? booking.properties[0] : booking.properties;
+  after(async () => {
+    const fp = await stayFingerprint(token);
+    await sendOwnerLog([{ source: "stay_link", event: "stay_opened", path: `/s/[stay:${fp}]`, subject: "stay:" + fp, actor: { name: booking.guest_first_name, role: "guest" },
+      details: { booking_id: booking.id, property: prop?.name ?? null, check_in: booking.check_in, check_out: booking.check_out, status: booking.status, lang: booking.guest_lang, dnd: booking.dnd_active } }]);
+  });
 
   // Fix 3: check expiry BEFORE recording the open so expired visits don't inflate open_count
   if (isTokenExpired(booking.check_out)) {

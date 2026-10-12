@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, type NextFetchEvent } from "next/server";
+import { sendOwnerLog, stayFingerprint, maskStayPath } from "@/lib/owner-log";
 import { verifyAdminCookie, refreshSession, isPathAllowed, ROLE_HOME } from "@/lib/admin-auth";
 import { allow, type RateRule } from "@/lib/rate-limit";
 import { UI_COOKIE, UI_COOKIE_MAX_AGE, STAY_HEADER, uiSwitch } from "@/lib/ui-mode";
@@ -47,8 +48,15 @@ function ruleFor(pathname: string, method: string): RateRule | null {
   return null;
 }
 
-export async function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest, event: NextFetchEvent) {
   const { pathname } = req.nextUrl;
+  // The owner's activity log. Skips the router's background prefetches (not a person looking). Never throws, never waits.
+  const isPrefetch = req.headers.get("next-router-prefetch") === "1" || /prefetch/i.test(req.headers.get("purpose") ?? req.headers.get("sec-purpose") ?? "");
+  const track = (e: Parameters<typeof sendOwnerLog>[0][number]) => {
+    if (isPrefetch) return;
+    try { event.waitUntil(sendOwnerLog([{ ...e, details: { method: req.method, ...(e.details ?? {}) } }])); } catch { /* ignore */ }
+  };
+  const isApi = pathname.startsWith("/api/");
 
   // ── Admin auth + role gate ──────────────────────────────────────────────
   if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
@@ -80,6 +88,7 @@ export async function middleware(req: NextRequest) {
       "x-admin-props",
       session.role !== "admin" && session.propertyIds ? JSON.stringify(session.propertyIds) : "",
     );
+    track({ source: "guest_app", event: isApi ? "api_request" : "page_view", path: pathname, actor: { name: session.name, role: "guest_app:" + session.role } });
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
@@ -110,6 +119,8 @@ export async function middleware(req: NextRequest) {
         { status: 429, headers: { "Retry-After": "30", "Content-Type": "text/html; charset=utf-8" } },
       );
     }
+    const fp = await stayFingerprint(token ?? pathname);
+    track({ source: "stay_link", event: isApi ? "api_request" : "page_view", path: maskStayPath(pathname, fp), subject: "stay:" + fp, actor: { role: "guest" } });
     // Tell the root layout this is a stay page, where the new look is the default.
     const stayHeaders = new Headers(req.headers);
     stayHeaders.set(STAY_HEADER, "1");
@@ -124,6 +135,7 @@ export async function middleware(req: NextRequest) {
     });
   }
 
+  track({ source: "guest_app", event: "api_request", path: pathname, actor: { role: pathname.startsWith("/api/admin") ? "visitor" : "guest" } });
   return NextResponse.next();
 }
 
