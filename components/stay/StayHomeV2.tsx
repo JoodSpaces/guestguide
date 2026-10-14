@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { AppIcon } from "@/components/ui/AppIcon";
-import { Orb } from "@/components/ui/Orb";
 import { BottomNav } from "@/components/stay/BottomNav";
 import { CountdownChip } from "@/components/stay/CountdownChip";
 import { WeatherStrip } from "@/components/stay/WeatherStrip";
@@ -60,68 +59,73 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
     { href: `/s/${token}/memory`, icon: "memory", title: isAr ? "ذكرى إقامتك" : "Your stay, remembered", show: isAfterOrDeparture },
   ].filter((m) => m.show);
 
-  const label = { color: "var(--jood-garnet)", fontFamily: "var(--font-label)", fontSize: 11.5, letterSpacing: "0.16em", textTransform: "uppercase" as const };
+  const label = { color: "var(--jood-mid)", fontFamily: "var(--font-label)", fontSize: 11, fontWeight: 600, letterSpacing: isAr ? 0 : "0.1em", textTransform: "uppercase" as const };
+  const tile = { width: 38, height: 38, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,96,55,.1)", color: "var(--jood-accent)", flex: "none" } as const;
 
   return (
-    <main className="stay-root" style={{ minHeight: "100dvh", padding: "0 18px 120px", maxWidth: 480, margin: "0 auto" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 0 14px" }}>
+    <main className="stay-root" style={{ minHeight: "100dvh", padding: "0 16px 120px", maxWidth: 480, margin: "0 auto" }}>
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 12px" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: 22, width: "auto", filter: "brightness(0) invert(1) opacity(.92)" }} />
+        <img src="/jood-logo-dark.png" alt="JOOD" className="jood-logo" style={{ height: 22, width: "auto" }} />
         <LanguageToggle />
       </header>
 
-      <p style={label}>{t(KICKER(hour) as never)} · {propertyName}</p>
-      <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 400, fontSize: "clamp(2.4rem, 11vw, 3.2rem)", lineHeight: 1, letterSpacing: "-0.01em", margin: "8px 0 10px", color: "var(--jood-ink)" }}>
-        {greeting}<br /><em style={{ color: "#FF6037" }}>{guestName}</em>
-      </h1>
-      <div style={{ margin: "0 0 4px" }}>
+      {/* the welcome: one white card, the greeting, the house and the countdown */}
+      <section className={glass} style={{ borderRadius: 18, padding: "18px 18px 16px" }}>
+        <p style={label}>{t(KICKER(hour) as never)}</p>
+        <h1 style={{ margin: "6px 0 4px", color: "var(--jood-ink)" }}>{greeting} {guestName}</h1>
+        <p style={{ margin: "0 0 12px", color: "var(--jood-ink-muted)", fontSize: 14 }}>{propertyName}</p>
         <CountdownChip phase={payload.phase as never} checkIn={payload.checkIn} checkOut={payload.checkOut} />
-      </div>
-
-      <div style={{ margin: "18px 0 4px" }}>
-        <Orb size={176} label={aiEnabled ? (isAr ? "تحدث مع المساعد" : "Talk to your concierge") : (isAr ? "راسل الفريق" : "Message the team")} onClick={() => router.push(`/s/${token}/concierge`)} />
-        <p style={{ textAlign: "center", marginTop: 6, color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", fontSize: 12, letterSpacing: isAr ? 0 : "0.18em", textTransform: "uppercase" }}>
-          {aiEnabled ? (isAr ? "اضغط لتسأل أي شيء" : "Tap to ask anything") : (isAr ? "اضغط لمراسلة الفريق" : "Tap to message the team")}
-        </p>
-      </div>
+      </section>
 
       {requestSummary?.payNow && (
-        <a href={requestSummary.payNow.url} className={glass} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "14px 18px", borderRadius: 18, margin: "16px 0 0", textDecoration: "none", color: "var(--jood-ink)" }}>
+        <a href={requestSummary.payNow.url} className={glass} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 16px", borderRadius: 16, margin: "12px 0 0", textDecoration: "none", color: "var(--jood-ink)", boxShadow: "inset 3px 0 0 var(--jood-accent), 0 0 0 1px rgba(53,30,28,.08)" }}>
           <span><span style={{ ...label, display: "block" }}>{isAr ? "بانتظار الدفع" : "Ready to pay"}</span>{requestSummary.payNow.serviceName}</span>
-          <span aria-hidden style={{ color: "#FF6037" }}>{isAr ? "←" : "→"}</span>
+          <span aria-hidden style={{ color: "var(--jood-accent)" }}>{isAr ? "←" : "→"}</span>
         </a>
       )}
 
-      <p style={{ ...label, margin: "22px 0 10px" }}>{isAr ? "الأساسيات" : "Essentials"}</p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {essentials.map((e) => (
-          <Link key={e.icon} href={e.href} className={glass} style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 14, minHeight: 112, padding: 16, borderRadius: 22, textDecoration: "none", color: "var(--jood-ink)" }}>
-            <span style={{ width: 40, height: 40, borderRadius: 14, display: "grid", placeItems: "center", background: "rgba(237,233,224,.07)", color: "var(--jood-garnet)" }}><AppIcon name={e.icon} size={22} /></span>
-            <span>
-              <span style={{ display: "block", fontWeight: 500, fontSize: 15, lineHeight: 1.3 }}>{e.title}</span>
-              <span style={{ display: "block", fontSize: 12.5, color: "var(--jood-ink-muted)", marginTop: 2, lineHeight: 1.4 }}>{e.sub}</span>
+      {/* the concierge: one clear row, the orb has moved to its own page */}
+      <Link href={`/s/${token}/concierge`} className={glass} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 16, margin: "12px 0 0", textDecoration: "none", color: "var(--jood-ink)" }}>
+        <span style={{ ...tile, background: "var(--jood-accent)", color: "#fff" }}><AppIcon name={aiEnabled ? "ai" : "chat"} size={20} /></span>
+        <span style={{ flex: 1 }}>
+          <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>{aiEnabled ? (isAr ? "تحدث مع المساعد" : "Talk to your concierge") : (isAr ? "راسل الفريق" : "Message the team")}</span>
+          <span style={{ display: "block", fontSize: 12.5, color: "var(--jood-ink-muted)", marginTop: 1 }}>{aiEnabled ? (isAr ? "اسأل أي شيء عن إقامتك" : "Ask anything about your stay") : (isAr ? "شخص حقيقي يردّ عليك" : "A person replies")}</span>
+        </span>
+        <span aria-hidden style={{ color: "var(--jood-mid)" }}>{isAr ? "←" : "→"}</span>
+      </Link>
+
+      <p style={{ ...label, margin: "22px 2px 8px" }}>{isAr ? "الأساسيات" : "Essentials"}</p>
+      <div className={glass} style={{ borderRadius: 16, overflow: "hidden" }}>
+        {essentials.map((e, i) => (
+          <Link key={e.icon} href={e.href} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 16px", textDecoration: "none", color: "var(--jood-ink)", borderTop: i ? "1px solid var(--jood-line)" : "none" }}>
+            <span style={tile}><AppIcon name={e.icon} size={19} /></span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontWeight: 600, fontSize: 14.5, lineHeight: 1.3 }}>{e.title}</span>
+              <span style={{ display: "block", fontSize: 12.5, color: "var(--jood-ink-muted)", marginTop: 1, lineHeight: 1.4 }}>{e.sub}</span>
             </span>
+            <span aria-hidden style={{ color: "var(--jood-mid)" }}>{isAr ? "←" : "→"}</span>
           </Link>
         ))}
       </div>
 
-      {(tonightNote || tonightNoteAr) && <div style={{ marginTop: 16 }}><TonightCard token={token} note={tonightNote ?? ""} noteAr={tonightNoteAr ?? ""} isAr={isAr} /></div>}
+      {(tonightNote || tonightNoteAr) && <div style={{ marginTop: 12 }}><TonightCard token={token} note={tonightNote ?? ""} noteAr={tonightNoteAr ?? ""} isAr={isAr} /></div>}
       {(hostPick || hostPickAr) && (
-        <div className={glass} style={{ borderRadius: 22, padding: "18px 20px", marginTop: 14 }}>
-          <p style={{ ...label, margin: "0 0 8px" }}>{isAr ? "نصيحة من مضيفك" : "From your host"}</p>
-          <p style={{ fontFamily: "var(--font-display)", fontStyle: "italic", fontSize: 21, lineHeight: 1.3, margin: 0 }}>{isAr ? (hostPickAr ?? hostPick) : (hostPick ?? hostPickAr)}</p>
+        <div className={glass} style={{ borderRadius: 16, padding: "16px 18px", marginTop: 12 }}>
+          <p style={{ ...label, margin: "0 0 6px" }}>{isAr ? "نصيحة من مضيفك" : "From your host"}</p>
+          <p style={{ fontSize: 15, lineHeight: 1.5, margin: 0 }}>{isAr ? (hostPickAr ?? hostPick) : (hostPick ?? hostPickAr)}</p>
         </div>
       )}
 
       {more.length > 0 && (
         <>
-          <p style={{ ...label, margin: "24px 0 10px" }}>{isAr ? "المزيد لإقامتك" : "More for your stay"}</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {more.map((m) => (
-              <Link key={m.icon} href={m.href} className={glass} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 18px", borderRadius: 18, textDecoration: "none", color: "var(--jood-ink)" }}>
-                <AppIcon name={m.icon} size={20} style={{ color: "var(--jood-garnet)" }} />
-                <span style={{ flex: 1, fontSize: 15 }}>{m.title}</span>
-                <span aria-hidden style={{ color: "var(--jood-ink-subtle)" }}>{isAr ? "←" : "→"}</span>
+          <p style={{ ...label, margin: "22px 2px 8px" }}>{isAr ? "المزيد لإقامتك" : "More for your stay"}</p>
+          <div className={glass} style={{ borderRadius: 16, overflow: "hidden" }}>
+            {more.map((m, i) => (
+              <Link key={m.icon} href={m.href} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 16px", textDecoration: "none", color: "var(--jood-ink)", borderTop: i ? "1px solid var(--jood-line)" : "none" }}>
+                <AppIcon name={m.icon} size={19} style={{ color: "var(--jood-accent)" }} />
+                <span style={{ flex: 1, fontSize: 14.5, fontWeight: 500 }}>{m.title}</span>
+                <span aria-hidden style={{ color: "var(--jood-mid)" }}>{isAr ? "←" : "→"}</span>
               </Link>
             ))}
           </div>

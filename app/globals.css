@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Outfit:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Syne:wght@500;600;700&family=Almarai:wght@300;400;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Outfit:wght@300;400;500;600&family=Geist+Mono:wght@400;500&family=Syne:wght@500;600;700&family=Almarai:wght@300;400;700;800&display=swap");
 
 /* ══════════════════════════════════════════════════════
    JOOD Design System — Token Layer
@@ -961,51 +961,120 @@ body {
 }
 
 
+
 /* ══════════════════════════════════════════════════════
-   New look ("next"): JOOD's own palette as dark luminous glass
-   Switched per browser with ?ui=next / ?ui=classic (see lib/ui-mode.ts). Dark by design.
+   Stay look ("next"): the same workspace look as the staff portal.
+   A soft grey ground, white cards on a hairline, Geist type, small quiet buttons and the five state colours.
+   Switched per browser with ?ui=next / ?ui=classic (see lib/ui-mode.ts). Light by design, whatever the device theme says.
    ══════════════════════════════════════════════════════ */
 :root[data-ui="next"][data-ui="next"] {
-  color-scheme: dark;
-  --jood-ink:              #EDE9E0;
-  --jood-ink-deep:         #F5F4ED;
-  --jood-garnet:           #C49898;
-  --jood-ground:           #140D0B;
-  --jood-surface:          rgba(237, 233, 224, 0.06);
-  --jood-surface-raised:   rgba(237, 233, 224, 0.09);
-  --jood-mist2:            #2A1B19;
-  --jood-mist3:            #35231F;
-  --jood-mid:              #A08880;
-  --jood-ink-muted:        rgba(237, 233, 224, 0.76);
-  --jood-ink-subtle:       rgba(237, 233, 224, 0.62);
-  --jood-ink-faint:        rgba(237, 233, 224, 0.25);
-  --jood-ink-ghost:        rgba(237, 233, 224, 0.12);
-  --jood-line:             rgba(237, 233, 224, 0.14);
-  --jood-line-mid:         rgba(237, 233, 224, 0.09);
-  --jood-line-dark:        rgba(237, 233, 224, 0.08);
-  --jood-success:          #3DA366;
-  --jood-success-surface:  rgba(61, 163, 102, 0.12);
-  --jood-warning:          #D48F2A;
-  --jood-warning-surface:  rgba(212, 143, 42, 0.12);
-  --jood-danger:           #E05050;
-  --jood-danger-surface:   rgba(224, 80, 80, 0.12);
-  --shadow-card:   0 14px 36px rgba(0, 0, 0, 0.40), inset 0 1px 0 rgba(237, 233, 224, 0.12);
+  color-scheme: light;
+  --jood-ink:              #351E1C;
+  --jood-ink-deep:         #2A1715;
+  --jood-garnet:           #733635;
+  --jood-ground:           #EEEDE8;
+  --jood-surface:          #FFFFFF;
+  --jood-surface-raised:   #FFFFFF;
+  --jood-mist2:            #E4E2DA;
+  --jood-mist3:            #D6D3C8;
+  --jood-mid:              #8A6663;
+  --jood-ink-muted:        rgba(53, 30, 28, 0.78);
+  --jood-ink-subtle:       rgba(53, 30, 28, 0.62);
+  --jood-ink-faint:        rgba(53, 30, 28, 0.28);
+  --jood-ink-ghost:        rgba(53, 30, 28, 0.16);
+  --jood-line:             rgba(53, 30, 28, 0.10);
+  --jood-line-mid:         rgba(53, 30, 28, 0.07);
+  --jood-success:          #2F5A41;
+  --jood-success-surface:  rgba(62, 107, 79, 0.13);
+  --jood-warning:          #A8431F;
+  --jood-warning-surface:  rgba(255, 96, 55, 0.12);
+  --jood-danger:           #9C2A2A;
+  --jood-danger-surface:   rgba(176, 42, 42, 0.10);
+  --jood-info:             #2B5C5F;
+  --jood-info-surface:     rgba(160, 201, 203, 0.38);
+  --jood-surface-glass:    rgba(255, 255, 255, 0.92);
+  --stay-glass-bg:         rgba(53, 30, 28, 0.05);
+  --font-display: 'Geist';
+  --font-body:    'Geist';
+  --font-label:   'Geist';
+  --radius-md:    12px;
+  --radius-lg:    16px;
+  --shadow-card:  0 0 0 1px rgba(53, 30, 28, 0.08);
+  --shadow-tile:  0 0 0 1px rgba(53, 30, 28, 0.08), 0 4px 14px rgba(53, 30, 28, 0.05);
+  --shadow-raised: 0 6px 20px rgba(53, 30, 28, 0.08);
 }
-html[data-ui="next"] body {
-  background:
-    radial-gradient(900px 560px at 18% -6%, rgba(115, 54, 53, 0.55), transparent 70%),
-    radial-gradient(700px 520px at 105% 42%, rgba(255, 96, 55, 0.07), transparent 70%),
-    radial-gradient(700px 500px at -5% 104%, rgba(160, 201, 203, 0.06), transparent 70%),
-    linear-gradient(180deg, #1A0F0D, #120B09);
-  background-attachment: fixed;
-}
+/* Geist has no Arabic: Arabic text keeps Almarai, everything else is Geist */
+:root[data-ui="next"][data-ui="next"][dir="rtl"] { --font-display: 'Almarai'; --font-body: 'Almarai'; --font-label: 'Almarai'; }
+
+html[data-ui="next"] body { background: var(--jood-ground); background-image: none; font-variant-numeric: tabular-nums; }
 html[data-ui="next"] .stay-root { background: transparent !important; }
 html[data-ui="next"] [data-theme-toggle] { display: none; }
-html[data-ui="next"] .jood-header-glass { background: rgba(20, 13, 11, 0.45) !important; }
-html[data-ui="next"] .stay-glass {
-  background: linear-gradient(180deg, rgba(237, 233, 224, 0.10), rgba(237, 233, 224, 0.035));
-  border: 1px solid var(--jood-line);
-  backdrop-filter: blur(18px) saturate(130%);
-  -webkit-backdrop-filter: blur(18px) saturate(130%);
-  box-shadow: inset 0 1px 0 rgba(237, 233, 224, 0.13), 0 14px 36px rgba(0, 0, 0, 0.4);
+html[data-ui="next"] .jood-logo, html[data-ui="next"] .jood-logo-coral { filter: none !important; }
+html[data-ui="next"] .page-frame { display: none; }
+
+/* the header: flat, on a hairline, like the staff top bar */
+html[data-ui="next"] .jood-header-glass { background: rgba(238, 237, 232, 0.92) !important; border-bottom: 1px solid var(--jood-line) !important; }
+
+/* page titles: one sans voice, no light italic serif */
+html[data-ui="next"] .stay-root h1,
+html[data-ui="next"] .stay-root h2,
+html[data-ui="next"] .stay-root h3 {
+  font-family: var(--font-display), system-ui, sans-serif !important;
+  font-style: normal !important;
+  letter-spacing: -0.015em;
 }
+html[data-ui="next"] .stay-root h1 { font-weight: 650 !important; font-size: clamp(1.6rem, 6vw, 2rem) !important; line-height: 1.12 !important; }
+html[data-ui="next"] .stay-root h2 { font-weight: 620; }
+html[data-ui="next"] .stay-root h3 { font-weight: 600; }
+html[data-ui="next"] .stay-root em { font-style: normal; }
+
+/* eyebrows and section labels: small, quiet caps */
+html[data-ui="next"] .text-micro,
+html[data-ui="next"] .label-eyebrow,
+html[data-ui="next"] .section-label { font-size: 0.68rem; letter-spacing: 0.1em; font-weight: 600; color: var(--jood-mid); }
+html[data-ui="next"][dir="rtl"] .text-micro, html[data-ui="next"][dir="rtl"] .label-eyebrow { letter-spacing: 0; }
+
+/* cards: white, a hairline, no lift */
+html[data-ui="next"] .stay-glass,
+html[data-ui="next"] .card,
+html[data-ui="next"] .card-raised,
+html[data-ui="next"] .jood-card {
+  background: #FFFFFF;
+  border: 0;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-ui="next"] .stay-glass { transition: box-shadow 0.12s, transform 0.12s; }
+html[data-ui="next"] a.stay-glass:hover,
+html[data-ui="next"] .card-interactive:hover { box-shadow: 0 0 0 1px var(--jood-accent), 0 6px 20px rgba(53, 30, 28, 0.07); transform: translateY(-1px); }
+html[data-ui="next"] a.stay-glass:active,
+html[data-ui="next"] .card-interactive:active { transform: scale(0.985); }
+
+/* buttons: small, 12px corners, not pills */
+html[data-ui="next"] .btn { border-radius: 12px; font-weight: 600; font-size: 0.84rem; padding: 10px 16px; }
+html[data-ui="next"] .btn-lg, html[data-ui="next"] .btn-xl { padding: 13px 20px; font-size: 0.9rem; }
+html[data-ui="next"] .btn-sm { padding: 7px 12px; font-size: 0.78rem; }
+html[data-ui="next"] .btn-icon { border-radius: 12px; }
+html[data-ui="next"] .btn-primary:hover, html[data-ui="next"] .btn-accent:hover { box-shadow: none; opacity: 0.9; }
+html[data-ui="next"] .btn-ghost, html[data-ui="next"] .btn-surface { background: #FFFFFF; border: 1px solid var(--jood-line); }
+
+/* fields */
+html[data-ui="next"] .jood-input,
+html[data-ui="next"] .jood-textarea,
+html[data-ui="next"] .jood-select { background: #FFFFFF; border-radius: 12px; }
+html[data-ui="next"] .jood-input:focus,
+html[data-ui="next"] .jood-textarea:focus,
+html[data-ui="next"] .jood-select:focus { border-color: var(--jood-accent); box-shadow: 0 0 0 3px rgba(255, 96, 55, 0.14); }
+
+/* states: orange asks for attention, aqua is calm, green is done, red is only late or error */
+html[data-ui="next"] .chip { font-family: var(--font-body), system-ui, sans-serif; text-transform: none; letter-spacing: 0.01em; font-size: 0.68rem; padding: 3px 10px; }
+html[data-ui="next"] .chip-muted { background: rgba(53, 30, 28, 0.07); border: 0; color: #6E504D; }
+html[data-ui="next"] .chip-accent { background: rgba(255, 96, 55, 0.12); color: #A8431F; }
+html[data-ui="next"] .chip-garnet { background: rgba(53, 30, 28, 0.07); color: #6E504D; }
+
+html[data-ui="next"] .divider { background: var(--jood-line); }
+html[data-ui="next"] :focus-visible { outline-color: var(--jood-accent); }
+html[data-ui="next"] .jood-toast { background: #FFFFFF; box-shadow: var(--shadow-raised); }
+html[data-ui="next"] .skeleton { background: linear-gradient(90deg, rgba(53,30,28,.06) 0%, rgba(53,30,28,.12) 50%, rgba(53,30,28,.06) 100%); background-size: 220% 100%; }
+html[data-ui="next"] .empty-state-icon { opacity: 1; }

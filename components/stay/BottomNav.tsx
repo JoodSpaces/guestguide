@@ -65,45 +65,41 @@ export function BottomNav({ token, active = "none" }: BottomNavProps) {
   const ui = useUiMode();
 
   if (ui === "next") {
-    // The new look: a floating glass pill, labels under every icon, and the concierge as a raised centre button.
+    // The workspace look: a flat white bar on a hairline, five equal tabs, the open one marked with an orange icon and a soft tile.
     const by = Object.fromEntries(tabs.map((tb) => [tb.id, tb]));
     const seq = [by.home, by.discover, by.concierge, by.services, by.help];
-    const pill = isRtl ? [...seq].reverse() : seq;
+    const bar = isRtl ? [...seq].reverse() : seq;
     return (
       <nav
         aria-label={isRtl ? "التنقل الرئيسي" : "Main navigation"}
-        className="stay-pill-nav"
+        className="stay-bar-nav"
         style={{
-          position: "fixed", left: 14, right: 14, bottom: "calc(14px + env(safe-area-inset-bottom, 0px))", zIndex: 50, maxWidth: 420, margin: "0 auto",
-          display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", borderRadius: 999,
-          background: "linear-gradient(180deg, rgba(237,233,224,.11), rgba(237,233,224,.04))", border: "1px solid var(--jood-line)",
-          backdropFilter: "blur(18px) saturate(130%)", WebkitBackdropFilter: "blur(18px) saturate(130%)",
-          boxShadow: "inset 0 1px 0 rgba(237,233,224,.13), 0 14px 36px rgba(0,0,0,.45)",
+          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 50,
+          background: "#FFFFFF", borderTop: "1px solid var(--jood-line)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        {pill.map((tab) => {
-          const isActive = tab.id === active;
-          const centre = tab.id === "concierge";
-          return (
-            <Link
-              key={tab.id}
-              href={tab.href}
-              aria-label={tab.label}
-              aria-current={isActive ? "page" : undefined}
-              style={centre ? {
-                flex: "none", width: 62, height: 62, margin: "-18px 4px 0", borderRadius: "50%", display: "grid", placeItems: "center",
-                background: "linear-gradient(135deg, #FF6037, #733635)", color: "#fff", textDecoration: "none",
-                boxShadow: "0 10px 30px rgba(0,0,0,.55), 0 0 0 4px rgba(237,233,224,.06), 0 0 38px -6px #FF6037",
-              } : {
-                flex: 1, display: "grid", placeItems: "center", gap: 2, height: 52, borderRadius: 999, textDecoration: "none",
-                color: isActive ? "var(--jood-ink)" : "var(--jood-ink-subtle)", fontSize: 11, letterSpacing: isRtl ? 0 : "0.04em",
-              }}
-            >
-              <span style={{ display: "flex", color: isActive && !centre ? "#FF6037" : "inherit" }}>{centre ? <span style={{ transform: "scale(1.25)", display: "flex" }}>{tab.icon}</span> : tab.icon}</span>
-              {!centre && <span>{tab.label}</span>}
-            </Link>
-          );
-        })}
+        <div style={{ display: "flex", maxWidth: 480, margin: "0 auto", padding: "6px 8px" }}>
+          {bar.map((tab) => {
+            const isActive = tab.id === active;
+            return (
+              <Link
+                key={tab.id}
+                href={tab.href}
+                aria-label={tab.label}
+                aria-current={isActive ? "page" : undefined}
+                style={{
+                  flex: 1, display: "grid", placeItems: "center", gap: 2, padding: "6px 0", borderRadius: 12, textDecoration: "none",
+                  color: isActive ? "var(--jood-ink)" : "var(--jood-mid)", fontSize: 11, fontWeight: isActive ? 600 : 500,
+                  background: isActive ? "rgba(53,30,28,.06)" : "transparent", WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                <span style={{ display: "flex", color: isActive ? "var(--jood-accent)" : "inherit" }}>{tab.icon}</span>
+                <span>{tab.label}</span>
+              </Link>
+            );
+          })}
+        </div>
       </nav>
     );
   }
