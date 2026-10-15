@@ -2,6 +2,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 import { voiceMonthlyMinutes, monthStartIso } from "@/lib/voice";
 import { groupGaps } from "@/lib/voice-gaps";
 import { VoiceGaps } from "@/components/admin/VoiceGaps";
+import { Hero, SectionHead } from "@/components/app/ui";
 
 interface Row {
   id: string; started_at: string; duration_sec: number; locale: string;
@@ -9,7 +10,7 @@ interface Row {
   bookings: { property_id: string; guest_first_name: string; guest_last_name: string; properties: { name: string } | { name: string }[] | null } | null;
 }
 
-const card: React.CSSProperties = { border: "none", borderRadius: 12, padding: "16px 18px", background: "var(--jood-surface, transparent)" };
+const card: React.CSSProperties = { border: "none", borderRadius: 22, padding: "16px 18px", background: "var(--jood-surface, transparent)" };
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default async function VoicePage() {
@@ -23,8 +24,8 @@ export default async function VoicePage() {
 
   if (error) {
     return (
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "32px 20px" }}>
-        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: 30 }}>Voice concierge</h1>
+      <main style={{ maxWidth: 720, margin: "0 auto" }}>
+        <h1>Voice concierge</h1>
         <p style={{ color: "var(--jood-ink-muted)" }}>The voice log table isn&apos;t set up yet. Run migration 032_voice_sessions.sql in the Guest App database, then reload.</p>
       </main>
     );
@@ -41,30 +42,21 @@ export default async function VoicePage() {
     .filter((x) => x.propertyId));
 
   return (
-    <main style={{ maxWidth: 820, margin: "0 auto", padding: "32px 20px 80px", display: "grid", gap: 20 }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 300, fontSize: 30, margin: 0 }}>Voice concierge</h1>
+    <main style={{ maxWidth: 820, margin: "0 auto", display: "grid", gap: 14 }}>
+      <Hero
+        label="Voice concierge · this month"
+        value={`${usedMin.toFixed(1)} of ${cap} min`}
+        note={pct >= 100 ? "The cap is reached: guests now see that voice is resting until next month." : pct >= 80 ? "Close to the cap. Raise VOICE_MONTHLY_MINUTES in Vercel after upgrading the ElevenLabs plan." : `${pct}% used. Voice stops at the cap; change it with VOICE_MONTHLY_MINUTES in Vercel.`}
+      />
 
       <section style={card}>
-        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
-          <span>This month</span>
-          <span style={{ color: pct >= 80 ? "var(--jood-danger)" : "var(--jood-ink-muted)" }}>{usedMin.toFixed(1)} of {cap} min ({pct}%)</span>
-        </div>
-        <div style={{ height: 6, borderRadius: 3, background: "var(--jood-line)", marginTop: 10 }}>
-          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: pct >= 80 ? "var(--jood-danger)" : "var(--jood-accent)" }} />
-        </div>
-        <p style={{ fontSize: 12, color: "var(--jood-ink-subtle)", margin: "10px 0 0" }}>
-          {pct >= 100 ? "The cap is reached: guests now see that voice is resting until next month." : pct >= 80 ? "Close to the cap. Raise VOICE_MONTHLY_MINUTES in Vercel after upgrading the ElevenLabs plan." : "Voice stops at the cap. Change it with VOICE_MONTHLY_MINUTES in Vercel."}
-        </p>
-      </section>
-
-      <section style={card}>
-        <h2 style={{ fontSize: 16, margin: "0 0 10px" }}>Questions it couldn&apos;t answer</h2>
+        <h2 style={{ fontSize: 16, margin: "0 0 10px", fontFamily: "var(--font-display)" }}>Questions it couldn&apos;t answer</h2>
         <p style={{ margin: "0 0 12px", fontSize: 13, color: "var(--jood-ink-muted)" }}>Answer one and it goes straight into that house&apos;s guide, so the concierge knows it on the next call.</p>
         <VoiceGaps groups={gaps} />
       </section>
 
       <section style={{ display: "grid", gap: 10 }}>
-        <h2 style={{ fontSize: 16, margin: 0 }}>Conversations</h2>
+        <SectionHead title="Conversations" count={rows.length} />
         {rows.length === 0 && <p style={{ color: "var(--jood-ink-muted)", fontSize: 14 }}>No conversations yet.</p>}
         {rows.map((r) => (
           <details key={r.id} style={card}>

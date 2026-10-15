@@ -1271,3 +1271,15 @@ html[data-ui="next"] header.admin-bar { background: #FFFFFF !important; border-b
 .app-pill-nav button span { display: none; }
 .app-pill-nav button[aria-current="page"] { background: var(--jood-ink); color: #fff; padding: 0 18px; }
 .app-pill-nav button[aria-current="page"] span { display: inline; }
+
+/* forms in the admin: cream fields that turn white with an ink outline on focus, slightly larger labels */
+html[data-ui="next"] .admin-main input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+html[data-ui="next"] .admin-main select,
+html[data-ui="next"] .admin-main textarea {
+  background-color: var(--jood-surface) !important; border: 1px solid transparent !important; border-radius: 16px !important;
+}
+html[data-ui="next"] .admin-main .app-search input { background-color: transparent !important; border: 0 !important; border-radius: 0 !important; }
+html[data-ui="next"] .admin-main input:focus, html[data-ui="next"] .admin-main select:focus, html[data-ui="next"] .admin-main textarea:focus {
+  background-color: #FFFFFF !important; border-color: var(--jood-ink) !important; outline: none; box-shadow: 0 0 0 3px rgba(53,30,28,.08);
+}
+html[data-ui="next"] .admin-main label { font-size: 0.78rem; letter-spacing: 0.06em; }
