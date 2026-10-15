@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, useRef } from "react";
 import Link from "next/link";
-import { DetailHead } from "@/components/app/ui";
+import { DetailHead, DetailsPanel, IdRow, State, StepLine } from "@/components/app/ui";
 import { toast } from "@/components/admin/Toaster";
 import { TeamPicker } from "@/components/admin/TeamPicker";
 
@@ -106,23 +106,35 @@ export function MaintenanceDetailClient({ ticket: initial, team = [] }: Props) {
     <div style={{ maxWidth: "640px" }}>
       <DetailHead back="/admin/ops/maintenance" title="Ticket" />
 
-      {/* Header */}
-      <div style={{ marginBottom: "24px" }}>
-        <div style={{ display: "flex", gap: "8px", marginBottom: "10px", flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[ticket.status], border: `1px solid ${STATUS_COLOR[ticket.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
-            {ticket.status.replace("_", " ")}
-          </span>
-          <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: PRIORITY_COLOR[ticket.priority], border: `1px solid ${PRIORITY_COLOR[ticket.priority]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
-            {ticket.priority}
-          </span>
-          <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>
-            {ticket.category}
-          </span>
+      <IdRow
+        label={`${property?.name ?? "House"} · ${fmt(ticket.created_at)}`}
+        id={ticket.title}
+        state={<span style={{ display: "inline-flex", gap: "6px" }}>
+          {ticket.priority === "urgent" && ticket.status !== "resolved" && <State tone="danger">Urgent</State>}
+          <State tone={ticket.status === "resolved" ? "ok" : ticket.status === "in_progress" ? "info" : "warn"}>{ticket.status.replace("_", " ")}</State>
+        </span>}
+      />
+
+      <StepLine
+        at={ticket.status === "resolved" ? 2 : ticket.status === "in_progress" ? 1 : 0}
+        steps={[{ label: "Opened", sub: fmt(ticket.created_at) }, { label: "In progress" }, { label: "Resolved" }]}
+      />
+
+      <DetailsPanel
+        title="Ticket details"
+        rows={[
+          { label: "House", value: property?.name ?? "—" },
+          { label: "Category", value: ticket.category },
+          { label: "Priority", value: ticket.priority },
+          { label: "Opened", value: fmt(ticket.created_at) },
+        ]}
+      />
+      {ticket.description && (
+        <div className="app-details" style={{ marginTop: "10px" }}>
+          <dl><div style={{ display: "block" }}><dd style={{ textAlign: "start", fontWeight: 500, lineHeight: 1.6, whiteSpace: "pre-line" }}>{ticket.description}</dd></div></dl>
         </div>
-        <h1 className="font-display" style={{ fontSize: "1.6rem", marginBottom: "4px" }}>{ticket.title}</h1>
-        <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>{property?.name} · {fmt(ticket.created_at)}</p>
-        {ticket.description && <p style={{ marginTop: "12px", fontSize: "0.9375rem", lineHeight: 1.6, color: "var(--jood-ink)", whiteSpace: "pre-line" }}>{ticket.description}</p>}
-      </div>
+      )}
+      <div style={{ height: "14px" }} />
 
       {/* Photos */}
       <div style={card}>
@@ -154,13 +166,12 @@ export function MaintenanceDetailClient({ ticket: initial, team = [] }: Props) {
               style={{
                 padding: "7px 16px",
                 borderRadius: "var(--radius-pill)",
-                border: `1px solid ${ticket.status === s ? STATUS_COLOR[s] : "var(--jood-line)"}`,
-                backgroundColor: "transparent",
-                color: ticket.status === s ? STATUS_COLOR[s] : "var(--jood-ink-muted)",
+                border: "none",
+                backgroundColor: ticket.status === s ? "var(--jood-ink)" : "#FFFFFF",
+                color: ticket.status === s ? "#FFFFFF" : "var(--jood-ink-muted)",
                 fontSize: "0.8125rem",
+                fontWeight: 600,
                 cursor: "pointer",
-                fontFamily: "var(--font-label)",
-                letterSpacing: "0.06em",
                 textTransform: "capitalize",
               }}
             >
