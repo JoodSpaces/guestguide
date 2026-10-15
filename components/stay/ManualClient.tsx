@@ -173,201 +173,112 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
     return map;
   }, [entries, isSearching]);
 
+  const PALETTE: [string, string][] = [["#16E0B0", "#0A6E6A"], ["#5B7BFF", "#2B2FB0"], ["#FF8A2A", "#B8321A"], ["#FF3FA4", "#7A1FA8"], ["#9BD6E0", "#2B6C86"], ["#FFD35B", "#B8721A"]];
+  const [openSec, setOpenSec] = useState<string | null>(null);
+  const secEntries = openSec && grouped ? grouped.get(openSec) ?? [] : [];
+  const secIndex = openSec ? sections.indexOf(openSec) : 0;
+  const glow = (i: number) => ({ "--c1": PALETTE[i % PALETTE.length][0], "--c2": PALETTE[i % PALETTE.length][1] }) as React.CSSProperties;
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-
-      {/* ── Header ── */}
-      <div style={{ marginBottom: "24px" }}>
-        <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>
-          {isAr ? "المسكن" : "Your Stay"}
-        </p>
-        <h1 className="font-display animate-reveal" style={{ fontSize: "clamp(1.75rem, 6vw, 2.5rem)", fontWeight: 600, color: "var(--jood-ink)", lineHeight: 1.05, letterSpacing: "-0.02em", margin: "0 0 20px" }}>
-          {t("title")}
-        </h1>
-
-        {/* Search bar */}
-        <div style={{ position: "relative" }}>
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={isAr ? "ابحث أو اسأل سؤالاً…" : "Search or ask a question…"}
-            style={{
-              width: "100%",
-              padding: "10px 18px 10px 42px",
-              borderRadius: "var(--radius-pill)",
-              border: `1px solid ${aiResult ? "var(--jood-aqua)" : "var(--jood-line)"}`,
-              backgroundColor: "var(--jood-surface)",
-              color: "var(--jood-ink)",
-              fontSize: "15px",
-              fontFamily: "var(--font-body)",
-              boxSizing: "border-box",
-              boxShadow: "var(--shadow-card)",
-              transition: "border-color 200ms",
-            }}
-            dir={isAr ? "rtl" : "ltr"}
-          />
-          <span style={{ position: "absolute", insetInlineStart: "16px", top: "50%", transform: "translateY(-50%)", color: aiSearching ? "var(--jood-accent)" : "var(--jood-ink-muted)", pointerEvents: "none", fontSize: "15px" }}>
-            <AppIcon name={aiSearching ? "ai" : "search"} size={16} />
-          </span>
-        </div>
+    <div className="man" dir={isAr ? "rtl" : "ltr"}>
+      {/* Search, as a pill */}
+      <div className="man-search">
+        <AppIcon name={aiSearching ? "ai" : "search"} size={18} />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); if (e.target.value) setOpenSec(null); }}
+          placeholder={isAr ? "ابحث أو اسأل سؤالاً…" : "Search or ask a question…"}
+          aria-label={isAr ? "ابحث في الدليل" : "Search the guide"}
+        />
       </div>
 
-      {/* ── Section chips (shown when not searching) ── */}
-      {!isSearching && sections.length > 1 && (
-        <div style={{ marginLeft: "-24px", marginRight: "-24px", overflowX: "auto", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", marginBottom: "28px" } as React.CSSProperties}>
-          <div style={{ display: "flex", gap: "6px", paddingLeft: "24px", paddingRight: "24px", paddingBottom: "4px" }}>
-            {sections.map((sec) => (
-              <button
-                key={sec}
-                onClick={() => jumpToSection(sec)}
-                style={{
-                  flexShrink: 0,
-                  background: activeSection === sec ? "var(--jood-ink)" : "var(--jood-surface)",
-                  border: "1px solid var(--jood-line)",
-                  color: activeSection === sec ? "var(--jood-ground)" : "var(--jood-ink-muted)",
-                  borderRadius: "var(--radius-pill)",
-                  fontSize: "12px",
-                  padding: "6px 14px",
-                  cursor: "pointer",
-                  fontFamily: "var(--font-body)",
-                  whiteSpace: "nowrap",
-                  boxShadow: "var(--shadow-card)",
-                  transition: "all 150ms",
-                }}
-              >
-                <AppIcon name={sectionIcon(sec)} size={13} style={{ marginInlineEnd: "6px", verticalAlign: "-2px" }} />{sec}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── AI answer card ── */}
+      {/* AI answer */}
       {aiResult?.answer && (
-        <div style={{ background: "var(--jood-surface)", border: "1px solid var(--jood-aqua)", borderRadius: "var(--radius-lg)", padding: "18px 20px", marginBottom: "20px", animation: "cc-rise 0.4s cubic-bezier(0.16,1,0.3,1) both" }}>
-          <style>{`@keyframes cc-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
-          <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px" }}>
-            <AppIcon name="ai" size={12} style={{ marginInlineEnd: "6px", verticalAlign: "-2px" }} />{isAr ? "JOOD ذكاء" : "JOOD AI"}
-          </p>
-          <p style={{ fontSize: "15px", color: "var(--jood-ink)", lineHeight: 1.65, margin: 0 }}>
-            {aiResult.answer}
-          </p>
-          {aiResult.entryIds.length > 0 && (
-            <p style={{ fontSize: "12px", color: "var(--jood-ink-muted)", marginTop: "10px" }}>
-              {isAr ? "↓ الأقسام ذات الصلة أدناه" : "↓ Relevant sections below"}
-            </p>
-          )}
+        <div className="home-note" style={{ marginTop: 12 }}>
+          <small><AppIcon name="ai" size={12} style={{ marginInlineEnd: 6, verticalAlign: "-2px" }} />{isAr ? "JOOD ذكاء" : "JOOD AI"}</small>
+          <p>{aiResult.answer}</p>
+          {aiResult.entryIds.length > 0 && <small style={{ marginTop: 8 }}>{isAr ? "↓ الأقسام ذات الصلة أدناه" : "↓ Relevant sections below"}</small>}
         </div>
       )}
-
       {aiResult && !aiResult.answer && aiResult.entryIds.length === 0 && (
-        <p style={{ color: "var(--jood-ink-muted)", fontSize: "14px", marginBottom: "16px" }}>
-          {isAr ? "لم أجد إجابة في الدليل. جرّب التواصل مع فريق جود." : "Couldn't find that in the manual. Try reaching the JOOD team."}
+        <p style={{ color: "var(--jood-ink-muted)", fontSize: 14, margin: "12px 4px 0" }}>
+          {isAr ? "لم أجد إجابة في الدليل. جرّب التواصل مع فريق جود." : "Couldn't find that in the guide. Try reaching the JOOD team."}
         </p>
       )}
 
-      {/* ── Wi-Fi card ── */}
-      {wifiSsid && (
-        <div style={{ background: "#351E1C", borderRadius: "var(--radius-lg)", padding: "20px 22px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-          <div>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.66)", marginBottom: "6px" }}>
-              {isAr ? "الواي فاي" : "Wi-Fi"}
-            </p>
-            <p style={{ color: "rgba(245,244,237,0.9)", fontWeight: 500, fontSize: "15px", margin: "0 0 3px" }}>{wifiSsid}</p>
-            {wifiPassword && (
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: "13px", color: "rgba(245,244,237,0.75)", letterSpacing: "0.05em", margin: 0 }}>{wifiPassword}</p>
-            )}
-          </div>
+      {/* Wi-Fi: the thing everyone looks for first */}
+      {wifiSsid && !isSearching && !openSec && (
+        <div className="home-card wide" style={{ ...glow(0), marginTop: 12, marginBottom: 0 }}>
+          <span style={{ minWidth: 0 }}>
+            <small>{isAr ? "الواي فاي" : "Wi-Fi"}</small>
+            <b style={{ overflowWrap: "anywhere" }}>{wifiSsid}</b>
+            {wifiPassword && <small style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.04em", opacity: 1, fontSize: ".85rem", overflowWrap: "anywhere" }}>{wifiPassword}</small>}
+          </span>
           {wifiPassword && (
-            <button
-              onClick={() => copyWifi(wifiPassword)}
-              style={{
-                flexShrink: 0,
-                background: copiedWifi ? "var(--jood-accent)" : "rgba(245,244,237,0.10)",
-                border: "1px solid rgba(245,244,237,0.15)",
-                color: copiedWifi ? "#fff" : "rgba(245,244,237,0.7)",
-                borderRadius: "var(--radius-pill)",
-                fontSize: "11px",
-                fontFamily: "var(--font-label)",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                padding: "8px 16px",
-                cursor: "pointer",
-                transition: "all 200ms",
-              }}
-            >
-              {copiedWifi ? (isAr ? "تم ✓" : "Copied ✓") : (isAr ? "نسخ" : "Copy")}
+            <button type="button" onClick={() => copyWifi(wifiPassword)} className="man-copy" aria-label={isAr ? "نسخ كلمة السر" : "Copy the password"}>
+              {copiedWifi ? "✓" : (isAr ? "نسخ" : "Copy")}
             </button>
           )}
         </div>
       )}
 
-      {/* ── Search results ── */}
+      {/* Search results */}
       {isSearching && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+        <div style={{ marginTop: 12 }}>
           {displayEntries.length === 0 && !aiResult && !aiSearching && (
-            <p style={{ color: "var(--jood-ink-muted)", padding: "16px 0", fontSize: "14px" }}>
-              {isAr ? "لا توجد نتائج" : "No results"}
-            </p>
+            <p style={{ color: "var(--jood-ink-muted)", padding: "16px 4px", fontSize: 14 }}>{isAr ? "لا توجد نتائج" : "No results"}</p>
           )}
-          {displayEntries.map((entry, idx) => (
-            <EntryRow key={entry.id} entry={entry} isAr={isAr} isOpen={expandedIds.has(entry.id)} onToggle={() => toggleEntry(entry.id)} isAiMatch={!!aiResult?.entryIds.includes(entry.id)} isLast={idx === displayEntries.length - 1} />
-          ))}
-        </div>
-      )}
-
-      {/* ── Nothing written yet ── */}
-      {!isSearching && entries.length === 0 && (
-        <div style={{ padding: "32px 0", display: "flex", flexDirection: "column", gap: "14px" }}>
-          <p style={{ color: "var(--jood-ink)", fontSize: "1rem", lineHeight: 1.6 }}>
-            {isAr ? "دليل البيت قيد الإعداد." : "The house guide is still being written."}
-          </p>
-          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.9rem", lineHeight: 1.6 }}>
-            {isAr ? "اسأل المساعد أو راسل الفريق وسنساعدك فوراً." : "Ask the concierge or message the team and we'll help right away."}
-          </p>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            <Link href={`/s/${token}/concierge`} style={{ padding: "10px 20px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", color: "var(--jood-ink)", textDecoration: "none", fontSize: "0.875rem" }}>
-              {isAr ? "اسأل المساعد" : "Ask the concierge"}
-            </Link>
-            <Link href={`/s/${token}/requests`} style={{ padding: "10px 20px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", color: "var(--jood-ink)", textDecoration: "none", fontSize: "0.875rem" }}>
-              {isAr ? "تواصل مع الفريق" : "Contact the team"}
-            </Link>
+          <div className="man-list">
+            {displayEntries.map((entry, idx) => (
+              <EntryRow key={entry.id} entry={entry} isAr={isAr} isOpen={expandedIds.has(entry.id)} onToggle={() => toggleEntry(entry.id)} isAiMatch={!!aiResult?.entryIds.includes(entry.id)} isLast={idx === displayEntries.length - 1} inGroup />
+            ))}
           </div>
         </div>
       )}
 
-      {/* ── Grouped sections ── */}
-      {!isSearching && grouped && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-          {sections.map((sec) => {
-            const secEntries = grouped.get(sec) ?? [];
-            return (
-              <section
-                key={sec}
-                ref={(el) => { sectionRefs.current[sec] = el; }}
-              >
-                {/* Section header */}
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
-                  <AppIcon name={sectionIcon(sec)} size={18} />
-                  <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 600, color: "var(--jood-ink)", margin: 0 }}>
-                    {sec}
-                  </p>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-accent)", background: "rgba(255,96,55,0.08)", padding: "2px 6px", borderRadius: "4px" }}>
-                    {secEntries.length}
-                  </span>
-                </div>
-
-                {/* Accordion entries */}
-                <div style={{ background: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", overflow: "hidden", boxShadow: "var(--shadow-card)" }}>
-                  {secEntries.map((entry, idx) => (
-                    <EntryRow key={entry.id} entry={entry} isAr={isAr} isOpen={expandedIds.has(entry.id)} onToggle={() => toggleEntry(entry.id)} isAiMatch={false} isLast={idx === secEntries.length - 1} inGroup />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
+      {/* Nothing written yet */}
+      {!isSearching && entries.length === 0 && (
+        <div className="home-note" style={{ marginTop: 12 }}>
+          <p style={{ fontWeight: 600 }}>{isAr ? "دليل البيت قيد الإعداد." : "The house guide is still being written."}</p>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: ".9rem" }}>{isAr ? "اسأل المساعد أو راسل الفريق وسنساعدك فوراً." : "Ask the concierge or message the team and we'll help right away."}</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
+            <Link href={`/s/${token}/concierge`} className="man-pill">{isAr ? "اسأل المساعد" : "Ask the concierge"}</Link>
+            <Link href={`/s/${token}/requests`} className="man-pill">{isAr ? "تواصل مع الفريق" : "Contact the team"}</Link>
+          </div>
         </div>
+      )}
+
+      {/* Sections as tiles; one opens into its entries */}
+      {!isSearching && entries.length > 0 && !openSec && (
+        <>
+          <p className="man-label">{isAr ? "الأقسام" : "Sections"}</p>
+          <div className="home-grid">
+            {sections.map((sec, i) => (
+              <button key={sec} type="button" className="home-card" style={{ ...glow(i + 1), textAlign: "start", border: 0, cursor: "pointer", font: "inherit" }} onClick={() => { setOpenSec(sec); setActiveSection(sec); }}>
+                <span className="home-ic"><AppIcon name={sectionIcon(sec) ?? "book"} size={18} /></span>
+                <span><b>{sec}</b><small>{(grouped?.get(sec) ?? []).length} {isAr ? "موضوع" : (grouped?.get(sec)?.length === 1 ? "topic" : "topics")}</small></span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!isSearching && openSec && (
+        <>
+          <button type="button" className="man-back" onClick={() => setOpenSec(null)}>
+            <span aria-hidden>{isAr ? "→" : "←"}</span> {isAr ? "كل الأقسام" : "All sections"}
+          </button>
+          <div className="home-card wide" style={{ ...glow(secIndex + 1), marginBottom: 10 }}>
+            <span><small>{(secEntries.length)} {isAr ? "موضوع" : "topics"}</small><b style={{ fontSize: "1.25rem" }}>{openSec}</b></span>
+            <i aria-hidden><AppIcon name={sectionIcon(openSec) ?? "book"} size={20} /></i>
+          </div>
+          <div className="man-list">
+            {secEntries.map((entry, idx) => (
+              <EntryRow key={entry.id} entry={entry} isAr={isAr} isOpen={expandedIds.has(entry.id)} onToggle={() => toggleEntry(entry.id)} isAiMatch={false} isLast={idx === secEntries.length - 1} inGroup />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

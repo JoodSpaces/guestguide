@@ -1481,3 +1481,14 @@ html[data-ui="next"]:has(.stay-root.home) body { background: #0B0807; }
 .home-list i { opacity: .5; font-style: normal; }
 .home-legal { text-align: center; margin: 26px 0 0; font-size: .7rem; }
 .home-legal a { color: rgba(255,255,255,.45); text-decoration: underline; }
+
+/* ── House guide: a pill search, section tiles, a section opens into its topics ── */
+.man-search { display: flex; align-items: center; gap: 10px; padding: 4px 16px; border-radius: 999px; background: rgba(255,255,255,.07); color: rgba(255,255,255,.6); }
+.man-search input { flex: 1; min-width: 0; height: 46px; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; font-size: .95rem; }
+.man-search input::placeholder { color: rgba(255,255,255,.45); }
+.man-label { margin: 22px 4px 10px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.5); }
+.man-copy { flex: none; border: 0; border-radius: 999px; padding: 10px 16px; background: rgba(255,255,255,.2); color: #fff; font: inherit; font-weight: 650; font-size: .82rem; cursor: pointer; }
+.man-pill { padding: 10px 18px; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; text-decoration: none; font-size: .88rem; font-weight: 600; }
+.man-back { display: inline-flex; align-items: center; gap: 8px; margin: 16px 0 12px; padding: 9px 14px; border: 0; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: .84rem; font-weight: 600; cursor: pointer; }
+.man-list { border-radius: 22px; background: rgba(255,255,255,.06); overflow: hidden; }
+.man-list button span { color: #fff; }
