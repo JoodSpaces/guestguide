@@ -124,7 +124,7 @@ export default async function AdminTodayPage() {
     <div>
       {/* ── The hero: what needs you today ──────────────────────────────── */}
       <Hero
-        label={`${greetWord} · ${today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}`}
+        label={`${greetWord}${h.get("x-admin-name") ? ", " + h.get("x-admin-name") : ""} · ${today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "short", day: "numeric", month: "short" })}`}
         value={needsYou === 0 ? "All clear" : `${needsYou} to look at`}
         note={briefSentence}
         corner={{ href: "/admin/bookings/new", label: "New booking" }}

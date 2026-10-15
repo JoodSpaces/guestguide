@@ -1266,3 +1266,8 @@ a.app-rc:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(53,30,
    (a blur would also trap the menu sheet, which is fixed to the screen) */
 html[data-ui="next"] header.admin-bar { background: #FFFFFF !important; border-bottom: 0 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 @media (min-width: 640px) { html[data-ui="next"] header.admin-bar { border-bottom: 1px solid var(--jood-line) !important; } }
+
+.app-pill-nav button { display: flex; align-items: center; justify-content: center; gap: 7px; height: 46px; min-width: 46px; padding: 0 12px; border-radius: 999px; color: var(--jood-mid); font-size: 0.8rem; font-weight: 600; }
+.app-pill-nav button span { display: none; }
+.app-pill-nav button[aria-current="page"] { background: var(--jood-ink); color: #fff; padding: 0 18px; }
+.app-pill-nav button[aria-current="page"] span { display: inline; }

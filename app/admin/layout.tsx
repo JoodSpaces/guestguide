@@ -37,7 +37,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <Toaster />
       <style>{`
         .admin-main {
-          padding: 20px 16px 120px;
+          padding: calc(20px + env(safe-area-inset-top, 0px)) 16px 120px;
           max-width: 900px;
           margin: 0 auto;
           overflow-x: hidden;

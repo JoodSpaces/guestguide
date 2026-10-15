@@ -228,7 +228,7 @@ export function AdminHeader({ role, name }: Props) {
         <PresenceAvatars myName={name} myRole={role} />
 
         {/* Hamburger — mobile only */}
-        <div ref={menuRef} className="admin-hamburger" style={{ position: "relative" }}>
+        <div className="admin-hamburger" style={{ position: "relative" }}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Menu"
@@ -244,44 +244,6 @@ export function AdminHeader({ role, name }: Props) {
           >
             <Menu size={16} strokeWidth={1.75} />
           </button>
-          {menuOpen && (
-            <>
-            <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(42,23,21,.45)", border: 0, zIndex: 59, cursor: "default" }} />
-            <div role="dialog" aria-label="Menu" className="admin-sheet" style={{
-              position: "fixed", left: 0, right: 0, bottom: 0,
-              backgroundColor: "#FFFFFF", borderRadius: "28px 28px 0 0",
-              boxShadow: "0 -10px 40px rgba(53,30,28,0.18)",
-              maxWidth: "560px", margin: "0 auto", zIndex: 60, overflow: "hidden",
-              padding: "10px 6px calc(16px + env(safe-area-inset-bottom, 0px))",
-            }}>
-              <div aria-hidden style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(53,30,28,.18)", margin: "0 auto 8px" }} />
-              {allNav.map((item) => (
-                <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{
-                  display: "block", padding: "13px 18px", textDecoration: "none",
-                  fontSize: "0.9375rem",
-                  color: isActive(item.href) ? "var(--jood-ink)" : "var(--jood-ink-muted)",
-                  fontWeight: isActive(item.href) ? 600 : 400,
-                  backgroundColor: isActive(item.href) ? "var(--jood-surface-raised)" : "transparent",
-                  borderBottom: "1px solid var(--jood-line)",
-                }}>
-                  {item.label}
-                </a>
-              ))}
-              <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--jood-line)" }}>
-                <p style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--jood-ink)" }}>{name || "Admin"}</p>
-                <p style={{ fontSize: "0.7rem", color: "var(--jood-ink-subtle)", marginTop: "2px", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{role}</p>
-              </div>
-              <button onClick={handleLogout} style={{
-                display: "block", width: "100%", padding: "13px 18px",
-                background: "none", border: "none", cursor: "pointer",
-                fontFamily: "inherit", fontSize: "0.9375rem",
-                color: "var(--jood-danger)", textAlign: "left",
-              }}>
-                Sign out
-              </button>
-            </div>
-            </>
-          )}
         </div>
 
         {/* Profile avatar — desktop only */}
@@ -335,7 +297,7 @@ export function AdminHeader({ role, name }: Props) {
         }
         @media (max-width: 639px) {
           .admin-logo-desktop         { display: none !important; }
-          .admin-bar                  { padding-top: env(safe-area-inset-top, 0px); }
+          .admin-bar                  { display: none !important; }
           .admin-nav-desktop          { display: none !important; }
           .admin-nav-mobile-spacer    { display: block !important; }
           .admin-hamburger            { display: block !important; }
@@ -345,7 +307,7 @@ export function AdminHeader({ role, name }: Props) {
     </header>
     {/* Phone: the main desks as a floating pill, the open one is an ink pill with its name */}
     <nav className="app-pill-nav" aria-label="Main">
-      {primaryVisible.map((item) => {
+      {primaryVisible.slice(0, 4).map((item) => {
         const Icon = NAV_ICON[item.label] ?? LayoutDashboard;
         return (
           <a key={item.label} href={item.href} aria-label={item.label} aria-current={isActive(item.href) ? "page" : undefined}>
@@ -354,7 +316,55 @@ export function AdminHeader({ role, name }: Props) {
           </a>
         );
       })}
+      <button type="button" aria-label="More" aria-haspopup="dialog" aria-expanded={menuOpen} onClick={() => setMenuOpen((o) => !o)}
+        style={{ border: 0, background: "none", font: "inherit", cursor: "pointer" }} aria-current={menuOpen ? "page" : undefined}>
+        <Menu size={18} strokeWidth={1.8} />
+        <span>More</span>
+      </button>
     </nav>
+    <div ref={menuRef}>
+          {menuOpen && (
+            <>
+            <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(42,23,21,.45)", border: 0, zIndex: 59, cursor: "default" }} />
+            <div role="dialog" aria-label="Menu" className="admin-sheet" style={{
+              position: "fixed", left: 0, right: 0, bottom: 0,
+              backgroundColor: "#FFFFFF", borderRadius: "28px 28px 0 0",
+              boxShadow: "0 -10px 40px rgba(53,30,28,0.18)",
+              maxWidth: "560px", margin: "0 auto", zIndex: 60, overflow: "hidden",
+              padding: "10px 6px calc(16px + env(safe-area-inset-bottom, 0px))",
+            }}>
+              <div aria-hidden style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(53,30,28,.18)", margin: "0 auto 8px" }} />
+              <button type="button" onClick={() => { setMenuOpen(false); window.dispatchEvent(new CustomEvent("live-feed-toggle")); }} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", padding: "13px 18px", background: "none", border: 0, borderBottom: "1px solid var(--jood-line)", font: "inherit", fontSize: "0.9375rem", color: "var(--jood-ink-muted)", textAlign: "start", cursor: "pointer" }}>
+                Activity feed {liveBadge > 0 && <span className="app-count on">{liveBadge}</span>}
+              </button>
+              {allNav.map((item) => (
+                <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{
+                  display: "block", padding: "13px 18px", textDecoration: "none",
+                  fontSize: "0.9375rem",
+                  color: isActive(item.href) ? "var(--jood-ink)" : "var(--jood-ink-muted)",
+                  fontWeight: isActive(item.href) ? 600 : 400,
+                  backgroundColor: isActive(item.href) ? "var(--jood-surface-raised)" : "transparent",
+                  borderBottom: "1px solid var(--jood-line)",
+                }}>
+                  {item.label}
+                </a>
+              ))}
+              <div style={{ padding: "12px 18px", borderBottom: "1px solid var(--jood-line)" }}>
+                <p style={{ fontSize: "0.8125rem", fontWeight: 500, color: "var(--jood-ink)" }}>{name || "Admin"}</p>
+                <p style={{ fontSize: "0.7rem", color: "var(--jood-ink-subtle)", marginTop: "2px", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.1em" }}>{role}</p>
+              </div>
+              <button onClick={handleLogout} style={{
+                display: "block", width: "100%", padding: "13px 18px",
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "inherit", fontSize: "0.9375rem",
+                color: "var(--jood-danger)", textAlign: "left",
+              }}>
+                Sign out
+              </button>
+            </div>
+            </>
+          )}
+    </div>
     </>
   );
 }
