@@ -5,6 +5,7 @@ import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { WEBSITE_URL } from "@/lib/site";
 import { VoiceDial } from "@/components/stay/VoiceDial";
 import { haptic } from "@/lib/haptics";
+import { publishAnswer } from "@/lib/live-answer";
 import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
 
 interface Props { token: string; isAr: boolean; guestFirstName: string }
@@ -114,7 +115,7 @@ function Inner({ token, isAr }: Props) {
       const text = (m.message ?? "").replace(/\[[^\]]{1,30}\]/g, "").replace(/\s{2,}/g, " ").trim();
       if (!text) return;
       transcript.current.push({ role: m.source === "ai" ? "agent" : "guest", text });
-      if (m.source === "ai") setCaption(text);
+      if (m.source === "ai") { setCaption(text); publishAnswer(token, { a: text, via: "voice" }); }
     },
     // The agent asked for a tool this screen does not have: keep a trace so the log shows it.
     onUnhandledClientToolCall: (t: { tool_name?: string }) => { actions.current.push(`unhandled:${t?.tool_name ?? "?"}`); },

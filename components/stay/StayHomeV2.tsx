@@ -10,6 +10,9 @@ import { Sun, Sunset, Thermometer, Waves, Wind } from "lucide-react";
 import { DotNumber } from "@/components/stay/DotNumber";
 import { InstallHint } from "@/components/stay/InstallHint";
 import { haptic } from "@/lib/haptics";
+import { ConciergeSheet } from "@/components/stay/ConciergeSheet";
+import { readAnswer, type LiveAnswer } from "@/lib/live-answer";
+import type { Phase } from "@/lib/token";
 import { stayCalendar, downloadIcs } from "@/lib/ics";
 import { usePullToRefresh } from "@/lib/gestures";
 import { cairoHour } from "@/lib/cairo-time";
@@ -26,13 +29,15 @@ interface Props {
   hostPickAr?: string | null;
   hasArrivalPrefs?: boolean;
   aiEnabled?: boolean;
+  voiceOn?: boolean;
+  latestReply?: { request: string; note: string; at: string } | null;
 }
 
 const KICKER = (h: number) =>
   h >= 5 && h < 11 ? "time_of_day.morning_kicker" : h >= 11 && h < 15 ? "time_of_day.midday_kicker" : h >= 15 && h < 17 ? "time_of_day.afternoon_kicker" : h >= 17 && h < 20 ? "time_of_day.golden_hour_kicker" : "time_of_day.evening_kicker";
 
 
-export function StayHomeV2({ payload, token, requestSummary = null, tonightNote = null, tonightNoteAr = null, hostPick = null, hostPickAr = null, hasArrivalPrefs = false, aiEnabled = true }: Props) {
+export function StayHomeV2({ payload, token, requestSummary = null, tonightNote = null, tonightNoteAr = null, hostPick = null, hostPickAr = null, hasArrivalPrefs = false, aiEnabled = true, voiceOn = false, latestReply = null }: Props) {
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
@@ -63,6 +68,19 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
 
   // Read the clock after mount, so the server and the phone never disagree about "today".
   const [now, setNow] = useState<number | null>(null);
+  const [sheet, setSheet] = useState(false);
+  const [seed, setSeed] = useState<string | undefined>(undefined);
+  const [live, setLive] = useState<LiveAnswer | null>(null);
+  const [open, setOpen] = useState(false);
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    setLive(readAnswer(token));
+    const on = (e: Event) => setLive((e as CustomEvent<LiveAnswer>).detail);
+    window.addEventListener("jood-live-answer", on);
+    const id = setInterval(() => setTick((n) => n + 1), 6000);
+    return () => { window.removeEventListener("jood-live-answer", on); clearInterval(id); };
+  }, [token]);
+  const ask = (q?: string) => { haptic(); setSeed(q); setSheet(true); };
   const [wx, setWx] = useState<{ tempC: number; sunsetLocal: string; windKph: number; uvIndex: number; waveM: number | null } | null>(null);
   useEffect(() => { setNow(Date.now()); }, []);
   useEffect(() => {
@@ -88,6 +106,18 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
   const sameDay = (a: number, b: number) => new Date(a).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" }) === new Date(b).toLocaleDateString("en-CA", { timeZone: "Africa/Cairo" });
   const dayLetter = (ms: number) => new Date(ms).toLocaleDateString(isAr ? "ar-EG" : "en-GB", { timeZone: "Africa/Cairo", weekday: isAr ? "short" : "narrow" });
   const dayNum = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric" });
+
+  const evening = hour >= 17 && hour < 21;
+  const suggestions: string[] = (() => {
+    const base = isAr
+      ? (isDeparture ? ["كيف أُسلّم الوحدة؟", "هل يمكنني تمديد وقت المغادرة؟"] : isPreArrival ? ["كيف أصل إلى البيت؟", "ما هي كلمة مرور الواي فاي؟"] : ["ما هي كلمة مرور الواي فاي؟", "ما المطاعم القريبة؟", "كيف أستخدم المكيف؟"])
+      : (isDeparture ? ["What's the check-out procedure?", "Can I get a late check-out?"] : isPreArrival ? ["How do I get to the house?", "What's the Wi-Fi password?"] : ["What's the Wi-Fi password?", "What's good for dinner nearby?", "How do I use the AC?"]);
+    const smart: string[] = [];
+    if (wx && evening) smart.push(isAr ? `الغروب ${wx.sunsetLocal}. أين أشاهده؟` : `Sunset is at ${wx.sunsetLocal}. Where's the best spot?`);
+    if (wx && wx.tempC >= 33) smart.push(isAr ? "أين أبرّد جسمي بالقرب؟" : "Where can I cool off nearby?");
+    return [...smart, ...base];
+  })();
+  const sug = suggestions[tick % suggestions.length];
 
   const tiles: { href: string; title: string; sub: string; c1: string; c2: string; icon: string }[] = [
     { href: essentials[0].href, title: essentials[0].title, sub: essentials[0].sub, c1: "#16E0B0", c2: "#0A6E6A", icon: essentials[0].icon },
@@ -133,6 +163,48 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
         <div className="home-num">{big !== null ? <DotNumber value={big} dot={13} gap={6} label={`${big} ${unit}`} /> : <span style={{ height: 91, display: "block" }} />}</div>
         <p className="home-unit">{unit}</p>
         <div className="home-bar" aria-hidden><i style={{ width: `${progress * 100}%` }} /></div>
+        {/* The live screen: the team's reply, the last answer, or something to ask */}
+        <div className={`home-live${open ? " open" : ""}`}>
+          <button type="button" className="live-head" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+            <span className="live-dot" aria-hidden />
+            <span className="live-text">
+              {latestReply ? (
+                <><small>{isAr ? "ردّ الفريق" : "The team replied"}</small><b>{latestReply.note}</b></>
+              ) : live ? (
+                <><small>{live.q ?? (isAr ? "المساعد" : "Concierge")}</small><b>{live.a}</b></>
+              ) : (
+                <><small>{isAr ? "اسألني" : "Ask me"}</small><b key={tick}>{sug}</b></>
+              )}
+            </span>
+            <span className="live-chev" aria-hidden>{open ? "−" : "+"}</span>
+          </button>
+
+          {open && (
+            <div className="live-body">
+              {latestReply && (
+                <div className="live-item">
+                  <small>{isAr ? "طلبك" : "Your request"}</small>
+                  <p>{latestReply.request}</p>
+                  <Link href={`/s/${token}/requests`} className="live-link">{isAr ? "افتح الطلبات" : "Open requests"} →</Link>
+                </div>
+              )}
+              {live && (
+                <div className="live-item">
+                  <small>{live.via === "voice" ? (isAr ? "من المحادثة الصوتية" : "From the voice chat") : (isAr ? "من المحادثة" : "From the chat")}</small>
+                  {live.q && <p style={{ opacity: .7 }}>{live.q}</p>}
+                  <p>{live.a}</p>
+                  <button type="button" className="live-link" onClick={() => ask()}>{isAr ? "تابع المحادثة" : "Continue the chat"} →</button>
+                </div>
+              )}
+              <div className="live-chips">
+                {suggestions.slice(0, 4).map((q) => (
+                  <button key={q} type="button" onClick={() => ask(q)}>{q}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
         <dl className="home-facts">
           <div><dt>{isAr ? "البيت" : "House"}</dt><dd>{propertyName}</dd></div>
           <div><dt>{isAr ? "الوصول" : "Arrive"}</dt><dd><bdi>{fmtDay(inMs)}</bdi></dd></div>
@@ -159,13 +231,13 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
       )}
 
       {/* The concierge, wide, like the average card */}
-      <Link href={`/s/${token}/concierge`} onClick={() => haptic()} className="home-card wide" style={{ "--c1": "#FF9A8A", "--c2": "#FF4F9A" } as React.CSSProperties}>
+      <button type="button" onClick={() => ask()} className="home-card wide" style={{ "--c1": "#FF9A8A", "--c2": "#FF4F9A", border: 0, width: "100%", textAlign: "start", cursor: "pointer", font: "inherit" } as React.CSSProperties}>
         <span>
           <small>{aiEnabled ? (isAr ? "المساعد" : "Concierge") : (isAr ? "الفريق" : "Team")}</small>
           <b>{aiEnabled ? (isAr ? "اسأل عن أي شيء" : "Ask anything about your stay") : (isAr ? "راسل الفريق" : "Message the team")}</b>
         </span>
         <i aria-hidden>{isAr ? "←" : "→"}</i>
-      </Link>
+      </button>
 
       {/* The four things guests open most */}
       <div className="home-grid">
@@ -194,6 +266,14 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
             </Link>
           ))}
         </div>
+      )}
+
+      {sheet && (
+        <ConciergeSheet
+          token={token} isAr={isAr} phase={payload.phase as Phase} guestFirstName={guestName}
+          propertyName={propertyName} aiOn={aiEnabled} voiceOn={voiceOn} seed={seed}
+          onClose={() => { setSheet(false); setSeed(undefined); }}
+        />
       )}
 
       <p className="home-legal">

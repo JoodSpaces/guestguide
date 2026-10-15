@@ -5,6 +5,7 @@ import type { Phase } from "@/lib/token";
 import { WEBSITE_URL } from "@/lib/site";
 import { AppIcon } from "@/components/ui/AppIcon";
 import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
+import { publishAnswer } from "@/lib/live-answer";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,6 +20,10 @@ interface Props {
   phase: Phase;
   guestFirstName: string;
   propertyName: string;
+  /** Inside a sheet: fills its parent and drops its own header. */
+  compact?: boolean;
+  /** A question to send as soon as the chat opens (a suggestion tapped on the home). */
+  initialQuestion?: string;
 }
 
 function suggestedQuestions(phase: Phase, isAr: boolean): string[] {
@@ -41,7 +46,7 @@ const WELCOME_EN = (name: string) =>
 const WELCOME_AR = (name: string) =>
   `مرحباً ${name}! أنا كونسيرج جود — هنا لمساعدتك في كل ما يتعلق بإقامتك. اسألني عن العقار، الواي فاي، الأماكن المحلية، أو أي شيء آخر.`;
 
-export function ConciergeClient({ token, locale, phase, guestFirstName, propertyName }: Props) {
+export function ConciergeClient({ token, locale, phase, guestFirstName, propertyName, compact = false, initialQuestion }: Props) {
   const isAr = locale === "ar";
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -60,6 +65,14 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (initialQuestion && !seeded.current) {
+      seeded.current = true;
+      void send(initialQuestion);
+    }
+  }); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function send(text: string) {
     const trimmed = text.trim();
@@ -118,6 +131,7 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
         return next;
       });
       if (prepared) { setReqError(null); setProposal(prepared); }
+      if (shown.trim()) publishAnswer(token, { q: trimmed, a: shown.trim(), via: "chat" });
     } catch {
       setMessages((prev) => {
         const next = [...prev];
@@ -168,14 +182,14 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
   const showSuggestions = messages.length === 1; // only on first load
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100dvh - 120px)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: compact ? "100%" : "calc(100dvh - 120px)", minHeight: 0 }}>
       {proposal && (
         <RequestConfirm
           isAr={isAr} draft={proposal} source="chat" propertyName={propertyName} busy={sendingReq} error={reqError}
           onConfirm={(d) => sendPrepared(d)} onCancel={cancelPrepared}
         />
       )}
-      {/* Header */}
+      {!compact && (
       <div
         style={{
           display: "flex",
@@ -223,6 +237,8 @@ export function ConciergeClient({ token, locale, phase, guestFirstName, property
           </div>
         </div>
       </div>
+
+      )}
 
       {/* Messages */}
       <div

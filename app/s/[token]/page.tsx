@@ -8,6 +8,7 @@ import { StayHome } from "@/components/stay/StayHome";
 import type { TokenPayload } from "@/lib/token";
 import { shouldSyncLocale } from "@/lib/locale";
 import { aiEnabled } from "@/lib/ai";
+import { voiceEnabled } from "@/lib/voice";
 import { getUiMode } from "@/lib/ui-mode-server";
 import { StayHomeV2 } from "@/components/stay/StayHomeV2";
 
@@ -31,7 +32,7 @@ export default async function StayPage({ params }: Props) {
 
   if (!tokenRow || tokenRow.revoked_at) notFound();
 
-  const [{ data: booking }, { data: serviceRequests }, { data: arrivalPrefs }] = await Promise.all([
+  const [{ data: booking }, { data: serviceRequests }, { data: arrivalPrefs }, { data: replyRow }] = await Promise.all([
     supabase
       .from("bookings")
       .select(`id, property_id, status, guest_first_name, guest_lang, check_in, check_out, dnd_active,
@@ -60,6 +61,15 @@ export default async function StayPage({ params }: Props) {
       .select("occasion")
       .eq("booking_id", tokenRow.booking_id)
       .maybeSingle<{ occasion: string | null }>(),
+    // The team's newest written reply to this guest, for the live card at the top of the home.
+    supabase
+      .from("guest_requests")
+      .select("body, admin_notes, created_at")
+      .eq("booking_id", tokenRow.booking_id)
+      .not("admin_notes", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ body: string; admin_notes: string; created_at: string }>(),
   ]);
 
   if (!booking || booking.status === "cancelled") notFound();
@@ -142,6 +152,8 @@ export default async function StayPage({ params }: Props) {
     return (
       <StayHomeV2
         aiEnabled={aiEnabled()}
+        voiceOn={voiceEnabled()}
+        latestReply={replyRow?.admin_notes ? { request: replyRow.body, note: replyRow.admin_notes, at: replyRow.created_at } : null}
         payload={payload}
         token={token}
         requestSummary={requestSummary}
