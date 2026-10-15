@@ -23,7 +23,7 @@ const ROLE_COLOR: Record<string, string> = {
 
 const PRIMARY_NAV = [
   { href: "/admin",                  label: "Today",       roles: ["admin"] },
-  { href: "/admin/bookings",         label: "Bookings",    roles: ["admin", "concierge"] },
+  { href: "/admin/calendar",         label: "Calendar",    roles: ["admin", "concierge"] },
   { href: "/admin/ops",              label: "Ops",         roles: ["admin", "ops"] },
   { href: "/admin/ops",              label: "Cleaning",    roles: ["housekeeping"] },
   { href: "/admin/ops/maintenance",  label: "Maintenance", roles: ["maintenance"] },
@@ -32,10 +32,11 @@ const PRIMARY_NAV = [
 ];
 
 const NAV_ICON: Record<string, typeof Menu> = {
-  Today: LayoutDashboard, Bookings: CalendarDays, Ops: ClipboardList, Cleaning: Sparkles, Maintenance: Wrench, Services: ConciergeBell, Requests: MessageCircle,
+  Today: LayoutDashboard, Calendar: CalendarDays, Ops: ClipboardList, Cleaning: Sparkles, Maintenance: Wrench, Services: ConciergeBell, Requests: MessageCircle,
 };
 
 const SECONDARY_NAV = [
+  { href: "/admin/bookings",    label: "Bookings",   roles: ["admin", "concierge"] },
   { href: "/admin/properties",  label: "Properties", roles: ["admin"] },
   { href: "/admin/team",        label: "Team",        roles: ["admin"] },
   { href: "/admin/voice",       label: "Voice",       roles: ["admin"] },

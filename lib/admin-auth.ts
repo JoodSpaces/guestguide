@@ -235,6 +235,7 @@ export function isPathAllowed(pathname: string, role: string): boolean {
   if (role === "concierge") {
     return (
       pathname.startsWith("/admin/requests") ||
+      pathname.startsWith("/admin/calendar") ||
       pathname.startsWith("/admin/bookings")
     );
   }
