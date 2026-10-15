@@ -70,7 +70,7 @@ export function BottomNav({ token, active = "none" }: BottomNavProps) {
     const seq = [by.home, by.discover, by.concierge, by.services, by.help];
     const bar = isRtl ? [...seq].reverse() : seq;
     return (
-      <nav aria-label={isRtl ? "التنقل الرئيسي" : "Main navigation"} className="app-pill-nav">
+      <nav aria-label={isRtl ? "التنقل الرئيسي" : "Main navigation"} className="app-pill-nav stay-aura-nav">
         {bar.map((tab) => (
           <Link key={tab.id} href={tab.href} aria-label={tab.label} aria-current={tab.id === active ? "page" : undefined}>
             {tab.icon}

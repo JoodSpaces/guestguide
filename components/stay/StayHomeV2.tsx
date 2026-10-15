@@ -9,6 +9,7 @@ import { AppIcon } from "@/components/ui/AppIcon";
 import { BottomNav } from "@/components/stay/BottomNav";
 import { CountdownChip } from "@/components/stay/CountdownChip";
 import { WeatherStrip } from "@/components/stay/WeatherStrip";
+import { DotNumber } from "@/components/stay/DotNumber";
 import { TonightCard } from "@/components/stay/TonightCard";
 import { cairoHour } from "@/lib/cairo-time";
 import { WEBSITE_URL } from "@/lib/site";
@@ -29,7 +30,6 @@ interface Props {
 const KICKER = (h: number) =>
   h >= 5 && h < 11 ? "time_of_day.morning_kicker" : h >= 11 && h < 15 ? "time_of_day.midday_kicker" : h >= 15 && h < 17 ? "time_of_day.afternoon_kicker" : h >= 17 && h < 20 ? "time_of_day.golden_hour_kicker" : "time_of_day.evening_kicker";
 
-const glass = "stay-glass";
 
 export function StayHomeV2({ payload, token, requestSummary = null, tonightNote = null, tonightNoteAr = null, hostPick = null, hostPickAr = null, hasArrivalPrefs = false, aiEnabled = true }: Props) {
   const t = useTranslations();
@@ -59,80 +59,96 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
     { href: `/s/${token}/memory`, icon: "memory", title: isAr ? "ذكرى إقامتك" : "Your stay, remembered", show: isAfterOrDeparture },
   ].filter((m) => m.show);
 
-  const label = { color: "var(--jood-mid)", fontFamily: "var(--font-label)", fontSize: 11, fontWeight: 600, letterSpacing: isAr ? 0 : "0.1em", textTransform: "uppercase" as const };
-  const tile = { width: 40, height: 40, borderRadius: 14, display: "grid", placeItems: "center", background: "#FFFFFF", color: "var(--jood-ink)", flex: "none" } as const;
+  // The big number: days until arrival, then nights left. Read after mount so the server and the phone never disagree.
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); }, []);
+  const DAY = 86_400_000;
+  const toIn = now === null ? null : Math.max(0, Math.ceil((new Date(payload.checkIn).getTime() - now) / DAY));
+  const toOut = now === null ? null : Math.max(0, Math.ceil((new Date(payload.checkOut).getTime() - now) / DAY));
+  const before = now !== null && new Date(payload.checkIn).getTime() > now;
+  const big = before ? toIn : toOut;
+  const bigLabel = before ? (isAr ? "يوم حتى الوصول" : "days until you arrive") : (isAr ? "ليلة متبقية" : "nights left");
+
+  const tag = { fontFamily: "var(--font-label)", fontSize: 11, fontWeight: 600, letterSpacing: isAr ? 0 : "0.1em", textTransform: "uppercase" as const, color: "rgba(255,255,255,.62)" };
 
   return (
-    <main className="stay-root" style={{ minHeight: "100dvh", padding: "0 16px 120px", maxWidth: 480, margin: "0 auto" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0 12px" }}>
+    <main className="stay-root aura" style={{ minHeight: "100dvh", padding: "0 16px 130px", maxWidth: 480, margin: "0 auto", position: "relative" }}>
+      <div className="aura-bg" aria-hidden />
+
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 0 6px", position: "relative" }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/jood-logo-dark.png" alt="JOOD" className="jood-logo" style={{ height: 22, width: "auto" }} />
+        <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: 22, width: "auto", filter: "brightness(0) invert(1)" }} />
         <LanguageToggle />
       </header>
 
-      {/* the welcome: one white card, the greeting, the house and the countdown */}
-      <section className="hero-card">
-        <p className="hero-label">{t(KICKER(hour) as never)} · {propertyName}</p>
-        <h1 style={{ margin: "6px 0 14px", color: "#FFFFFF" }}>{greeting} {guestName}</h1>
-        <CountdownChip phase={payload.phase as never} checkIn={payload.checkIn} checkOut={payload.checkOut} />
+      {/* The number, in dots */}
+      <section style={{ position: "relative", padding: "22px 4px 8px" }}>
+        <p style={tag}>{t(KICKER(hour) as never)} · {propertyName}</p>
+        <h1 className="aura-title">{greeting} {guestName}</h1>
+        <div style={{ marginTop: 26, minHeight: 140 }}>
+          {big !== null && <DotNumber value={big} dot={14} gap={7} label={`${big} ${bigLabel}`} />}
+        </div>
+        <p style={{ ...tag, marginTop: 14 }}>{bigLabel}</p>
+        <div style={{ marginTop: 6 }}>
+          <CountdownChip phase={payload.phase as never} checkIn={payload.checkIn} checkOut={payload.checkOut} />
+        </div>
       </section>
 
       {requestSummary?.payNow && (
-        <a href={requestSummary.payNow.url} className={glass} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "13px 16px", borderRadius: 16, margin: "12px 0 0", textDecoration: "none", color: "var(--jood-ink)", boxShadow: "inset 3px 0 0 var(--jood-accent), 0 0 0 1px rgba(53,30,28,.08)" }}>
-          <span><span style={{ ...label, display: "block" }}>{isAr ? "بانتظار الدفع" : "Ready to pay"}</span>{requestSummary.payNow.serviceName}</span>
-          <span aria-hidden style={{ color: "var(--jood-accent)" }}>{isAr ? "←" : "→"}</span>
+        <a href={requestSummary.payNow.url} className="aura-tile" style={{ "--a1": "#FF6037", "--a2": "#733635", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "16px 18px", margin: "14px 0 0", textDecoration: "none", color: "#fff" } as React.CSSProperties}>
+          <span style={{ position: "relative" }}><span style={{ ...tag, display: "block" }}>{isAr ? "بانتظار الدفع" : "Ready to pay"}</span><b style={{ fontWeight: 650 }}>{requestSummary.payNow.serviceName}</b></span>
+          <span aria-hidden style={{ position: "relative" }}>{isAr ? "←" : "→"}</span>
         </a>
       )}
 
-      {/* the concierge: one clear row, the orb has moved to its own page */}
-      <Link href={`/s/${token}/concierge`} className={glass} style={{ display: "flex", alignItems: "center", gap: 14, padding: "14px 16px", borderRadius: 16, margin: "12px 0 0", textDecoration: "none", color: "var(--jood-ink)" }}>
-        <span style={{ ...tile, background: "var(--jood-accent)", color: "#fff" }}><AppIcon name={aiEnabled ? "ai" : "chat"} size={20} /></span>
-        <span style={{ flex: 1 }}>
-          <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>{aiEnabled ? (isAr ? "تحدث مع المساعد" : "Talk to your concierge") : (isAr ? "راسل الفريق" : "Message the team")}</span>
-          <span style={{ display: "block", fontSize: 12.5, color: "var(--jood-ink-muted)", marginTop: 1 }}>{aiEnabled ? (isAr ? "اسأل أي شيء عن إقامتك" : "Ask anything about your stay") : (isAr ? "شخص حقيقي يردّ عليك" : "A person replies")}</span>
+      {/* The concierge: a glowing sheet and one pill */}
+      <Link href={`/s/${token}/concierge`} className="aura-tile aura-hero" style={{ "--a1": "#FF3D8B", "--a2": "#733635" } as React.CSSProperties}>
+        <span style={{ ...tag, position: "relative" }}>{isAr ? "المساعد" : "Concierge"}</span>
+        <b className="aura-hero-title">{aiEnabled ? (isAr ? "اسأل عن أي شيء في إقامتك" : "Ask anything about your stay") : (isAr ? "راسل الفريق" : "Message the team")}</b>
+        <span className="aura-cta">
+          <span>{aiEnabled ? (isAr ? "ابدأ المحادثة" : "Start talking") : (isAr ? "ابدأ الرسالة" : "Start a message")}</span>
+          <i aria-hidden>{isAr ? "←" : "→"}</i>
         </span>
-        <span aria-hidden style={{ color: "var(--jood-mid)" }}>{isAr ? "←" : "→"}</span>
       </Link>
 
-      <p style={{ ...label, margin: "22px 2px 8px" }}>{isAr ? "الأساسيات" : "Essentials"}</p>
-      <div className={glass} style={{ borderRadius: 16, overflow: "hidden" }}>
-        {essentials.map((e, i) => (
-          <Link key={e.icon} href={e.href} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 16px", textDecoration: "none", color: "var(--jood-ink)", borderTop: i ? "1px solid var(--jood-line)" : "none" }}>
-            <span style={tile}><AppIcon name={e.icon} size={19} /></span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: "block", fontWeight: 600, fontSize: 14.5, lineHeight: 1.3 }}>{e.title}</span>
-              <span style={{ display: "block", fontSize: 12.5, color: "var(--jood-ink-muted)", marginTop: 1, lineHeight: 1.4 }}>{e.sub}</span>
-            </span>
-            <span aria-hidden style={{ color: "var(--jood-mid)" }}>{isAr ? "←" : "→"}</span>
-          </Link>
-        ))}
+      {/* Essentials: each tile has its own glow */}
+      <div className="aura-grid">
+        {essentials.map((e, i) => {
+          const glow = [["#2FD6A0", "#0B5C57"], ["#6C7BFF", "#2A1B6B"], ["#FF9A3D", "#7A2E10"], ["#FF5FA8", "#5E1B45"]][i % 4];
+          return (
+            <Link key={e.icon} href={e.href} className="aura-tile aura-sq" style={{ "--a1": glow[0], "--a2": glow[1] } as React.CSSProperties}>
+              <span className="aura-ic"><AppIcon name={e.icon} size={20} /></span>
+              <span style={{ position: "relative" }}>
+                <b className="aura-sq-title">{e.title}</b>
+                <small className="aura-sq-sub">{e.sub}</small>
+              </span>
+            </Link>
+          );
+        })}
       </div>
 
-      {(tonightNote || tonightNoteAr) && <div style={{ marginTop: 12 }}><TonightCard token={token} note={tonightNote ?? ""} noteAr={tonightNoteAr ?? ""} isAr={isAr} /></div>}
+      {(tonightNote || tonightNoteAr) && <div style={{ marginTop: 12, position: "relative" }}><TonightCard token={token} note={tonightNote ?? ""} noteAr={tonightNoteAr ?? ""} isAr={isAr} /></div>}
       {(hostPick || hostPickAr) && (
-        <div className={glass} style={{ borderRadius: 16, padding: "16px 18px", marginTop: 12 }}>
-          <p style={{ ...label, margin: "0 0 6px" }}>{isAr ? "نصيحة من مضيفك" : "From your host"}</p>
-          <p style={{ fontSize: 15, lineHeight: 1.5, margin: 0 }}>{isAr ? (hostPickAr ?? hostPick) : (hostPick ?? hostPickAr)}</p>
+        <div className="aura-tile" style={{ "--a1": "#A0C9CB", "--a2": "#1E4B4F", padding: "18px 20px", marginTop: 12 } as React.CSSProperties}>
+          <p style={{ ...tag, margin: "0 0 8px", position: "relative" }}>{isAr ? "نصيحة من مضيفك" : "From your host"}</p>
+          <p style={{ fontSize: 18, lineHeight: 1.4, margin: 0, position: "relative", color: "#fff" }}>{isAr ? (hostPickAr ?? hostPick) : (hostPick ?? hostPickAr)}</p>
         </div>
       )}
 
       {more.length > 0 && (
-        <>
-          <p style={{ ...label, margin: "22px 2px 8px" }}>{isAr ? "المزيد لإقامتك" : "More for your stay"}</p>
-          <div className={glass} style={{ borderRadius: 16, overflow: "hidden" }}>
-            {more.map((m, i) => (
-              <Link key={m.icon} href={m.href} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 16px", textDecoration: "none", color: "var(--jood-ink)", borderTop: i ? "1px solid var(--jood-line)" : "none" }}>
-                <AppIcon name={m.icon} size={19} style={{ color: "var(--jood-accent)" }} />
-                <span style={{ flex: 1, fontSize: 14.5, fontWeight: 500 }}>{m.title}</span>
-                <span aria-hidden style={{ color: "var(--jood-mid)" }}>{isAr ? "←" : "→"}</span>
-              </Link>
-            ))}
-          </div>
-        </>
+        <div className="aura-list">
+          {more.map((m) => (
+            <Link key={m.icon} href={m.href} className="aura-row">
+              <AppIcon name={m.icon} size={18} />
+              <span style={{ flex: 1 }}>{m.title}</span>
+              <span aria-hidden style={{ opacity: .6 }}>{isAr ? "←" : "→"}</span>
+            </Link>
+          ))}
+        </div>
       )}
 
-      <div style={{ marginTop: 22 }}><WeatherStrip token={token} isAr={isAr} /></div>
-      <p style={{ textAlign: "center", fontSize: "0.6875rem", color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", padding: "22px 0 0" }}>
+      <div style={{ marginTop: 22, position: "relative" }}><WeatherStrip token={token} isAr={isAr} /></div>
+      <p style={{ textAlign: "center", fontSize: "0.6875rem", color: "rgba(255,255,255,.5)", fontFamily: "var(--font-label)", padding: "22px 0 0", position: "relative" }}>
         <a href={`${WEBSITE_URL}/legal#privacy`} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
           {isAr ? "الخصوصية وكيف نتعامل مع بياناتك" : "Privacy and how we handle your data"}
         </a>
