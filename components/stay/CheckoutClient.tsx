@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { DotNumber } from "@/components/stay/DotNumber";
+import { haptic } from "@/lib/haptics";
 
 interface Props {
   bookingId: string;
@@ -113,6 +114,7 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
   const items = isAr ? CHECKLIST.ar : CHECKLIST.en;
 
   function toggleItem(i: number) {
+    haptic();
     setCheckedItems((prev) => {
       const next = new Set(prev);
       next.has(i) ? next.delete(i) : next.add(i);
@@ -140,6 +142,7 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
         body: JSON.stringify({ token }),
       });
     } catch { /* still proceed */ }
+    haptic("success");
     setDeparted(true);
     setLoading(false);
     setStep(4);

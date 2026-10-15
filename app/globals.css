@@ -1546,3 +1546,25 @@ html[data-ui="next"]:has(.stay-root.home) body { background: #0B0807; }
 /* ── Discover ── */
 .dsc-chip { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.35); color: #fff; font-size: .72rem; font-weight: 600; text-decoration: none; text-shadow: none; }
 .dsc-chip.strong { background: #fff; color: #0E0908; }
+
+/* ── iPhone: no zoom on focus, no accidental text selection on taps, no rubber-band flash of white ── */
+.stay-root :is(input, textarea, select) { font-size: 16px !important; }
+.stay-root :is(button, a, [role="button"]) { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; }
+.stay-root { overscroll-behavior-y: none; }
+html:has(.stay-root) { background: #0B0807; overscroll-behavior-y: none; }
+.install-hint { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; background: rgba(255,255,255,.08); }
+.install-hint b { display: block; font-size: .92rem; }
+.install-hint p { margin: 2px 0 0 !important; font-size: .8rem !important; color: rgba(255,255,255,.7); line-height: 1.4; }
+.install-hint .ih-icon { width: 40px; height: 40px; border-radius: 13px; background: #fff; color: #0B0807; display: grid; place-items: center; flex: none; animation: ihBob 2.4s ease-in-out infinite; }
+.install-hint button { border: 0; background: rgba(255,255,255,.12); color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; flex: none; }
+@keyframes ihBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .install-hint .ih-icon { animation: none; } }
+.ptr { display: grid; place-items: center; overflow: hidden; color: rgba(255,255,255,.7); font-size: .78rem; font-weight: 600; transition: height .2s; }
+.ptr i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,.25); border-top-color: #fff; display: block; }
+.ptr.busy i { animation: ptrSpin .8s linear infinite; }
+@keyframes ptrSpin { to { transform: rotate(360deg); } }
+
+.home-cal { display: block; width: 100%; margin-top: 18px; padding: 13px 16px; border: 0; border-radius: 999px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer; }
+
+.svc-grab-zone { padding: 6px 0 12px; margin: 0 -20px; }
+.svc-grab-zone .svc-grab { margin: 0 auto; }

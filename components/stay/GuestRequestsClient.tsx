@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
 import { createClient } from "@supabase/supabase-js";
 import { AppIcon } from "@/components/ui/AppIcon";
+import { haptic } from "@/lib/haptics";
 import { detectEmergency } from "@/lib/emergency-rules";
 import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
 
@@ -157,6 +158,7 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
           status: "received", admin_notes: null, created_at: new Date().toISOString(),
         };
         setRequests((prev) => (prev.some((r) => r.id === newReq.id) ? prev : [newReq, ...prev]));
+        haptic("success");
         setBody("");
         setUrgent(false);
         setPredictedCategory(null);

@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { DotNumber } from "@/components/stay/DotNumber";
+import { haptic } from "@/lib/haptics";
 
 interface Props {
   token: string;
@@ -47,7 +48,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
         }
         return;
       }
-      navigator.vibrate?.(50);
+      haptic("success");
       setState({ kind: "revealed", code: data.code, copied: false });
     } catch {
       setState({ kind: "error", message: "generic" });
@@ -103,7 +104,7 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
 
   const copyCode = useCallback(async (code: string) => {
     await navigator.clipboard.writeText(code);
-    navigator.vibrate?.(30);
+    haptic("tap");
     setState({ kind: "revealed", code, copied: true });
     setTimeout(() => setState({ kind: "revealed", code, copied: false }), 2000);
   }, []);

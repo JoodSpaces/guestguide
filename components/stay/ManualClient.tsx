@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { AppIcon } from "@/components/ui/AppIcon";
+import { haptic } from "@/lib/haptics";
 
 interface Entry {
   id: string;
@@ -144,6 +145,7 @@ export function ManualClient({ entries, wifiSsid, wifiPassword, locale, token }:
 
   const copyWifi = async (text: string) => {
     await navigator.clipboard.writeText(text);
+    haptic("success");
     setCopiedWifi(true);
     setTimeout(() => setCopiedWifi(false), 2000);
   };

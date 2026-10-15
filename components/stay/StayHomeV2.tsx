@@ -8,6 +8,10 @@ import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { AppIcon } from "@/components/ui/AppIcon";
 import { Sun, Sunset, Thermometer, Waves, Wind } from "lucide-react";
 import { DotNumber } from "@/components/stay/DotNumber";
+import { InstallHint } from "@/components/stay/InstallHint";
+import { haptic } from "@/lib/haptics";
+import { stayCalendar, downloadIcs } from "@/lib/ics";
+import { usePullToRefresh } from "@/lib/gestures";
 import { cairoHour } from "@/lib/cairo-time";
 import { WEBSITE_URL } from "@/lib/site";
 
@@ -32,6 +36,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
+  const ptr = usePullToRefresh(async () => { haptic("success"); router.refresh(); await new Promise((r) => setTimeout(r, 500)); });
   const isAr = locale === "ar";
   const propertyName = isAr ? (payload.propertyNameAr ?? payload.propertyName) : payload.propertyName;
   const guestName = isAr ? (payload.guestFirstNameAr ?? payload.guestFirstName) : payload.guestFirstName;
@@ -92,7 +97,8 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
   ];
 
   return (
-    <main className="stay-root home" style={{ minHeight: "100dvh", padding: "0 16px 48px", maxWidth: 480, margin: "0 auto" }} dir={isAr ? "rtl" : "ltr"}>
+    <main className="stay-root home" style={{ minHeight: "100dvh", padding: "0 16px calc(48px + env(safe-area-inset-bottom, 0px))", maxWidth: 480, margin: "0 auto" }} dir={isAr ? "rtl" : "ltr"} {...ptr.bind}>
+      <div className={`ptr${ptr.busy ? " busy" : ""}`} style={{ height: ptr.pull }} aria-hidden>{ptr.pull > 8 && <i />}</div>
       {/* Top: the weather, then the language. No bar. */}
       <div className="home-wx" aria-label={isAr ? "الطقس" : "Weather"}>
         <div className="home-wx-row">
@@ -104,6 +110,8 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
         </div>
         <LanguageToggle />
       </div>
+
+      <InstallHint isAr={isAr} />
 
       {/* The week, with today lit */}
       <div className="home-days" role="list" aria-label={isAr ? "أيام الإقامة" : "Days of your stay"}>
@@ -131,6 +139,16 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
           <div><dt>{isAr ? "المغادرة" : "Leave"}</dt><dd><bdi>{fmtDay(outMs)}</bdi> <bdi>{fmtTime(outMs)}</bdi></dd></div>
           <div><dt>{isAr ? "المدة" : "Nights"}</dt><dd>{nights}</dd></div>
         </dl>
+        <button
+          type="button"
+          className="home-cal"
+          onClick={() => {
+            haptic("success");
+            downloadIcs("jood-stay.ics", stayCalendar({ house: propertyName, checkIn: payload.checkIn, checkOut: payload.checkOut, url: `${window.location.origin}/s/${token}`, uid: token.slice(0, 8) }));
+          }}
+        >
+          {isAr ? "أضف إلى التقويم" : "Add to Calendar"}
+        </button>
       </section>
 
       {requestSummary?.payNow && (
@@ -141,7 +159,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
       )}
 
       {/* The concierge, wide, like the average card */}
-      <Link href={`/s/${token}/concierge`} className="home-card wide" style={{ "--c1": "#FF9A8A", "--c2": "#FF4F9A" } as React.CSSProperties}>
+      <Link href={`/s/${token}/concierge`} onClick={() => haptic()} className="home-card wide" style={{ "--c1": "#FF9A8A", "--c2": "#FF4F9A" } as React.CSSProperties}>
         <span>
           <small>{aiEnabled ? (isAr ? "المساعد" : "Concierge") : (isAr ? "الفريق" : "Team")}</small>
           <b>{aiEnabled ? (isAr ? "اسأل عن أي شيء" : "Ask anything about your stay") : (isAr ? "راسل الفريق" : "Message the team")}</b>
@@ -152,7 +170,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
       {/* The four things guests open most */}
       <div className="home-grid">
         {tiles.map((e) => (
-          <Link key={e.icon} href={e.href} className="home-card" style={{ "--c1": e.c1, "--c2": e.c2 } as React.CSSProperties}>
+          <Link key={e.icon} href={e.href} onClick={() => haptic()} className="home-card" style={{ "--c1": e.c1, "--c2": e.c2 } as React.CSSProperties}>
             <span className="home-ic"><AppIcon name={e.icon} size={18} /></span>
             <span><b>{e.title}</b><small>{e.sub}</small></span>
           </Link>

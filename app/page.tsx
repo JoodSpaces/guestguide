@@ -13,6 +13,8 @@ export default async function RootPage() {
       className="min-h-dvh flex flex-col items-center justify-center px-6 text-center"
       style={{ backgroundColor: "var(--jood-ground)", color: "var(--jood-ink)" }}
     >
+      {/* A stay saved on this phone (the Home Screen app opens "/" in older installs): go straight to it. */}
+      <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('jood_stay_token');if(t&&/^[A-Za-z0-9_-]{22}$/.test(t))location.replace('/s/'+t)}catch(e){}" }} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: "26px", marginBottom: "36px", opacity: 0.7 }} />
       <h1 className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.4rem)", marginBottom: "12px" }}>

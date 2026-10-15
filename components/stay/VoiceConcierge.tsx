@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { WEBSITE_URL } from "@/lib/site";
 import { VoiceDial } from "@/components/stay/VoiceDial";
+import { haptic } from "@/lib/haptics";
 import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
 
 interface Props { token: string; isAr: boolean; guestFirstName: string }
@@ -238,6 +239,7 @@ function Inner({ token, isAr }: Props) {
   }, [live]);
 
   async function start() {
+    haptic("success");
     setError(null); setDetail(""); setCaption(""); setChips([]);
     transcript.current = []; unanswered.current = []; actions.current = [];
     try { await navigator.mediaDevices.getUserMedia({ audio: true }); }

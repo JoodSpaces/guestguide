@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { useLocale } from "use-intl";
 import { AppIcon } from "@/components/ui/AppIcon";
+import { haptic } from "@/lib/haptics";
+import { useSwipeDown } from "@/lib/gestures";
 
 const STATUS_COLOR: Record<string, string> = {
   pending:   "var(--jood-warning)",
@@ -97,6 +99,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   const [qty, setQty] = useState<Record<string, number>>({});
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [filter, setFilter] = useState<string>("all");
+  const swipe = useSwipeDown(() => { setShowNotes(null); setSubmitError(null); });
 
   async function requestService(serviceId: string) {
     if (inFlight.current) return;
@@ -124,6 +127,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
           paymob_payment_url: null, created_at: new Date().toISOString(),
           services: svc ? { name_en: svc.name_en, price_egp: svc.price_egp } : null,
         }, ...prev]);
+        haptic("success");
         setShowNotes(null);
       } else {
         const body = await res.json().catch(() => ({})) as { error?: string };
@@ -206,9 +210,9 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
       {active && (
         <div className="svc-wrap" role="dialog" aria-modal="true" aria-label={name(active)}>
           <button type="button" className="svc-scrim" aria-label={isAr ? "إغلاق" : "Close"} onClick={() => { setShowNotes(null); setSubmitError(null); }} />
-          <section className="svc-sheet">
+          <section className="svc-sheet" style={{ transform: swipe.offset ? `translateY(${swipe.offset}px)` : undefined, transition: swipe.offset ? "none" : undefined }}>
             <div className="svc-glow" style={glow(active.category)} aria-hidden />
-            <div className="svc-grab" aria-hidden />
+            <div className="svc-grab-zone" {...swipe.handlers}><div className="svc-grab" aria-hidden /></div>
             <p className="req-kicker" style={{ position: "relative" }}>{isAr ? (CAT_LABEL_AR[active.category] ?? active.category) : (CAT_LABEL_EN[active.category] ?? active.category)}</p>
             <h2 className="svc-title">{name(active)}</h2>
             {desc(active) && <p className="svc-desc">{desc(active)}</p>}
