@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { BedDouble, Droplets, Utensils, Leaf, Package, X, type LucideIcon } from "lucide-react";
+import { BedDouble, Boxes, ChevronRight, Droplets, Utensils, Leaf, Package, PackageCheck, PackageX, Plus, TriangleAlert, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { DetailHead } from "@/components/app/ui";
 import { toast } from "@/components/admin/Toaster";
@@ -55,6 +55,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
   const [adding, setAdding]             = useState(false);
   const [addingPending, setAddingPending] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [cat, setCat]                   = useState<string>("all");
   const [newItem, setNewItem]           = useState({ category: "linen", name: "", unit: "pcs", par_level: 0, current_stock: 0 });
 
   const grouped = CATEGORIES.reduce<Record<string, InventoryItem[]>>((acc, cat) => {
@@ -150,199 +151,141 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
     }
   }
 
+  // How healthy the stock is: of the items that have a minimum, how many are at or above it.
+  const watched = items.filter((i) => i.par_level > 0);
+  const okCount = watched.filter((i) => i.current_stock >= i.par_level).length;
+  const pct = watched.length ? Math.round((okCount / watched.length) * 100) : null;
+  const verdict = pct === null ? { text: "Set a minimum on each item", tone: "neutral" as const }
+    : outOfStock.length > 0 ? { text: "Restock now", tone: "danger" as const }
+    : lowStock.length > 0 ? { text: "Needs attention", tone: "warn" as const }
+    : { text: "Well stocked", tone: "ok" as const };
+  const ringColor = verdict.tone === "danger" ? "var(--jood-danger)" : verdict.tone === "warn" ? "var(--jood-accent)" : "var(--jood-success)";
+  const R = 52, C = 2 * Math.PI * R;
+
+  const shown = cat === "all" ? items : items.filter((i) => i.category === cat);
+  const present = CATEGORIES.filter((c) => grouped[c]?.length);
+
   return (
     <div style={{ maxWidth: "700px" }}>
       <DetailHead back="/admin/ops" title="Inventory" />
 
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>
-        <div>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "0.7rem", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "6px" }}>
-            Inventory
-          </p>
-          <h1 className="font-display" style={{ fontSize: "1.8rem" }}>{propertyName}</h1>
+      <p style={{ margin: "0 2px 12px", fontSize: "0.85rem", color: "var(--jood-mid)" }}>Stock in</p>
+      <h1 style={{ margin: "-10px 2px 18px" }}>{propertyName}</h1>
+
+      {/* Stock health: a ring, and what it says */}
+      <section className="inv-health">
+        <div className="inv-verdict"><span>Stock status</span><b className={verdict.tone}>{verdict.text}</b></div>
+        <div className="inv-ring">
+          <svg viewBox="0 0 120 120" width="150" height="150" aria-hidden>
+            <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(53,30,28,.09)" strokeWidth="10" />
+            {pct !== null && (
+              <circle cx="60" cy="60" r={R} fill="none" stroke={ringColor} strokeWidth="10" strokeLinecap="round"
+                strokeDasharray={`${(C * pct) / 100} ${C}`} transform="rotate(-90 60 60)" style={{ transition: "stroke-dasharray 600ms ease" }} />
+            )}
+          </svg>
+          <div><b>{pct === null ? "–" : `${pct}%`}</b><small>at or above minimum</small></div>
         </div>
+        <div className="inv-tiles">
+          <div><span className="ic danger"><PackageX size={18} strokeWidth={1.8} /></span><b>{outOfStock.length}</b><small>Out of stock</small></div>
+          <div><span className="ic warn"><TriangleAlert size={18} strokeWidth={1.8} /></span><b>{lowStock.length}</b><small>Running low</small></div>
+          <div><span className="ic ok"><PackageCheck size={18} strokeWidth={1.8} /></span><b>{okCount}</b><small>Stocked</small></div>
+          <div><span className="ic info"><Boxes size={18} strokeWidth={1.8} /></span><b>{items.length}</b><small>Tracked</small></div>
+        </div>
+      </section>
 
-        {/* Summary pills */}
-        {items.length > 0 && (
-          <div style={{ display: "flex", gap: "6px", alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
-              {items.length} tracked
-            </span>
-            {lowStock.length > 0 && (
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-accent)", border: "1px solid var(--jood-accent)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
-                {lowStock.length} low
-              </span>
-            )}
-            {outOfStock.length > 0 && (
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-danger)", border: "1px solid var(--jood-danger)", borderRadius: "var(--radius-pill)", padding: "4px 10px" }}>
-                {outOfStock.length} out
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Category sections */}
-      {CATEGORIES.map((cat) => {
-        const catItems = grouped[cat];
-        if (!catItems?.length) return null;
-        const meta = CATEGORY_META[cat] ?? { label: cat, icon: Package };
-        return (
-          <div key={cat} style={{ marginBottom: "28px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "10px" }}>
-              {(() => { const Icon = meta.icon; return <Icon size={14} strokeWidth={1.75} style={{ color: "var(--jood-ink-muted)" }} />; })()}
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
-                {meta.label}
-              </span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)" }}>
-                {catItems.length}
-              </span>
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-              {catItems.map((item) => {
-                const status  = stockStatus(item.current_stock, item.par_level);
-                const gaugePct = item.par_level > 0 ? Math.min(1, item.current_stock / item.par_level) : null;
-
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      backgroundColor: "var(--jood-surface)",
-                      border: "1px solid var(--jood-line)",
-                      borderRadius: "var(--radius-lg)",
-                      padding: "12px 16px",
-                      display: "grid",
-                      gridTemplateColumns: "10px 1fr auto 28px",
-                      gap: "14px",
-                      alignItems: "center",
-                    }}
-                  >
-                    {/* Status dot */}
-                    <div style={{ width: "7px", height: "7px", borderRadius: "50%", backgroundColor: STATUS_COLOR[status], flexShrink: 0 }} />
-
-                    {/* Name + gauge */}
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: "0.875rem", color: "var(--jood-ink)", marginBottom: gaugePct !== null ? "6px" : 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {item.name}
-                      </p>
-                      {gaugePct !== null && (
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <div style={{ flex: 1, height: "3px", backgroundColor: "var(--jood-line)", borderRadius: "2px", overflow: "hidden" }}>
-                            <div style={{
-                              height: "100%",
-                              width: `${gaugePct * 100}%`,
-                              backgroundColor: STATUS_COLOR[status],
-                              borderRadius: "2px",
-                              transition: "width 400ms cubic-bezier(0.16, 1, 0.3, 1)",
-                            }} />
-                          </div>
-                          <span style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: STATUS_COLOR[status], flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
-                            {item.current_stock}/{item.par_level} {item.unit}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Par input + stepper */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      {/* Par level */}
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
-                        <input
-                          type="number"
-                          value={item.par_level}
-                          min={0}
-                          onChange={(e) => setParLevel(item.id, parseInt(e.target.value) || 0)}
-                          style={{ width: "44px", padding: "4px 6px", textAlign: "center", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", backgroundColor: "var(--jood-ground)", color: "var(--jood-ink-muted)", fontSize: "0.75rem", fontVariantNumeric: "tabular-nums" }}
-                          title="Par level (minimum stock)"
-                        />
-                        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)" }}>min</span>
-                      </div>
-
-                      {/* Stepper */}
-                      <div style={{ display: "flex", alignItems: "center", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-md)", overflow: "hidden", backgroundColor: "var(--jood-ground)" }}>
-                        <button
-                          onClick={() => step(item.id, -1)}
-                          style={{ width: "28px", height: "32px", border: "none", background: "none", cursor: "pointer", color: "var(--jood-ink-muted)", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 120ms" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--jood-surface)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                        >−</button>
-                        <span style={{ minWidth: "32px", textAlign: "center", fontSize: "0.875rem", fontWeight: 500, color: STATUS_COLOR[status], fontVariantNumeric: "tabular-nums", padding: "0 4px", borderLeft: "1px solid var(--jood-line)", borderRight: "1px solid var(--jood-line)", lineHeight: "32px" }}>
-                          {item.current_stock}
-                        </span>
-                        <button
-                          onClick={() => step(item.id, 1)}
-                          style={{ width: "28px", height: "32px", border: "none", background: "none", cursor: "pointer", color: "var(--jood-ink-muted)", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center", transition: "background 120ms" }}
-                          onMouseEnter={(e) => (e.currentTarget.style.background = "var(--jood-surface)")}
-                          onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
-                        >+</button>
-                      </div>
-                    </div>
-
-                    {/* Delete */}
-                    <button
-                      onClick={() => deleteItem(item.id)}
-                      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-subtle)", width: "28px", height: "28px", borderRadius: "var(--radius-md)", display: "flex", alignItems: "center", justifyContent: "center", transition: "color 120ms, background 120ms" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = "var(--jood-danger)"; e.currentTarget.style.background = "rgba(201,48,48,0.06)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--jood-ink-ghost)"; e.currentTarget.style.background = "none"; }}
-                    ><X size={13} strokeWidth={1.75} /></button>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-
-      {/* Add item form */}
+      {/* Add: the gradient card */}
       {adding ? (
-        <div style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "18px 20px", marginBottom: "10px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "14px" }}>New item</p>
+        <div style={{ background: "var(--jood-surface)", borderRadius: 24, padding: "18px 18px 16px", margin: "14px 0" }}>
+          <p style={{ fontWeight: 650, margin: "0 0 12px" }}>New item</p>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 190px), 1fr))", gap: "10px", marginBottom: "12px" }}>
             <div>
-              <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Category</label>
+              <label style={{ display: "block", marginBottom: "4px" }}>Category</label>
               <select value={newItem.category} onChange={(e) => setNewItem((n) => ({ ...n, category: e.target.value }))} style={{ ...inputStyle, textTransform: "capitalize" }}>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_META[c]?.label ?? c}</option>)}
               </select>
             </div>
             <div>
-              <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Name</label>
-              <input value={newItem.name} onChange={(e) => setNewItem((n) => ({ ...n, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && addItem()} style={inputStyle} placeholder="e.g. Bath towel" autoFocus />
+              <label style={{ display: "block", marginBottom: "4px" }}>Name</label>
+              <input value={newItem.name} onChange={(e) => setNewItem((n) => ({ ...n, name: e.target.value }))} onKeyDown={(e) => e.key === "Enter" && addItem()} style={inputStyle} placeholder="e.g. Bath towel" />
             </div>
             <div>
-              <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Unit</label>
+              <label style={{ display: "block", marginBottom: "4px" }}>Unit</label>
               <input value={newItem.unit} onChange={(e) => setNewItem((n) => ({ ...n, unit: e.target.value }))} style={inputStyle} placeholder="pcs, sets, bottles…" />
             </div>
             <div>
-              <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Starting stock</label>
+              <label style={{ display: "block", marginBottom: "4px" }}>Starting stock</label>
               <input type="number" value={newItem.current_stock} min={0} onChange={(e) => setNewItem((n) => ({ ...n, current_stock: parseInt(e.target.value) || 0 }))} style={inputStyle} />
             </div>
             <div>
-              <label style={{ fontSize: "0.7rem", color: "var(--jood-ink-muted)", display: "block", marginBottom: "4px" }}>Keep at least (par)</label>
+              <label style={{ display: "block", marginBottom: "4px" }}>Keep at least (par)</label>
               <input type="number" value={newItem.par_level} min={0} onChange={(e) => setNewItem((n) => ({ ...n, par_level: parseInt(e.target.value) || 0 }))} style={inputStyle} />
             </div>
           </div>
           {addError && <p role="alert" style={{ color: "var(--jood-danger)", fontSize: "0.8125rem", marginBottom: "10px" }}>{addError}</p>}
           <div style={{ display: "flex", gap: "8px" }}>
-            <button onClick={addItem} disabled={addingPending || !newItem.name.trim()} style={{ padding: "8px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer", opacity: addingPending || !newItem.name.trim() ? 0.4 : 1 }}>
-              {addingPending ? "Adding…" : "Add item"}
-            </button>
-            <button onClick={() => setAdding(false)} style={{ padding: "8px 16px", backgroundColor: "transparent", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.8125rem", cursor: "pointer", color: "var(--jood-ink-muted)" }}>
-              Cancel
-            </button>
+            <button onClick={addItem} disabled={addingPending || !newItem.name.trim()} className="btn btn-primary btn-sm">{addingPending ? "Adding…" : "Add item"}</button>
+            <button onClick={() => setAdding(false)} className="btn btn-ghost btn-sm">Cancel</button>
           </div>
         </div>
       ) : (
-        <button
-          onClick={() => setAdding(true)}
-          style={{ width: "100%", padding: "14px", backgroundColor: "transparent", border: "1.5px dashed var(--jood-line)", borderRadius: "var(--radius-lg)", fontSize: "0.875rem", cursor: "pointer", color: "var(--jood-ink-subtle)", transition: "border-color 150ms, color 150ms" }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--jood-ink-muted)"; e.currentTarget.style.color = "var(--jood-ink-muted)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--jood-line)"; e.currentTarget.style.color = "var(--jood-ink-ghost)"; }}
-        >
-          + Add item
+        <button type="button" onClick={() => setAdding(true)} className="inv-cta">
+          <span className="ic"><Plus size={20} strokeWidth={2} /></span>
+          <span><b>Add an item</b><small>Track something new in this house</small></span>
+          <ChevronRight size={18} strokeWidth={1.8} aria-hidden />
         </button>
       )}
+
+      {/* Categories as pills */}
+      {items.length > 0 && (
+        <div className="inv-pills" role="tablist" aria-label="Category">
+          <button type="button" role="tab" aria-selected={cat === "all"} onClick={() => setCat("all")}>All <span>{items.length}</span></button>
+          {present.map((c) => (
+            <button key={c} type="button" role="tab" aria-selected={cat === c} onClick={() => setCat(c)}>
+              {CATEGORY_META[c]?.label ?? c} <span>{grouped[c].length}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {items.length === 0 && <p className="app-empty">Nothing is tracked in this house yet. Add the first item above.</p>}
+
+      {/* Items as a grid of cards */}
+      <div className="inv-grid">
+        {shown.map((item) => {
+          const status = stockStatus(item.current_stock, item.par_level);
+          const meta = CATEGORY_META[item.category] ?? { label: item.category, icon: Package };
+          const Icon = meta.icon;
+          const gaugePct = item.par_level > 0 ? Math.min(1, item.current_stock / item.par_level) : null;
+          const chip = status === "critical" ? { t: "Out", c: "danger" } : status === "low" ? { t: "Low", c: "warn" } : status === "ok" ? { t: "OK", c: "ok" } : { t: "No minimum", c: "neutral" };
+          return (
+            <article key={item.id} className="inv-card">
+              <div className="inv-card-top">
+                <span className="ic"><Icon size={16} strokeWidth={1.8} /></span>
+                <span className={`app-state ${chip.c}`}>{chip.t}</span>
+              </div>
+              <b className="inv-name">{item.name}</b>
+              <small className="inv-sub">
+                {gaugePct !== null ? `${item.current_stock} of ${item.par_level} ${item.unit}` : `${item.current_stock} ${item.unit}`}
+              </small>
+              {gaugePct !== null && (
+                <div className="inv-gauge"><i style={{ width: `${gaugePct * 100}%`, background: STATUS_COLOR[status] }} /></div>
+              )}
+              <div className="inv-step">
+                <button type="button" onClick={() => step(item.id, -1)} aria-label={`One less ${item.name}`}>−</button>
+                <span style={{ color: STATUS_COLOR[status] === "var(--jood-line)" ? "var(--jood-ink)" : STATUS_COLOR[status] }}>{item.current_stock}</span>
+                <button type="button" onClick={() => step(item.id, 1)} aria-label={`One more ${item.name}`}>+</button>
+              </div>
+              <div className="inv-foot">
+                <label>
+                  Min
+                  <input type="number" value={item.par_level} min={0} onChange={(e) => setParLevel(item.id, parseInt(e.target.value) || 0)} title="Par level (minimum stock)" />
+                </label>
+                <button type="button" onClick={() => deleteItem(item.id)} aria-label={`Remove ${item.name}`}><X size={14} strokeWidth={1.8} /></button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }
