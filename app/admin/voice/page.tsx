@@ -9,7 +9,7 @@ interface Row {
   bookings: { property_id: string; guest_first_name: string; guest_last_name: string; properties: { name: string } | { name: string }[] | null } | null;
 }
 
-const card: React.CSSProperties = { border: "1px solid var(--jood-line)", borderRadius: 12, padding: "16px 18px", background: "var(--jood-surface, transparent)" };
+const card: React.CSSProperties = { border: "none", borderRadius: 12, padding: "16px 18px", background: "var(--jood-surface, transparent)" };
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 export default async function VoicePage() {

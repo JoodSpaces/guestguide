@@ -19,7 +19,7 @@ function fmt(iso: string) {
 
 const card: React.CSSProperties = {
   backgroundColor: "var(--jood-surface)",
-  border: "1px solid var(--jood-line)",
+  border: "none",
   borderRadius: "var(--radius-lg)",
   padding: "14px 18px",
   textDecoration: "none",
@@ -57,7 +57,7 @@ export default async function MaintenancePage() {
         {open.map((t) => {
           const property = Array.isArray(t.properties) ? t.properties[0] : t.properties;
           return (
-            <Link key={t.id} href={`/admin/ops/maintenance/${t.id}`} style={{ ...card, borderLeft: t.priority === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
+            <Link key={t.id} href={`/admin/ops/maintenance/${t.id}`} style={{ ...card, boxShadow: t.priority === "urgent" ? "inset 3px 0 0 var(--jood-danger)" : "none" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
                   <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{t.title}</p>

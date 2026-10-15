@@ -8,6 +8,16 @@ import type { ReactNode } from "react";
 
 export type Tone = "neutral" | "info" | "ok" | "warn" | "danger";
 
+/** Maps the old per-screen status colours to the five states, so a screen that still names a colour shows the standard chip. */
+export function toneOfColor(c: string | undefined): Tone {
+  if (!c) return "neutral";
+  if (c.includes("danger")) return "danger";
+  if (c.includes("accent")) return "warn";
+  if (c.includes("success")) return "ok";
+  if (c.includes("aqua") || c.includes("info")) return "info";
+  return "neutral";
+}
+
 /** A state chip: orange asks for attention, aqua is calm, green is done, red is only late or error. */
 export function State({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
   return <span className={`app-state ${tone}`}>{children}</span>;

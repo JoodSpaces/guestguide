@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
+import { State, toneOfColor } from "@/components/app/ui";
 import { createServiceClient } from "@/lib/supabase/server";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { CreateTurnoverForm } from "@/components/admin/CreateTurnoverForm";
@@ -29,20 +30,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 function StatusChip({ value, colorMap }: { value: string; colorMap: Record<string, string> }) {
-  const color = colorMap[value] ?? "var(--jood-ink-muted)";
-  const label = STATUS_LABEL[value] ?? value.replace("_", " ");
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: "5px",
-      fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em",
-      textTransform: "uppercase", color,
-      border: `1px solid ${color}`, borderRadius: "var(--radius-pill)",
-      padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
-    }}>
-      <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
-      {label}
-    </span>
-  );
+  return <State tone={toneOfColor(colorMap[value])}>{STATUS_LABEL[value] ?? value.replace("_", " ")}</State>;
 }
 
 function fmt(iso: string) {
@@ -51,7 +39,7 @@ function fmt(iso: string) {
 
 const card: React.CSSProperties = {
   backgroundColor: "var(--jood-surface)",
-  border: "1px solid var(--jood-line)",
+  border: "none",
   borderRadius: "var(--radius-lg)",
   padding: "16px 20px",
 };
@@ -102,12 +90,11 @@ export default async function OpsPage() {
         ...card,
         textDecoration: "none", color: "inherit", display: "block",
         opacity: muted ? 0.8 : 1,
-        borderLeft: highlight
-          ? "4px solid var(--jood-accent)"
+        boxShadow: highlight
+          ? "inset 4px 0 0 var(--jood-accent)"
           : t.status === "scheduled"
-          ? "3px solid var(--jood-aqua)"
-          : "1px solid var(--jood-line)",
-        backgroundColor: highlight ? "var(--jood-surface-raised)" : "var(--jood-surface)",
+          ? "inset 3px 0 0 var(--jood-aqua)"
+          : "none",
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
@@ -241,7 +228,7 @@ export default async function OpsPage() {
               {tickets?.map((ticket) => {
                 const property = Array.isArray(ticket.properties) ? ticket.properties[0] : ticket.properties;
                 return (
-                  <Link key={ticket.id} href={`/admin/ops/maintenance/${ticket.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", borderLeft: ticket.priority === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
+                  <Link key={ticket.id} href={`/admin/ops/maintenance/${ticket.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", boxShadow: ticket.priority === "urgent" ? "inset 3px 0 0 var(--jood-danger)" : "none" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
                         <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{ticket.title}</p>

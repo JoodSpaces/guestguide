@@ -27,7 +27,7 @@ const CATEGORIES = [
 
 const card: React.CSSProperties = {
   backgroundColor: "var(--jood-surface)",
-  border: "1px solid var(--jood-line)",
+  border: "none",
   borderRadius: "var(--radius-lg)",
   padding: "16px 20px",
   marginBottom: "10px",

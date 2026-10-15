@@ -621,7 +621,7 @@ export function BookingsCalendarClient({ initialBookings, externalBlocks = [] }:
                       padding: "14px 16px", textDecoration: "none", color: "inherit",
                       backgroundColor: isActive ? "var(--jood-surface-raised)" : "var(--jood-surface)",
                       border: "1px solid var(--jood-line)",
-                      borderLeft: isActive ? "3px solid var(--jood-accent)" : "1px solid var(--jood-line)",
+                      boxShadow: isActive ? "inset 3px 0 0 var(--jood-accent)" : "none",
                       borderRadius: "var(--radius-lg)",
                       opacity: b.status === "cancelled" ? 0.45 : 1,
                       transition: "filter 120ms",
@@ -725,7 +725,7 @@ const styles = {
     padding: "12px 14px", textDecoration: "none", color: "inherit",
     backgroundColor: "var(--jood-surface)",
     border: "1px solid var(--jood-line)",
-    borderLeft: urgent ? "3px solid var(--jood-accent)" : "1px solid var(--jood-line)",
+    boxShadow: urgent ? "inset 3px 0 0 var(--jood-accent)" : "none",
     borderRadius: "var(--radius-lg)", transition: "filter 120ms",
   }),
 };

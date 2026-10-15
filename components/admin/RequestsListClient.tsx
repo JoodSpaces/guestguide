@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, X, MessageSquare, Bell } from "lucide-react";
+import { Search, X } from "lucide-react";
+import { Empty, RecordCard, SectionHead, State, type Tone } from "@/components/app/ui";
 
 interface ServiceReq {
   id: string;
@@ -23,15 +24,9 @@ interface GuestReq {
   bookings: { guest_first_name: string; guest_last_name: string; properties: { name: string } | { name: string }[] } | null;
 }
 
-const STATUS_COLOR: Record<string, string> = {
-  pending:     "var(--jood-accent)",
-  approved:    "var(--jood-aqua)",
-  paid:        "var(--jood-success)",
-  fulfilled:   "var(--jood-ink-subtle)",
-  rejected:    "var(--jood-danger)",
-  received:    "var(--jood-accent)",
-  in_progress: "var(--jood-aqua)",
-  resolved:    "var(--jood-ink-subtle)",
+const STATUS_TONE: Record<string, Tone> = {
+  pending: "warn", received: "warn", approved: "info", in_progress: "info",
+  paid: "ok", fulfilled: "ok", resolved: "ok", rejected: "danger",
 };
 
 const CAT_LABELS: Record<string, string> = {
@@ -41,32 +36,6 @@ const CAT_LABELS: Record<string, string> = {
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short" });
-}
-
-function StatusChip({ status }: { status: string }) {
-  const color = STATUS_COLOR[status] ?? "var(--jood-ink-muted)";
-  return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: "5px",
-      fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em",
-      textTransform: "uppercase", color,
-      border: `1px solid ${color}`, borderRadius: "var(--radius-pill)",
-      padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
-    }}>
-      <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: color, flexShrink: 0 }} />
-      {status.replace("_", " ")}
-    </span>
-  );
-}
-
-function EmptyState({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle: string }) {
-  return (
-    <div style={{ textAlign: "center", padding: "56px 24px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-      <div style={{ marginBottom: "12px", color: "var(--jood-ink-subtle)", display: "flex", justifyContent: "center" }}>{icon}</div>
-      <p style={{ fontSize: "0.9375rem", fontWeight: 500, color: "var(--jood-ink)", marginBottom: "6px" }}>{title}</p>
-      <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-subtle)" }}>{subtitle}</p>
-    </div>
-  );
 }
 
 type Tab = "service" | "guest";
@@ -92,9 +61,9 @@ function TabBtn({ t, label, pending, activeTab, setTab }: { t: Tab; label: strin
         <span style={{
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           minWidth: "18px", height: "18px", borderRadius: "9px",
-          backgroundColor: "var(--jood-danger)",
+          backgroundColor: "var(--jood-accent)",
           color: "white",
-          fontSize: "0.6rem", fontFamily: "var(--font-mono)",
+          fontSize: "0.68rem", fontFamily: "var(--font-label)",
           fontWeight: 600, padding: "0 4px",
         }}>
           {pending}
@@ -148,114 +117,75 @@ export function RequestsListClient({
     });
   }, [query, initialServiceReqs]);
 
-  const card: React.CSSProperties = {
-    display: "block",
-    backgroundColor: "var(--jood-surface)",
-    border: "1px solid var(--jood-line)",
-    borderRadius: "var(--radius-lg)",
-    padding: "14px 18px",
-    textDecoration: "none",
-    color: "inherit",
-    transition: "border-color 150ms",
-  };
+  const chip = (status: string) => <State tone={STATUS_TONE[status] ?? "neutral"}>{status.replace("_", " ")}</State>;
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "24px" }}>
-        <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Requests</h1>
-      </div>
+      <h1 style={{ margin: "0 0 16px" }}>Requests</h1>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+      <div style={{ display: "flex", gap: "8px", marginBottom: "16px", flexWrap: "wrap" }}>
         <TabBtn t="guest" label="Guest requests" pending={pendingGuest} activeTab={tab} setTab={setTab} />
         <TabBtn t="service" label="Service bookings" pending={pendingServices} activeTab={tab} setTab={setTab} />
       </div>
 
-      {/* Search */}
-      <div style={{ position: "relative", marginBottom: "16px" }}>
-        <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--jood-ink-subtle)", pointerEvents: "none", display: "flex" }}><Search size={14} strokeWidth={1.75} /></span>
-        <input
-          type="text"
-          placeholder="Search by guest, property, status…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          style={{ width: "100%", boxSizing: "border-box", padding: "10px 14px 10px 38px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", backgroundColor: "var(--jood-surface)", color: "var(--jood-ink)", fontSize: "0.875rem", fontFamily: "inherit", outline: "none" }}
-        />
-        {query && (
-          <button onClick={() => setQuery("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-subtle)", padding: 0, display: "flex" }}><X size={14} strokeWidth={1.75} /></button>
-        )}
+      {/* Search: a pill with a round ink button, filters as you type */}
+      <div className="app-search">
+        <Search size={18} strokeWidth={1.8} />
+        <input type="text" placeholder="Search a guest, a house or a status" aria-label="Search requests" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <button type="button" aria-label={query ? "Clear" : "Search"} onClick={() => setQuery("")}>{query ? <X size={18} strokeWidth={1.8} /> : <Search size={18} strokeWidth={1.8} />}</button>
       </div>
 
       {tab === "guest" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <>
+          <SectionHead title="Guest requests" count={filteredGuest.length} />
           {!filteredGuest.length && (
-            <EmptyState
-              icon={query ? <Search size={24} strokeWidth={1.5} /> : <MessageSquare size={24} strokeWidth={1.5} />}
-              title={query ? `No results for "${query}"` : "No guest requests yet"}
-              subtitle={query ? "Try different keywords" : "Requests from guests will appear here"}
-            />
+            <Empty text={query ? `No results for "${query}". Try different words.` : "No guest requests yet. They will appear here."} />
           )}
           {filteredGuest.map((r) => {
             const booking  = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
             const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
+            const urgent = r.urgency === "urgent";
             return (
-              <a key={r.id} href={`/admin/requests/guest/${r.id}`} style={{ ...card, borderLeft: r.urgency === "urgent" ? "3px solid var(--jood-danger)" : "1px solid var(--jood-line)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "4px" }}>
-                      <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", backgroundColor: "var(--jood-surface-raised)", borderRadius: "var(--radius-pill)", padding: "2px 7px" }}>
-                        {CAT_LABELS[r.category] ?? r.category}
-                      </span>
-                      {r.urgency === "urgent" && (
-                        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-danger)" }}>Urgent</span>
-                      )}
-                    </div>
-                    <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {r.body.slice(0, 80)}{r.body.length > 80 ? "…" : ""}
-                    </p>
-                    <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
-                      {booking?.guest_first_name} {booking?.guest_last_name} · {(property as { name: string })?.name} · {fmt(r.created_at)}
-                    </p>
-                  </div>
-                  <StatusChip status={r.status} />
-                </div>
-              </a>
+              <RecordCard
+                key={r.id}
+                href={`/admin/requests/guest/${r.id}`}
+                kicker={`${CAT_LABELS[r.category] ?? r.category} · ${fmt(r.created_at)}`}
+                state={<span style={{ display: "inline-flex", gap: "6px" }}>{urgent && <State tone="danger">Urgent</State>}{chip(r.status)}</span>}
+                cols={[
+                  { label: "Said", value: r.body.length > 90 ? r.body.slice(0, 90) + "…" : r.body },
+                  { label: "Guest", value: `${booking?.guest_first_name ?? ""} ${booking?.guest_last_name ?? ""} · ${(property as { name: string } | null)?.name ?? ""}` },
+                ]}
+              />
             );
           })}
-        </div>
+        </>
       )}
 
       {tab === "service" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+        <>
+          <SectionHead title="Service bookings" count={filteredService.length} />
           {!filteredService.length && (
-            <EmptyState
-              icon={query ? <Search size={24} strokeWidth={1.5} /> : <Bell size={24} strokeWidth={1.5} />}
-              title={query ? `No results for "${query}"` : "No service bookings yet"}
-              subtitle={query ? "Try different keywords" : "Service bookings from guests will appear here"}
-            />
+            <Empty text={query ? `No results for "${query}". Try different words.` : "No service bookings yet. They will appear here."} />
           )}
           {filteredService.map((r) => {
             const booking  = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
             const property = booking ? (Array.isArray(booking.properties) ? booking.properties[0] : booking.properties) : null;
             const totalPrice = (r.services?.price_egp ?? 0) * r.quantity;
             return (
-              <a key={r.id} href={`/admin/requests/service/${r.id}`} style={card}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: "0.9375rem", fontWeight: 500, marginBottom: "4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {r.quantity > 1 ? `${r.quantity}× ` : ""}{r.services?.name_en ?? "Service"}
-                    </p>
-                    <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
-                      {booking?.guest_first_name} {booking?.guest_last_name} · {(property as { name: string })?.name} · {fmt(r.created_at)}
-                      {totalPrice > 0 ? ` · ${totalPrice.toLocaleString()} EGP` : " · Free"}
-                    </p>
-                  </div>
-                  <StatusChip status={r.status} />
-                </div>
-              </a>
+              <RecordCard
+                key={r.id}
+                href={`/admin/requests/service/${r.id}`}
+                kicker={`${fmt(r.created_at)}${totalPrice > 0 ? ` · ${totalPrice.toLocaleString()} EGP` : " · Free"}`}
+                state={chip(r.status)}
+                cols={[
+                  { label: "Service", value: `${r.quantity > 1 ? `${r.quantity}× ` : ""}${r.services?.name_en ?? "Service"}` },
+                  { label: "Guest", value: `${booking?.guest_first_name ?? ""} ${booking?.guest_last_name ?? ""} · ${(property as { name: string } | null)?.name ?? ""}` },
+                ]}
+              />
             );
           })}
-        </div>
+        </>
       )}
     </div>
   );

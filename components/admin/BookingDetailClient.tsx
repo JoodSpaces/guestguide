@@ -80,7 +80,7 @@ const eyebrow: React.CSSProperties = {
 
 const card: React.CSSProperties = {
   backgroundColor: "var(--jood-surface)",
-  border: "1px solid var(--jood-line)",
+  border: "none",
   borderRadius: "var(--radius-lg)",
   padding: "20px 24px",
   marginBottom: "16px",

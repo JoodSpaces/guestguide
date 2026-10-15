@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { GapGroup } from "@/lib/voice-gaps";
 
-const card: React.CSSProperties = { border: "1px solid var(--jood-line)", borderRadius: 12, padding: "14px 16px" };
+const card: React.CSSProperties = { border: "none", borderRadius: 12, padding: "14px 16px" };
 const input: React.CSSProperties = { width: "100%", padding: "9px 12px", border: "1px solid var(--jood-line)", borderRadius: 8, background: "transparent", color: "var(--jood-ink)", fontSize: 14, font: "inherit" };
 const pill = (primary: boolean): React.CSSProperties => ({ padding: "8px 16px", borderRadius: 999, fontSize: 13, cursor: "pointer", border: "1px solid var(--jood-line)", background: primary ? "var(--jood-ink)" : "transparent", color: primary ? "var(--jood-ground)" : "var(--jood-ink-muted)" });
 
