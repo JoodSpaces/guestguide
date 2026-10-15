@@ -183,172 +183,64 @@ export function GuestRequestsClient({ token, bookingId, initialRequests }: Guest
           onConfirm={(d) => submitRequest(d)} onCancel={() => { if (!sending) setConfirmDraft(null); }}
         />
       )}
-      {/* ── Compose ─────────────────────────────────────────────────────── */}
-      <div style={{
-        border: "1px solid var(--jood-line)",
-        borderRadius: "16px",
-        overflow: "hidden",
-        marginBottom: "32px",
-        backgroundColor: "var(--jood-surface)",
-      }}>
+      {/* Compose: a glowing sheet, the message, one pill */}
+      <section className="req-compose" style={{ "--c1": "#FF8A2A", "--c2": "#FF3FA4" } as React.CSSProperties}>
+        <p className="req-kicker">{isAr ? "اكتب لفريق جود" : "Message the JOOD team"}</p>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder={isAr ? "كيف يمكننا مساعدتك؟" : "How can we help you?"}
           rows={3}
-          style={{
-            width: "100%",
-            padding: "16px 18px",
-            background: "transparent",
-            border: "none",
-            outline: "none",
-            resize: "none",
-            fontFamily: "var(--font-body)",
-            fontSize: "15px",
-            color: "var(--jood-ink)",
-            lineHeight: 1.6,
-            boxSizing: "border-box",
-            direction: isAr ? "rtl" : "ltr",
-          }}
+          dir={isAr ? "rtl" : "ltr"}
+          aria-label={isAr ? "رسالتك" : "Your message"}
         />
-
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "10px 18px 14px", borderTop: "1px solid var(--jood-line)",
-        }}>
-          <label style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-            <div
-              onClick={() => setUrgent((u) => !u)}
-              style={{
-                width: "18px", height: "18px", borderRadius: "4px",
-                border: urgent ? "none" : "1.5px solid var(--jood-line)",
-                backgroundColor: urgent ? "var(--jood-garnet)" : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", flexShrink: 0, transition: "background-color 180ms",
-              }}
-            >
-              {urgent && <span style={{ color: "#fff", fontSize: "11px", lineHeight: 1 }}>✓</span>}
-            </div>
-            <span style={{ fontSize: "13px", color: "var(--jood-mid)", fontFamily: "var(--font-body)" }}>
-              {isAr ? "عاجل" : "Urgent"}
-            </span>
-          </label>
-
-          {/* What we think this is about: shown in place (no layout jump) and only when it is more than "other" */}
-          {predictedCategory && predictedCategory !== "other" && (
-            <span style={{
-              fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase",
-              color: "var(--jood-garnet)", border: "1px solid var(--jood-garnet)", borderRadius: "99px", padding: "2px 9px",
-              marginInline: "auto 12px",
-            }}>
-              {predictedCategory}
-            </span>
-          )}
-
-          <button
-            onClick={openConfirm}
-            disabled={sending || !body.trim()}
-            style={{
-              fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              color: body.trim() ? "var(--jood-garnet)" : "var(--jood-ink-subtle)",
-              background: "none", border: "none",
-              cursor: body.trim() ? "pointer" : "default",
-              opacity: sending ? 0.5 : 1, padding: "0", transition: "color 180ms",
-            }}
-          >
-            {sending ? (isAr ? "جاري الإرسال…" : "Sending…") : (isAr ? "أرسل ←" : "Send →")}
+        <div className="req-row">
+          <button type="button" className={`req-urgent${urgent ? " on" : ""}`} aria-pressed={urgent} onClick={() => setUrgent((u) => !u)}>
+            <span aria-hidden>{urgent ? "●" : "○"}</span> {isAr ? "عاجل" : "Urgent"}
           </button>
+          {predictedCategory && predictedCategory !== "other" && <span className="req-cat">{predictedCategory}</span>}
         </div>
-      </div>
+        <button type="button" className="vpill" onClick={openConfirm} disabled={sending || !body.trim()} style={{ opacity: body.trim() ? 1 : 0.55 }}>
+          <span>{sending ? (isAr ? "جاري الإرسال…" : "Sending…") : (isAr ? "أرسل" : "Send")}</span><i aria-hidden>{isAr ? "←" : "→"}</i>
+        </button>
+      </section>
 
       {sendError && (
-        <p role="alert" style={{ color: "var(--jood-danger)", fontSize: "13px", margin: "-16px 0 24px", lineHeight: 1.5 }}>{sendError}</p>
+        <p role="alert" style={{ color: "#FF9C9C", fontSize: "13px", margin: "10px 4px 0", lineHeight: 1.5 }}>{sendError}</p>
       )}
 
-      {/* ── Logbook ──────────────────────────────────────────────────────── */}
+      {/* Your requests */}
       {requests.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-subtle)" }}>
-          <p style={{ marginBottom: "8px", color: "var(--jood-ink-subtle)", display: "flex", justifyContent: "center" }}><AppIcon name="ai" size={28} /></p>
-          <p style={{ fontSize: "14px" }}>{isAr ? "لا توجد طلبات بعد" : "No requests yet"}</p>
+        <div className="home-note" style={{ marginTop: 14, textAlign: "center" }}>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: 14 }}>{isAr ? "لا توجد طلبات بعد" : "No requests yet. What you send appears here."}</p>
         </div>
       ) : (
         groups.map((group) => (
           <div key={group.label}>
-            {/* Date divider */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "24px 0 12px" }}>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
-              <p style={{
-                fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.18em",
-                textTransform: "uppercase", color: "var(--jood-ink-subtle)", whiteSpace: "nowrap",
-              }}>
-                {group.label}
-              </p>
-              <div style={{ flex: 1, height: "1px", backgroundColor: "var(--jood-line)" }} />
-            </div>
-
+            <p className="man-label">{group.label}</p>
             {group.items.map((req) => {
-              const statusColor = STATUS_COLOR[req.status] ?? "var(--jood-ink-muted)";
               const statusLabel = isAr ? (STATUS_LABEL_AR[req.status] ?? req.status) : (STATUS_LABEL_EN[req.status] ?? req.status);
-              const isExpanded = expandedId === req.id;
-
+              const step = req.status === "resolved" ? 2 : req.status === "in_progress" ? 1 : 0;
+              const open = expandedId === req.id;
               return (
-                <div key={req.id} style={{ display: "flex", borderBottom: "1px solid var(--jood-line)" }}>
-                  {/* Status bar */}
-                  <div style={{
-                    width: "2px", background: statusColor,
-                    margin: "16px 16px 16px 0", borderRadius: "99px",
-                    flexShrink: 0, alignSelf: "stretch", transition: "background 300ms",
-                  }} />
-
-                  <div style={{ flex: 1, padding: "14px 0" }}>
-                    <div
-                      onClick={() => setExpandedId(isExpanded ? null : req.id)}
-                      style={{ display: "flex", alignItems: "flex-start", gap: "12px", cursor: "pointer" }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <p style={{ fontSize: "15px", color: "var(--jood-ink)", lineHeight: 1.5, wordBreak: "break-word" }}>
-                          {req.body}
-                        </p>
-                        {isUrgent(req) && (
-                          <p style={{
-                            fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em",
-                            textTransform: "uppercase", color: "var(--jood-danger)", marginTop: "4px",
-                          }}>
-                            {isAr ? "عاجل" : "Urgent"}
-                          </p>
-                        )}
-                      </div>
-
-                      <span style={{
-                        fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em",
-                        textTransform: "uppercase", color: statusColor,
-                        border: `1px solid ${statusColor}`, borderRadius: "99px",
-                        padding: "3px 8px", whiteSpace: "nowrap", flexShrink: 0,
-                      }}>
-                        {statusLabel}
-                      </span>
-                    </div>
-
-                    {/* Admin notes (staff reply) */}
-                    {req.admin_notes && (
-                      <div style={{
-                        marginTop: "10px", borderTop: "1px solid var(--jood-line)", paddingTop: "10px",
-                        paddingLeft: "12px", borderLeft: "2px solid var(--jood-garnet)",
-                      }}>
-                        <p style={{
-                          fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em",
-                          textTransform: "uppercase", color: "var(--jood-garnet)", marginBottom: "4px",
-                        }}>
-                          JOOD
-                        </p>
-                        <p style={{ fontSize: "14px", color: "var(--jood-ink)", lineHeight: 1.5 }}>
-                          {req.admin_notes}
-                        </p>
-                      </div>
-                    )}
+                <article key={req.id} className="req-card">
+                  <button type="button" className="req-head" onClick={() => setExpandedId(open ? null : req.id)} aria-expanded={open}>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <b>{req.body}</b>
+                      {isUrgent(req) && <em>{isAr ? "عاجل" : "Urgent"}</em>}
+                    </span>
+                    <span className={`req-state s${step}`}>{statusLabel}</span>
+                  </button>
+                  <div className="req-dots" aria-hidden>
+                    {[0, 1, 2].map((i) => <i key={i} className={i <= step ? "on" : ""} />)}
                   </div>
-                </div>
+                  {req.admin_notes && (
+                    <div className="req-reply">
+                      <small>JOOD</small>
+                      <p>{req.admin_notes}</p>
+                    </div>
+                  )}
+                </article>
               );
             })}
           </div>

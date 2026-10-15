@@ -157,323 +157,143 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
     );
   }
 
-  // Group services by category
+  // Services as tiles (a colour per category); a tapped tile opens its own sheet with the price, the quantity and one pill.
   const categories = [...new Set(initialServices.map((s) => s.category))];
-
-  const rule = { borderTop: "1px solid var(--jood-line)" } as const;
+  const PALETTE: [string, string][] = [["#16E0B0", "#0A6E6A"], ["#5B7BFF", "#2B2FB0"], ["#FF8A2A", "#B8321A"], ["#FF3FA4", "#7A1FA8"], ["#9BD6E0", "#2B6C86"], ["#FFD35B", "#B8721A"]];
+  const glow = (cat: string) => {
+    const [c1, c2] = PALETTE[Math.max(0, categories.indexOf(cat)) % PALETTE.length];
+    return { "--c1": c1, "--c2": c2 } as React.CSSProperties;
+  };
+  const [filter, setFilter] = useState<string>("all");
+  const shown = filter === "all" ? initialServices : initialServices.filter((s) => s.category === filter);
+  const active = initialServices.find((s) => s.id === showNotes) ?? null;
+  const price = (svc: Service) => (svc.price_egp === 0 ? (isAr ? "مجاني" : "Free") : `${svc.price_egp.toLocaleString()} ${isAr ? "ج.م" : "EGP"}`);
+  const STEPS = ["pending", "approved", "paid", "fulfilled"];
 
   return (
-    <div>
-      {/* ── Service categories ───────────────────────────────────────────── */}
-      {categories.map((cat, catIdx) => {
-        const catServices = initialServices.filter((s) => s.category === cat);
-        return (
-          <div key={cat} style={{ marginTop: catIdx > 0 ? "28px" : "0" }}>
-            {/* Category label */}
-            <p style={{
-              fontFamily: "var(--font-label)",
-              fontSize: "11px",
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: "var(--jood-garnet)",
-              marginBottom: "12px",
-            }}>
-              {isAr ? (CAT_LABEL_AR[cat] ?? cat) : (CAT_LABEL_EN[cat] ?? cat)}
-            </p>
+    <div dir={isAr ? "rtl" : "ltr"}>
+      {categories.length > 1 && (
+        <div className="svc-pills" role="tablist" aria-label={isAr ? "الفئة" : "Category"}>
+          <button type="button" role="tab" aria-selected={filter === "all"} onClick={() => setFilter("all")}>{isAr ? "الكل" : "All"}</button>
+          {categories.map((c) => (
+            <button key={c} type="button" role="tab" aria-selected={filter === c} onClick={() => setFilter(c)}>
+              {isAr ? (CAT_LABEL_AR[c] ?? c) : (CAT_LABEL_EN[c] ?? c)}
+            </button>
+          ))}
+        </div>
+      )}
 
-            {catServices.map((svc) => {
-              const isRequested = requested.has(svc.id);
-              const isSubmitting = submitting === svc.id;
-              const showingNotes = showNotes === svc.id;
+      <div className="home-grid">
+        {shown.map((svc) => {
+          const isRequested = requested.has(svc.id);
+          return (
+            <button key={svc.id} type="button" className="home-card" style={{ ...glow(svc.category), textAlign: "start", border: 0, cursor: "pointer", font: "inherit", minHeight: 150 }}
+              onClick={() => { setShowNotes(svc.id); setSubmitError(null); }}>
+              <span style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, width: "100%" }}>
+                <span className="home-ic"><AppIcon name={CAT_ICON[svc.category] ?? "other"} size={18} /></span>
+                {isRequested && <span className="svc-sent">{isAr ? "أُرسل" : "Sent"}</span>}
+              </span>
+              <span style={{ width: "100%" }}>
+                <b>{name(svc)}</b>
+                <small>{price(svc)}</small>
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-              return (
-                <div key={svc.id} style={rule}>
-                  {/* Main entry row */}
-                  <div style={{ display: "flex", alignItems: "flex-start", padding: "15px 0", gap: "16px" }}>
-                    <div style={{ flex: 1 }}>
-                      <p style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: "20px",
-                        fontWeight: 400,
-                        color: "var(--jood-ink)",
-                        lineHeight: 1.1,
-                        marginBottom: desc(svc) ? "3px" : "0",
-                      }}>
-                        {name(svc)}
-                      </p>
-                      {desc(svc) && (
-                        <p style={{ fontSize: "12.5px", color: "var(--jood-mid)", lineHeight: 1.5 }}>
-                          {desc(svc)}
-                        </p>
-                      )}
-                    </div>
+      {/* The sheet for one service */}
+      {active && (
+        <div className="svc-wrap" role="dialog" aria-modal="true" aria-label={name(active)}>
+          <button type="button" className="svc-scrim" aria-label={isAr ? "إغلاق" : "Close"} onClick={() => { setShowNotes(null); setSubmitError(null); }} />
+          <section className="svc-sheet">
+            <div className="svc-glow" style={glow(active.category)} aria-hidden />
+            <div className="svc-grab" aria-hidden />
+            <p className="req-kicker" style={{ position: "relative" }}>{isAr ? (CAT_LABEL_AR[active.category] ?? active.category) : (CAT_LABEL_EN[active.category] ?? active.category)}</p>
+            <h2 className="svc-title">{name(active)}</h2>
+            {desc(active) && <p className="svc-desc">{desc(active)}</p>}
 
-                    <div style={{ flexShrink: 0, textAlign: isAr ? "left" : "right", display: "flex", flexDirection: "column", alignItems: isAr ? "flex-start" : "flex-end", gap: "6px" }}>
-                      <p style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "13px",
-                        letterSpacing: "0.02em",
-                        color: svc.price_egp === 0 ? "var(--jood-aqua)" : "var(--jood-ink)",
-                      }}>
-                        {svc.price_egp === 0
-                          ? (isAr ? "مجاني" : "Free")
-                          : `${svc.price_egp.toLocaleString()} ${isAr ? "ج.م" : "EGP"}`}
-                      </p>
+            <div className="svc-price">
+              <b>{active.price_egp === 0 ? (isAr ? "مجاني" : "Free") : (active.price_egp * (qty[active.id] ?? 1)).toLocaleString()}</b>
+              {active.price_egp > 0 && <small>{isAr ? "ج.م" : "EGP"}</small>}
+              {active.lead_hours > 0 && <small style={{ marginInlineStart: "auto" }}>{isAr ? `يلزم ${active.lead_hours} ساعة` : `${active.lead_hours}h notice`}</small>}
+            </div>
 
-                      {isRequested ? (
-                        <span style={{
-                          fontFamily: "var(--font-label)",
-                          fontSize: "11px",
-                          letterSpacing: "0.12em",
-                          textTransform: "uppercase",
-                          color: "var(--jood-ink-subtle)",
-                          border: "1px solid var(--jood-line)",
-                          borderRadius: "99px",
-                          padding: "4px 9px",
-                        }}>
-                          {isAr ? "أُرسل" : "Sent"}
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => setShowNotes(showingNotes ? null : svc.id)}
-                          disabled={isSubmitting}
-                          style={{
-                            fontFamily: "var(--font-label)",
-                            fontSize: "11px",
-                            letterSpacing: "0.12em",
-                            textTransform: "uppercase",
-                            color: "var(--jood-garnet)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            padding: "0",
-                          }}
-                        >
-                          {isAr ? "أضف →" : "Add →"}
-                        </button>
-                      )}
-                    </div>
+            {requested.has(active.id) ? (
+              <p className="svc-done">{isAr ? "تم إرسال طلبك. ستجده في طلباتي أدناه." : "Your request is sent. You will find it under My requests."}</p>
+            ) : (
+              <>
+                <div className="svc-qty">
+                  <span>{isAr ? "الكمية" : "Quantity"}</span>
+                  <div>
+                    <button type="button" onClick={() => setQty((q) => ({ ...q, [active.id]: Math.max(1, (q[active.id] ?? 1) - 1) }))} aria-label="−">−</button>
+                    <b>{qty[active.id] ?? 1}</b>
+                    <button type="button" onClick={() => setQty((q) => ({ ...q, [active.id]: Math.min(10, (q[active.id] ?? 1) + 1) }))} aria-label="+">+</button>
                   </div>
-
-                  {/* Expanded notes panel */}
-                  {showingNotes && !isRequested && (
-                    <div style={{
-                      paddingBottom: "16px",
-                      borderTop: "1px solid var(--jood-line)",
-                      paddingTop: "14px",
-                    }}>
-                      {/* Quantity stepper */}
-                      <div style={{ display: "flex", gap: "10px", marginBottom: "10px", alignItems: "center" }}>
-                        <label style={{ fontSize: "12.5px", color: "var(--jood-mid)", fontFamily: "var(--font-body)" }}>
-                          {isAr ? "الكمية" : "Quantity"}
-                        </label>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <button
-                            onClick={() => setQty((q) => ({ ...q, [svc.id]: Math.max(1, (q[svc.id] ?? 1) - 1) }))}
-                            style={{ width: "28px", height: "28px", border: "1px solid var(--jood-line)", borderRadius: "50%", background: "none", cursor: "pointer", fontSize: "1rem", color: "var(--jood-ink)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                          >−</button>
-                          <span style={{ fontSize: "0.875rem", minWidth: "20px", textAlign: "center", color: "var(--jood-ink)" }}>
-                            {qty[svc.id] ?? 1}
-                          </span>
-                          <button
-                            onClick={() => setQty((q) => ({ ...q, [svc.id]: Math.min(10, (q[svc.id] ?? 1) + 1) }))}
-                            style={{ width: "28px", height: "28px", border: "1px solid var(--jood-line)", borderRadius: "50%", background: "none", cursor: "pointer", fontSize: "1rem", color: "var(--jood-ink)", display: "flex", alignItems: "center", justifyContent: "center" }}
-                          >+</button>
-                        </div>
-                      </div>
-
-                      <textarea
-                        className="jood-textarea"
-                        value={notes[svc.id] ?? ""}
-                        onChange={(e) => setNotes((n) => ({ ...n, [svc.id]: e.target.value }))}
-                        placeholder={isAr ? "ملاحظات (اختياري)" : "Notes (optional)"}
-                        style={{ width: "100%", resize: "vertical", minHeight: "60px", boxSizing: "border-box", direction: isAr ? "rtl" : "ltr", marginBottom: "10px" }}
-                      />
-
-                      {submitError && submitting === null && (
-                        <p style={{ fontSize: "12px", color: "var(--jood-danger)", marginBottom: "8px" }}>
-                          {submitError}
-                        </p>
-                      )}
-                      <div style={{ display: "flex", gap: "10px" }}>
-                        <button
-                          onClick={() => requestService(svc.id)}
-                          disabled={isSubmitting}
-                          className="btn btn-primary btn-sm"
-                          style={{ opacity: isSubmitting ? 0.5 : 1 }}
-                        >
-                          {isSubmitting ? (isAr ? "جاري الإرسال…" : "Sending…") : (isAr ? "تأكيد الطلب" : "Confirm")}
-                        </button>
-                        <button onClick={() => { setShowNotes(null); setSubmitError(null); }} className="btn btn-ghost btn-sm">
-                          {isAr ? "إلغاء" : "Cancel"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
-              );
-            })}
-          </div>
-        );
-      })}
+                <textarea
+                  className="svc-notes"
+                  value={notes[active.id] ?? ""}
+                  onChange={(e) => setNotes((n) => ({ ...n, [active.id]: e.target.value }))}
+                  placeholder={isAr ? "ملاحظات (اختياري)" : "Notes (optional)"}
+                  dir={isAr ? "rtl" : "ltr"}
+                />
+                {submitError && submitting === null && <p role="alert" style={{ color: "#FF9C9C", fontSize: 13, margin: "0 0 10px" }}>{submitError}</p>}
+                <button type="button" className="vpill" disabled={submitting === active.id} onClick={() => requestService(active.id)} style={{ background: "#fff", color: "#0E0908", boxShadow: "none" }}>
+                  <span>{submitting === active.id ? (isAr ? "جاري الإرسال…" : "Sending…") : (isAr ? "تأكيد الطلب" : "Confirm request")}</span>
+                  <i aria-hidden style={{ background: "#0E0908", color: "#fff" }}>{isAr ? "←" : "→"}</i>
+                </button>
+              </>
+            )}
+          </section>
+        </div>
+      )}
 
-      {/* ── My requests ──────────────────────────────────────────────────── */}
+      {/* My requests */}
       {myRequests.length > 0 && (
-        <div style={{ marginTop: "36px", borderTop: "1px solid var(--jood-line)" }}>
-          <div style={{
-            display: "flex",
-            alignItems: "baseline",
-            justifyContent: "space-between",
-            padding: "16px 0",
-            borderBottom: "1px solid var(--jood-line)",
-          }}>
-            <p style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "22px",
-              fontWeight: 400,
-              fontStyle: "italic",
-              color: "var(--jood-ink)",
-            }}>
-              {isAr ? "طلباتي" : "My requests"}
-            </p>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", color: "var(--jood-ink-subtle)" }}>
-              {myRequests.length}
-            </p>
-          </div>
-
+        <>
+          <p className="man-label">{isAr ? "طلباتي" : "My requests"} · {myRequests.length}</p>
           {myRequests.map((r) => {
             const svcName = isAr
               ? (initialServices.find((s) => s.id === r.service_id)?.name_ar || r.services?.name_en)
               : r.services?.name_en;
             const hasPayment = r.status === "approved" && r.paymob_payment_url;
-            const barColor = STATUS_COLOR[r.status] ?? "var(--jood-line)";
-
+            const step = Math.max(0, STEPS.indexOf(r.status));
             return (
-              <div
-                key={r.id}
-                style={{ display: "flex", padding: "0", borderBottom: "1px solid var(--jood-line)", gap: "0" }}
-              >
-                {/* Status bar */}
-                <div style={{
-                  width: "2px",
-                  background: barColor,
-                  margin: "16px 16px 16px 0",
-                  borderRadius: "99px",
-                  flexShrink: 0,
-                  alignSelf: "stretch",
-                }} />
-
-                <div style={{ flex: 1, padding: "14px 0" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: "15px", fontWeight: 500, color: "var(--jood-ink)", marginBottom: hasPayment ? "3px" : "0" }}>
-                        {r.quantity > 1 ? `${r.quantity}× ` : ""}{svcName}
-                      </p>
-                      {hasPayment && (
-                        <p style={{ fontSize: "13px", color: "var(--jood-garnet)", marginBottom: "8px" }}>
-                          {isAr ? "بانتظار الدفع" : "Awaiting payment"}
-                        </p>
-                      )}
-                      {hasPayment && (
-                        <a
-                          href={r.paymob_payment_url!}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-garnet btn-sm"
-                          style={{ display: "inline-flex" }}
-                        >
-                          {isAr ? "ادفع الآن" : "Pay now"}
-                        </a>
-                      )}
-                    </div>
-
-                    <span style={{
-                      fontFamily: "var(--font-label)",
-                      fontSize: "11px",
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: STATUS_COLOR[r.status] ?? "var(--jood-ink-subtle)",
-                      border: "1px solid var(--jood-line)",
-                      borderRadius: "99px",
-                      padding: "4px 9px",
-                      whiteSpace: "nowrap",
-                      flexShrink: 0,
-                    }}>
-                      {t(`services.status_${r.status}`, { defaultValue: r.status })}
-                    </span>
-                  </div>
-
-                  {r.guest_notes && (
-                    <p style={{
-                      fontSize: "12px",
-                      color: "var(--jood-mid)",
-                      marginTop: "8px",
-                      fontStyle: "italic",
-                      borderTop: "1px solid var(--jood-line)",
-                      paddingTop: "8px",
-                    }}>
-                      "{r.guest_notes}"
-                    </p>
-                  )}
-
-                  {/* Mood pulse — only for fulfilled, unrated requests */}
-                  {r.status === "fulfilled" && !r.guest_rating && !ratings[r.id] && (
-                    <div style={{
-                      marginTop: "12px",
-                      paddingTop: "12px",
-                      borderTop: "1px solid var(--jood-line)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}>
-                      <p style={{
-                        fontFamily: "var(--font-label)", fontSize: "11px",
-                        letterSpacing: "0.14em", textTransform: "uppercase",
-                        color: "var(--jood-ink-subtle)", flexShrink: 0,
-                      }}>
-                        {isAr ? "كيف كانت التجربة؟" : "How was it?"}
-                      </p>
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        {([["😞", 1], ["😐", 2], ["😊", 3]] as const).map(([emoji, val]) => (
-                          <button
-                            key={val}
-                            onClick={() => submitRating(r.id, val)}
-                            style={{
-                              width: "36px", height: "36px",
-                              borderRadius: "50%",
-                              border: "1px solid var(--jood-line)",
-                              background: "var(--jood-surface)",
-                              fontSize: "18px",
-                              cursor: "pointer",
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              transition: "transform 150ms, border-color 150ms",
-                            }}
-                            onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.15)"; e.currentTarget.style.borderColor = "var(--jood-ink-muted)"; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.borderColor = "var(--jood-line)"; }}
-                          >
-                            {emoji}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Thank-you after rating */}
-                  {r.status === "fulfilled" && (r.guest_rating || ratings[r.id]) && (
-                    <p style={{
-                      marginTop: "10px", paddingTop: "10px",
-                      borderTop: "1px solid var(--jood-line)",
-                      fontSize: "12px", color: "var(--jood-ink-muted)",
-                      fontFamily: "var(--font-label)", letterSpacing: "0.08em",
-                    }}>
-                      {isAr ? "شكراً على تقييمك" : "Thanks for your feedback"}
-                    </p>
-                  )}
+              <article key={r.id} className="req-card">
+                <div className="req-head" style={{ cursor: "default" }}>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <b>{r.quantity > 1 ? `${r.quantity}× ` : ""}{svcName}</b>
+                    {hasPayment && <em style={{ color: "#FFB59E" }}>{isAr ? "بانتظار الدفع" : "Awaiting payment"}</em>}
+                  </span>
+                  <span className={`req-state s${r.status === "fulfilled" || r.status === "paid" ? 2 : r.status === "approved" ? 1 : 0}`}>
+                    {t(`services.status_${r.status}`, { defaultValue: r.status })}
+                  </span>
                 </div>
-              </div>
+                {r.status !== "rejected" && <div className="req-dots" aria-hidden>{STEPS.map((_, i) => <i key={i} className={i <= step ? "on" : ""} />)}</div>}
+                {hasPayment && (
+                  <a href={r.paymob_payment_url!} target="_blank" rel="noopener noreferrer" className="vpill" style={{ marginTop: 12, textDecoration: "none", background: "#fff", color: "#0E0908", boxShadow: "none" }}>
+                    <span>{isAr ? "ادفع الآن" : "Pay now"}</span><i aria-hidden style={{ background: "#0E0908", color: "#fff" }}>{isAr ? "←" : "→"}</i>
+                  </a>
+                )}
+                {r.guest_notes && <p style={{ margin: "10px 0 0", fontSize: 13, color: "var(--jood-ink-muted)", fontStyle: "italic" }}>&ldquo;{r.guest_notes}&rdquo;</p>}
+                {r.status === "fulfilled" && !r.guest_rating && !ratings[r.id] && (
+                  <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 12, color: "var(--jood-ink-muted)" }}>{isAr ? "كيف كانت التجربة؟" : "How was it?"}</span>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      {([["😞", 1], ["😐", 2], ["😊", 3]] as const).map(([emoji, val]) => (
+                        <button key={val} type="button" onClick={() => submitRating(r.id, val)} className="svc-mood" aria-label={String(val)}>{emoji}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {r.status === "fulfilled" && (r.guest_rating || ratings[r.id]) && (
+                  <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--jood-ink-muted)" }}>{isAr ? "شكراً على تقييمك" : "Thanks for your feedback"}</p>
+                )}
+              </article>
             );
           })}
-        </div>
+        </>
       )}
     </div>
   );
