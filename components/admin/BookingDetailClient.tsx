@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { State, StepLine } from "@/components/app/ui";
 import { useState } from "react";
 import { AppIcon } from "@/components/ui/AppIcon";
 
@@ -193,47 +194,29 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
 
   return (
     <div>
-      {/* Back */}
-      <Link
-        href="/admin/bookings"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "6px",
-          color: "var(--jood-ink-muted)",
-          textDecoration: "none",
-          fontSize: "0.8125rem",
-          marginBottom: "24px",
-        }}
-      >
-        ← Bookings
-      </Link>
-
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px" }}>
-        <div>
-          <h1 className="font-display" style={{ fontSize: "1.8rem", lineHeight: 1.1 }}>
-            {booking.guestFirstName} {booking.guestLastName}
-          </h1>
-          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem", marginTop: "4px" }}>
-            {property?.name} · {fmt(booking.checkIn)} → {fmt(booking.checkOut)}
-          </p>
-        </div>
-        <span
-          style={{
-            fontFamily: "var(--font-label)",
-            fontSize: "11px",
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            color: STATUS_COLOR[status] ?? "var(--jood-ink-muted)",
-            border: `1px solid ${STATUS_COLOR[status] ?? "var(--jood-line)"}`,
-            borderRadius: "20px",
-            padding: "4px 10px",
-          }}
-        >
-          {status}
-        </span>
+      {/* Back, then the head of the record: who, which house, the state, and where the stay is on its way */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "18px" }}>
+        <Link href="/admin/bookings" aria-label="Back to bookings" className="app-roundbtn">←</Link>
+        <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem" }}>Booking</p>
       </div>
+
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "18px" }}>
+        <div style={{ minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--jood-mid)" }}>{property?.name} · {fmt(booking.checkIn)} → {fmt(booking.checkOut)}</p>
+          <h1 style={{ margin: "2px 0 0" }}>{booking.guestFirstName} {booking.guestLastName}</h1>
+        </div>
+        <State tone={status === "confirmed" ? "warn" : status === "cancelled" ? "danger" : status === "completed" ? "ok" : "neutral"}>{status}</State>
+      </div>
+
+      {status !== "cancelled" && (() => {
+        const t = new Date().toISOString().slice(0, 10);
+        const at = status === "completed" || t > booking.checkOut.slice(0, 10) ? 2 : t >= booking.checkIn.slice(0, 10) ? 1 : 0;
+        return (
+          <div style={{ marginBottom: "20px" }}>
+            <StepLine at={at} steps={[{ label: "Booked" }, { label: "Checked in", sub: fmt(booking.checkIn) }, { label: "Checked out", sub: fmt(booking.checkOut) }]} />
+          </div>
+        );
+      })()}
 
       {/* Guest info */}
       <div style={card}>

@@ -7,26 +7,7 @@ import { Package, RefreshCcw, Wrench, AlertTriangle, Check, type LucideIcon } fr
 import { cairoDay, cairoHour } from "@/lib/cairo-time";
 import { sortAlerts } from "@/lib/inventory";
 import { DismissAlertButton } from "@/components/admin/DismissAlertButton";
-
-function Section({ title, count }: { title: string; count: number }) {
-  return (
-    <p className="label-eyebrow" style={{ color: "var(--jood-ink-muted)", marginBottom: "16px" }}>
-      {title}
-      <span
-        style={{
-          marginInlineStart: "8px",
-          backgroundColor: count > 0 ? "var(--jood-accent)" : "var(--jood-line)",
-          color: count > 0 ? "white" : "var(--jood-ink-muted)",
-          borderRadius: "20px",
-          padding: "2px 8px",
-          fontSize: "0.7rem",
-        }}
-      >
-        {count}
-      </span>
-    </p>
-  );
-}
+import { Empty, Hero, RecordCard, SearchPill, SectionHead, State, StepLine } from "@/components/app/ui";
 
 export default async function AdminTodayPage() {
   const h = await headers();
@@ -135,26 +116,23 @@ export default async function AdminTodayPage() {
     ? "All clear — no open items today."
     : briefParts.join(" · ") + ".";
 
+  const needsYou = reqCount + ticketCount + (pendingServiceReqs?.length ?? 0) + criticalAlerts;
   const greetHour = cairoHour();
   const greetWord = greetHour < 12 ? "Good morning" : greetHour < 17 ? "Good afternoon" : "Good evening";
 
   return (
     <div>
-      {/* ── Daily brief: the dark hero ───────────────────────────────────── */}
-      <div className="hero-card" style={{ marginBottom: "28px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
-          <p className="hero-label">
-            {today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}
-          </p>
-          <h1 className="hero-num" style={{ color: "#FFFFFF", margin: "4px 0 10px" }}>{greetWord}.</h1>
-          <p style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,.82)", lineHeight: 1.55, maxWidth: "480px" }}>
-            {briefSentence}
-          </p>
-        </div>
-        <Link href="/admin/bookings/new" className="btn btn-sm" style={{ flexShrink: 0, background: "#FFFFFF", color: "var(--jood-ink)" }}>
-          + New booking
-        </Link>
-      </div>
+      {/* ── The hero: what needs you today ──────────────────────────────── */}
+      <Hero
+        label={today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}
+        value={needsYou === 0 ? `${greetWord}. All clear` : `${needsYou} to look at`}
+        note={briefSentence}
+        actions={[
+          { href: "/admin/bookings/new", label: "New booking" },
+          { href: "/admin/requests", label: "Requests" },
+        ]}
+      />
+      <SearchPill action="/admin/bookings" placeholder="Search a guest or a house" />
 
       {/* Property status rings */}
       {(properties?.length ?? 0) > 0 && (() => {
@@ -353,217 +331,76 @@ export default async function AdminTodayPage() {
         );
       })()}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(240px, 100%), 1fr))", gap: "16px", marginBottom: "32px" }}>
-        {/* Arrivals */}
-        <div
-          style={{
-            backgroundColor: "var(--jood-surface)",
-            border: "1px solid var(--jood-line)",
-            borderRadius: "var(--radius-lg)",
-            padding: "20px",
-          }}
-        >
-          <Section title="Arrivals" count={arrivals?.length ?? 0} />
-          {arrivals?.length === 0 && (
-            <div>
-              <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>None today</p>
-              <Link href="/admin/bookings/new" style={{ display: "inline-block", marginTop: "10px", fontSize: "0.8rem", color: "var(--jood-ink-muted)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
-                + Add a booking
-              </Link>
-            </div>
-          )}
-          {arrivals?.map((b) => {
-            const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
-            return (
-              <Link
-                key={b.id}
-                href={`/admin/bookings/${b.id}`}
-                style={{ display: "block", textDecoration: "none", marginBottom: "10px" }}
-              >
-                <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem" }}>
-                  {b.guest_first_name} {b.guest_last_name}
-                </p>
-                <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Departures */}
-        <div
-          style={{
-            backgroundColor: "var(--jood-surface)",
-            border: "1px solid var(--jood-line)",
-            borderRadius: "var(--radius-lg)",
-            padding: "20px",
-          }}
-        >
-          <Section title="Departures" count={departures?.length ?? 0} />
-          {departures?.length === 0 && (
-            <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>None today</p>
-          )}
-
-          {departures?.map((b) => {
-            const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
-            return (
-              <Link
-                key={b.id}
-                href={`/admin/bookings/${b.id}`}
-                style={{ display: "block", textDecoration: "none", marginBottom: "10px" }}
-              >
-                <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem" }}>
-                  {b.guest_first_name} {b.guest_last_name}
-                </p>
-                <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Today: arrivals and departures, each a card with the stay's steps */}
+      <SectionHead title="Today" count={(arrivals?.length ?? 0) + (departures?.length ?? 0)} href="/admin/bookings" />
+      {(arrivals?.length ?? 0) + (departures?.length ?? 0) === 0 && (
+        <Empty text="No check-ins or check-outs today." href="/admin/bookings/new" hrefLabel="Add a booking" />
+      )}
+      {[...(arrivals ?? []).map((b) => ({ b, out: false })), ...(departures ?? []).map((b) => ({ b, out: true }))].map(({ b, out }) => {
+        const prop = Array.isArray(b.properties) ? b.properties[0] : b.properties;
+        return (
+          <RecordCard
+            key={b.id + (out ? "o" : "i")}
+            href={`/admin/bookings/${b.id}`}
+            kicker={out ? "Check-out today" : "Check-in today"}
+            state={<State tone={out ? "info" : "warn"}>{out ? "Leaving" : "Arriving"}</State>}
+            cols={[{ label: "Guest", value: `${b.guest_first_name} ${b.guest_last_name}` }, { label: "House", value: prop?.name ?? "" }]}
+          >
+            <StepLine at={out ? 2 : 1} steps={[{ label: "Booked" }, { label: "Checked in" }, { label: "Checked out" }]} />
+          </RecordCard>
+        );
+      })}
 
       {/* Open requests */}
-      <Section title="Open requests" count={openCount} />
-      {openCount === 0 && (
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-          <Check size={15} strokeWidth={2} style={{ color: "var(--jood-success)", flexShrink: 0 }} />
-          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>All clear — no open requests</p>
-        </div>
-      )}
+      <SectionHead title="Guest requests" count={openCount} href="/admin/requests" />
+      {openCount === 0 && <Empty text="All clear. No open requests." />}
       {openRequests?.map((r) => {
         const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
         const prop = Array.isArray(booking?.properties) ? booking?.properties[0] : booking?.properties;
         return (
-          <Link
+          <RecordCard
             key={r.id}
             href={`/admin/requests/guest/${r.id}`}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "14px 20px",
-              backgroundColor: "var(--jood-surface)",
-              border: "1px solid var(--jood-line)",
-              borderRadius: "var(--radius-lg)",
-              textDecoration: "none",
-              marginBottom: "8px",
-            }}
-          >
-            <div style={{ minWidth: 0 }}>
-              {/* What the guest actually wrote (two requests from one guest used to look identical) */}
-              <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {r.body}
-              </p>
-              <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>
-                {booking?.guest_first_name} · {prop?.name}{r.category && r.category !== "other" ? ` · ${r.category}` : ""}
-              </p>
-            </div>
-            {r.urgency === "urgent" && (
-              <span
-                style={{
-                  backgroundColor: "var(--jood-danger)",
-                  color: "white",
-                  fontSize: "0.6875rem",
-                  padding: "3px 8px",
-                  borderRadius: "20px",
-                  fontFamily: "var(--font-label)",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.1em",
-                }}
-              >
-                Urgent
-              </span>
-            )}
-          </Link>
+            kicker={r.category && r.category !== "other" ? r.category : "Request"}
+            state={<State tone={r.urgency === "urgent" ? "danger" : "warn"}>{r.urgency === "urgent" ? "Urgent" : "Open"}</State>}
+            cols={[{ label: "Guest", value: `${booking?.guest_first_name ?? ""}${prop?.name ? ` · ${prop.name}` : ""}` }, { label: "Said", value: r.body.length > 60 ? r.body.slice(0, 60) + "…" : r.body }]}
+          />
         );
       })}
 
       {/* Maintenance tickets */}
-      <div style={{ marginTop: "32px" }}>
-        <Section title="Maintenance" count={openTickets?.length ?? 0} />
-        {(openTickets?.length ?? 0) === 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-            <Check size={15} strokeWidth={2} style={{ color: "var(--jood-success)", flexShrink: 0 }} />
-            <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>No open maintenance tickets</p>
-          </div>
-        )}
-        {openTickets?.map((t) => {
-          const prop = Array.isArray(t.properties) ? t.properties[0] : t.properties;
-          const isUrgent = t.priority === "urgent";
-          return (
-            <Link
-              key={t.id}
-              href={`/admin/ops/maintenance/${t.id}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 20px",
-                backgroundColor: "var(--jood-surface)",
-                border: "1px solid var(--jood-line)",
-                borderLeft: isUrgent ? "3px solid var(--jood-danger)" : "3px solid var(--jood-ink-muted)",
-                borderRadius: "var(--radius-lg)",
-                textDecoration: "none",
-                marginBottom: "8px",
-              }}
-            >
-              <div>
-                <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem" }}>{t.title}</p>
-                <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{(prop as { name: string } | null)?.name}</p>
-              </div>
-              {isUrgent && (
-                <span style={{ backgroundColor: "var(--jood-danger)", color: "white", fontSize: "0.6875rem", padding: "3px 8px", borderRadius: "20px", fontFamily: "var(--font-label)", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                  Urgent
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
+      <SectionHead title="Maintenance" count={openTickets?.length ?? 0} href="/admin/ops/maintenance" />
+      {(openTickets?.length ?? 0) === 0 && <Empty text="No open maintenance tickets." />}
+      {openTickets?.map((t) => {
+        const prop = Array.isArray(t.properties) ? t.properties[0] : t.properties;
+        return (
+          <RecordCard
+            key={t.id}
+            href={`/admin/ops/maintenance/${t.id}`}
+            kicker="Ticket"
+            state={<State tone={t.priority === "urgent" ? "danger" : "neutral"}>{t.priority === "urgent" ? "Urgent" : "Open"}</State>}
+            cols={[{ label: "What", value: t.title }, { label: "House", value: (prop as { name: string } | null)?.name ?? "" }]}
+          />
+        );
+      })}
 
       {/* Pending service requests */}
-      <div style={{ marginTop: "32px" }}>
-        <Section title="Service requests" count={pendingServiceReqs?.length ?? 0} />
-        {(pendingServiceReqs?.length ?? 0) === 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "16px 20px", backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }}>
-            <Check size={15} strokeWidth={2} style={{ color: "var(--jood-success)", flexShrink: 0 }} />
-            <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem" }}>No pending service orders</p>
-          </div>
-        )}
-        {pendingServiceReqs?.map((r) => {
-          const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
-          const prop = Array.isArray((booking as { properties?: unknown })?.properties) ? (booking as { properties: { name: string }[] }).properties[0] : (booking as { properties: { name: string } } | null)?.properties;
-          const svc = Array.isArray(r.services) ? r.services[0] : r.services;
-          return (
-            <Link
-              key={r.id}
-              href={`/admin/requests/service/${r.id}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 20px",
-                backgroundColor: "var(--jood-surface)",
-                border: "1px solid var(--jood-line)",
-                borderLeft: "3px solid var(--jood-aqua)",
-                borderRadius: "var(--radius-lg)",
-                textDecoration: "none",
-                marginBottom: "8px",
-              }}
-            >
-              <div>
-                <p style={{ color: "var(--jood-ink)", fontWeight: 500, fontSize: "0.9375rem" }}>
-                  {booking?.guest_first_name} — {svc?.name_en ?? "Service"}
-                  {r.quantity > 1 && <span style={{ color: "var(--jood-ink-muted)", fontWeight: 400 }}> ×{r.quantity}</span>}
-                </p>
-                <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem" }}>{prop?.name}</p>
-              </div>
-              <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--jood-aqua)", flexShrink: 0 }}>
-                Pending
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+      <SectionHead title="Service orders" count={pendingServiceReqs?.length ?? 0} href="/admin/requests" />
+      {(pendingServiceReqs?.length ?? 0) === 0 && <Empty text="No pending service orders." />}
+      {pendingServiceReqs?.map((r) => {
+        const booking = Array.isArray(r.bookings) ? r.bookings[0] : r.bookings;
+        const prop = Array.isArray((booking as { properties?: unknown })?.properties) ? (booking as { properties: { name: string }[] }).properties[0] : (booking as { properties: { name: string } } | null)?.properties;
+        const svc = Array.isArray(r.services) ? r.services[0] : r.services;
+        return (
+          <RecordCard
+            key={r.id}
+            href={`/admin/requests/service/${r.id}`}
+            kicker="Service"
+            state={<State tone="info">Waiting</State>}
+            cols={[{ label: "Service", value: `${svc?.name_en ?? "Service"}${r.quantity > 1 ? ` ×${r.quantity}` : ""}` }, { label: "Guest", value: `${booking?.guest_first_name ?? ""}${prop?.name ? ` · ${prop.name}` : ""}` }]}
+          />
+        );
+      })}
     </div>
   );
 }
