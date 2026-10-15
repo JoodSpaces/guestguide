@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { BottomNav } from "@/components/stay/BottomNav";
 import { PushPrompt } from "@/components/stay/PushPrompt";
 import type { ReactNode } from "react";
 import { AppIcon } from "@/components/ui/AppIcon";
@@ -91,12 +90,11 @@ export function StayShell({ token, title, eyebrow, children, back, activeTab = "
         </section>
       )}
 
-      <div style={{ padding: "16px 16px 130px", maxWidth: 560, margin: "0 auto", position: "relative" }}>
+      <div style={{ padding: "16px 16px 56px", maxWidth: 560, margin: "0 auto", position: "relative" }}>
         {children}
       </div>
 
       <PushPrompt token={token} />
-      <BottomNav token={token} active={activeTab} />
     </div>
   );
 }
