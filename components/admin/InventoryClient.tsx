@@ -166,7 +166,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
   const present = CATEGORIES.filter((c) => grouped[c]?.length);
 
   return (
-    <div style={{ maxWidth: "700px" }}>
+    <div className="inv-page">
       <DetailHead back="/admin/ops" title="Inventory" />
 
       <p style={{ margin: "0 2px 12px", fontSize: "0.85rem", color: "var(--jood-mid)" }}>Stock in</p>
@@ -175,11 +175,13 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
       {/* Stock health: a ring, and what it says */}
       <section className="inv-health">
         <div className="inv-verdict"><span>Stock status</span><b className={verdict.tone}>{verdict.text}</b></div>
+        <div className="inv-sheet">
         <div className="inv-ring">
           <svg viewBox="0 0 120 120" width="150" height="150" aria-hidden>
-            <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(53,30,28,.09)" strokeWidth="10" />
+            <circle cx="60" cy="60" r={R - 8} fill={ringColor} opacity="0.09" />
+            <circle cx="60" cy="60" r={R} fill="none" stroke="rgba(53,30,28,.07)" strokeWidth="5" />
             {pct !== null && (
-              <circle cx="60" cy="60" r={R} fill="none" stroke={ringColor} strokeWidth="10" strokeLinecap="round"
+              <circle cx="60" cy="60" r={R} fill="none" stroke={ringColor} strokeWidth="5" strokeLinecap="round"
                 strokeDasharray={`${(C * pct) / 100} ${C}`} transform="rotate(-90 60 60)" style={{ transition: "stroke-dasharray 600ms ease" }} />
             )}
           </svg>
@@ -190,6 +192,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
           <div><span className="ic warn"><TriangleAlert size={18} strokeWidth={1.8} /></span><b>{lowStock.length}</b><small>Running low</small></div>
           <div><span className="ic ok"><PackageCheck size={18} strokeWidth={1.8} /></span><b>{okCount}</b><small>Stocked</small></div>
           <div><span className="ic info"><Boxes size={18} strokeWidth={1.8} /></span><b>{items.length}</b><small>Tracked</small></div>
+        </div>
         </div>
       </section>
 
@@ -275,6 +278,11 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
                 <span style={{ color: STATUS_COLOR[status] === "var(--jood-line)" ? "var(--jood-ink)" : STATUS_COLOR[status] }}>{item.current_stock}</span>
                 <button type="button" onClick={() => step(item.id, 1)} aria-label={`One more ${item.name}`}>+</button>
               </div>
+              {gaugePct !== null && item.current_stock < item.par_level ? (
+                <button type="button" className="inv-restock" onClick={() => step(item.id, item.par_level - item.current_stock)}>
+                  Top up to {item.par_level}
+                </button>
+              ) : null}
               <div className="inv-foot">
                 <label>
                   Min
