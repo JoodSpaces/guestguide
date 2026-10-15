@@ -1,43 +1,33 @@
 import { headers } from "next/headers";
 import { createServiceClient } from "@/lib/supabase/server";
 import { scopeFromHeaders } from "@/lib/admin-scope";
-import { BookingsCalendarClient, type Booking, type ExternalRange } from "@/components/admin/BookingsCalendarClient";
-import { externalBlocks, BLOCK_LABEL } from "@/lib/website-calendar";
+import { BookingsListClient, type Booking } from "@/components/admin/BookingsListClient";
 
-export default async function AdminBookingsPage() {
+export const dynamic = "force-dynamic";
+
+/** All bookings, searchable. The month view (with what Airbnb and the other channels hold) is the Calendar. */
+export default async function AdminBookingsPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const supabase = createServiceClient();
   const scope = scopeFromHeaders(await headers());
+  const sp = await searchParams;
 
-  let bookingsQuery = supabase
+  let query = supabase
     .from("bookings")
-    .select("id, guest_first_name, guest_last_name, check_in, check_out, status, source, property_id, properties(id, name)")
-    .order("check_in", { ascending: true });
-  let propertiesQuery = supabase.from("properties").select("id, name, slug").is("archived_at", null).order("name");
-  if (scope) {
-    bookingsQuery = bookingsQuery.in("property_id", scope);
-    propertiesQuery = propertiesQuery.in("id", scope);
-  }
+    .select("id, guest_first_name, guest_last_name, check_in, check_out, status, source, properties(name)")
+    .order("check_in", { ascending: false })
+    .limit(500);
+  if (scope) query = query.in("property_id", scope);
 
-  const [{ data: bookings }, { data: properties }] = await Promise.all([
-    bookingsQuery.returns<Booking[]>(),
-    propertiesQuery,
-  ]);
-
-  // What the website's other channels (Airbnb, Booking.com…) and staff holds have taken, shown read-only.
-  const props = (properties ?? []) as { id: string; name: string; slug: string }[];
-  const day = (offset: number) => new Date(Date.now() + offset * 86_400_000).toISOString().slice(0, 10);
-  const blocks = await externalBlocks(props.map((p) => p.slug), day(-62), day(430));
-  const bySlug = new Map(props.map((p) => [p.slug, p]));
-  const external: ExternalRange[] = blocks.flatMap((b) => {
-    const p = bySlug.get(b.slug);
-    return p ? [{ propertyId: p.id, propertyName: p.name, label: BLOCK_LABEL[b.kind] ?? "Blocked", from: b.from, to: b.to }] : [];
-  });
+  const { data, error } = await query.returns<Booking[]>();
 
   return (
-    <BookingsCalendarClient
-      initialBookings={bookings ?? []}
-      properties={props.map(({ id, name }) => ({ id, name }))}
-      externalBlocks={external}
-    />
+    <>
+      {error && (
+        <p role="alert" style={{ background: "rgba(255,96,55,.12)", color: "#A8431F", borderRadius: 14, padding: "10px 14px", fontSize: ".85rem", margin: "0 0 14px" }}>
+          Could not read the bookings: {error.message}. The list below may be incomplete.
+        </p>
+      )}
+      <BookingsListClient initialBookings={data ?? []} initialQuery={typeof sp.q === "string" ? sp.q.slice(0, 80) : ""} />
+    </>
   );
 }

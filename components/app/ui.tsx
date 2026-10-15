@@ -67,7 +67,7 @@ export function StepLine({ steps, at }: { steps: { label: string; sub?: string }
         <div key={s.label} role="listitem" className={`app-step${i < at ? " done" : i === at ? " on" : ""}`}>
           <i aria-hidden>{i <= at ? <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.2 2.2L9.5 3.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}</i>
           <b>{s.label}</b>
-          {s.sub && <small>{s.sub}</small>}
+          {(s.sub || steps.some((x) => x.sub)) && <small>{s.sub ?? "\u00A0"}</small>}
         </div>
       ))}
     </div>

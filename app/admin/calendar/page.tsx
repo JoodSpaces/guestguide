@@ -5,6 +5,7 @@ import { scopeFromHeaders } from "@/lib/admin-scope";
 import { cairoDay } from "@/lib/cairo-time";
 import { cairoDate, monthBounds, type CalEvent, type CalStay } from "@/lib/calendar-events";
 import { CalendarClient } from "@/components/admin/CalendarClient";
+import { externalBlocks, BLOCK_LABEL } from "@/lib/website-calendar";
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +31,7 @@ export default async function AdminCalendarPage({ searchParams }: { searchParams
   let mq = supabase.from("maintenance_tickets").select("id, title, priority, status, property_id, created_at, resolved_at, properties(name)").or(`created_at.gte.${from},resolved_at.gte.${from}`).limit(400);
   let sq = supabase.from("service_requests").select("id, status, quantity, created_at, services(name_en), bookings(guest_first_name, property_id, properties(name))").gte("created_at", from).lt("created_at", to).limit(400);
   let gq = supabase.from("guest_requests").select("id, category, urgency, status, body, created_at, bookings(guest_first_name, property_id, properties(name))").gte("created_at", from).lt("created_at", to).limit(400);
-  let pq = supabase.from("properties").select("id, name").is("archived_at", null).order("name");
+  let pq = supabase.from("properties").select("id, name, slug").is("archived_at", null).order("name");
   if (scope) { bq = bq.in("property_id", scope); tq = tq.in("property_id", scope); mq = mq.in("property_id", scope); pq = pq.in("id", scope); }
 
   const [b, t, m, s, g, p] = await Promise.all([bq, tq, mq, sq, gq, pq]);
@@ -81,5 +82,19 @@ export default async function AdminCalendarPage({ searchParams }: { searchParams
     events.push({ id: r.id, date, kind: "request", title: String(r.body).slice(0, 80), sub: `${bk?.guest_first_name ?? ""}${prop?.name ? ` · ${prop.name}` : ""}`, propertyId: bk?.property_id ?? null, href: `/admin/requests/guest/${r.id}`, state: urgent ? "Urgent" : String(r.status).replace("_", " "), tone: urgent ? "danger" : "warn", urgent });
   }
 
-  return <CalendarClient month={month} today={today} events={events} stays={stays} properties={(p.data ?? []) as { id: string; name: string }[]} failed={failed} />;
+  // What the other channels (Airbnb, Booking.com) and staff holds have taken, as stays under their own name.
+  const props = (p.data ?? []) as { id: string; name: string; slug: string }[];
+  try {
+    const blocks = await externalBlocks(props.map((x) => x.slug), first, next);
+    const bySlug = new Map(props.map((x) => [x.slug, x]));
+    for (const bl of blocks) {
+      const prop = bySlug.get(bl.slug);
+      if (!prop) continue;
+      stays.push({ id: `ext-${bl.slug}-${bl.from}`, from: bl.from, to: bl.to, guest: BLOCK_LABEL[bl.kind] ?? "Blocked", propertyId: prop.id, propertyName: prop.name, href: "/admin/calendar" });
+    }
+  } catch {
+    failed.push("other channels");
+  }
+
+  return <CalendarClient month={month} today={today} events={events} stays={stays} properties={props.map(({ id, name }) => ({ id, name }))} failed={failed} />;
 }

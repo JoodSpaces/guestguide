@@ -20,8 +20,8 @@ function fmtShort(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short" });
 }
 
-export function BookingsListClient({ initialBookings }: { initialBookings: Booking[] }) {
-  const [query, setQuery] = useState("");
+export function BookingsListClient({ initialBookings, initialQuery = "" }: { initialBookings: Booking[]; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const today = new Date().toISOString().slice(0, 10);
 
   const filtered = useMemo(() => {

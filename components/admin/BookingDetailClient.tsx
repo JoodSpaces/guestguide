@@ -111,6 +111,8 @@ const TEMP_LABEL: Record<string, string> = {
   cool: "Cool (AC on)", warm: "Warm", any: "No preference",
 };
 
+const day = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short" });
+
 export function BookingDetailClient({ booking, property, tokens, rating, arrivalPrefs }: Props) {
   const [doorCode, setDoorCode] = useState(booking.doorCode ?? "");
   const [editingCode, setEditingCode] = useState(false);
@@ -209,7 +211,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
         const at = status === "completed" || t > booking.checkOut.slice(0, 10) ? 2 : t >= booking.checkIn.slice(0, 10) ? 1 : 0;
         return (
           <div style={{ marginBottom: "6px" }}>
-            <StepLine at={at} steps={[{ label: "Booked" }, { label: "Checked in", sub: fmt(booking.checkIn) }, { label: "Checked out", sub: fmt(booking.checkOut) }]} />
+            <StepLine at={at} steps={[{ label: "Booked" }, { label: "Checked in", sub: day(booking.checkIn) }, { label: "Checked out", sub: day(booking.checkOut) }]} />
           </div>
         );
       })()}
@@ -222,7 +224,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
         title="Stay details"
         rows={[
           { label: "House", value: property?.name ?? "—" },
-          { label: "Dates", value: `${fmt(booking.checkIn)} → ${fmt(booking.checkOut)}` },
+          { label: "Dates", value: `${day(booking.checkIn)} → ${day(booking.checkOut)}` },
           { label: "Guests", value: String(booking.guestCount) },
           { label: "Language", value: booking.guestLang === "ar" ? "Arabic" : "English" },
           ...(booking.externalRef ? [{ label: "Reference", value: booking.externalRef }] : []),
