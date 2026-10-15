@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Activity, ChevronDown, ChevronUp, Menu } from "lucide-react";
+import { Activity, CalendarDays, ChevronDown, ChevronUp, ClipboardList, ConciergeBell, LayoutDashboard, Menu, MessageCircle, Sparkles, Wrench } from "lucide-react";
 
 const ROLE_HOME: Record<string, string> = {
   admin:        "/admin",
@@ -30,6 +30,10 @@ const PRIMARY_NAV = [
   { href: "/admin/services",         label: "Services",    roles: ["admin"] },
   { href: "/admin/requests",         label: "Requests",    roles: ["admin", "concierge"] },
 ];
+
+const NAV_ICON: Record<string, typeof Menu> = {
+  Today: LayoutDashboard, Bookings: CalendarDays, Ops: ClipboardList, Cleaning: Sparkles, Maintenance: Wrench, Services: ConciergeBell, Requests: MessageCircle,
+};
 
 const SECONDARY_NAV = [
   { href: "/admin/properties",  label: "Properties", roles: ["admin"] },
@@ -89,17 +93,19 @@ export function AdminHeader({ role, name }: Props) {
   const initials         = name ? name.slice(0, 2).toUpperCase() : "?";
 
   const linkStyle = (active: boolean): React.CSSProperties => ({
-    color: active ? "var(--jood-ink)" : "var(--jood-ink-muted)",
+    color: active ? "#FFFFFF" : "var(--jood-ink-muted)",
+    backgroundColor: active ? "var(--jood-ink)" : "transparent",
     textDecoration: "none",
-    fontSize: "0.875rem",
-    fontWeight: active ? 600 : 400,
-    borderBottom: active ? "2px solid var(--jood-ink)" : "2px solid transparent",
-    paddingBottom: "2px",
-    transition: "color 150ms, border-color 150ms",
+    fontSize: "0.84rem",
+    fontWeight: 600,
+    padding: "7px 14px",
+    borderRadius: "999px",
+    transition: "background-color 150ms, color 150ms",
     whiteSpace: "nowrap",
   });
 
   return (
+    <>
     <header
       className="jood-header-glass"
       style={{
@@ -308,6 +314,7 @@ export function AdminHeader({ role, name }: Props) {
 
       <style>{`
         @media (min-width: 640px) {
+          .app-pill-nav               { display: none !important; }
           .admin-nav-desktop          { display: flex !important; }
           .admin-nav-mobile-spacer    { display: none !important; }
           .admin-hamburger            { display: none !important; }
@@ -321,5 +328,18 @@ export function AdminHeader({ role, name }: Props) {
         }
       `}</style>
     </header>
+    {/* Phone: the main desks as a floating pill, the open one is an ink pill with its name */}
+    <nav className="app-pill-nav" aria-label="Main">
+      {primaryVisible.map((item) => {
+        const Icon = NAV_ICON[item.label] ?? LayoutDashboard;
+        return (
+          <a key={item.label} href={item.href} aria-label={item.label} aria-current={isActive(item.href) ? "page" : undefined}>
+            <Icon size={18} strokeWidth={1.8} />
+            <span>{item.label}</span>
+          </a>
+        );
+      })}
+    </nav>
+    </>
   );
 }

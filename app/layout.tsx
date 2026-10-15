@@ -27,9 +27,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const messages = await getMessages();
   const dir = locale === "ar" ? "rtl" : "ltr";
-  // The new look is the default on stay links only; admin and other pages stay classic whatever the cookie says.
+  // The app look is the default on stay links (a guest can switch back with ?ui=classic); admin and every other page always use it.
   const isStay = (await headers()).get(STAY_HEADER) === "1";
-  const ui = isStay ? parseUiMode((await cookies()).get(UI_COOKIE)?.value) : "classic";
+  const ui = isStay ? parseUiMode((await cookies()).get(UI_COOKIE)?.value) : "next";
 
   return (
     <html lang={locale} dir={dir} data-ui={ui}>

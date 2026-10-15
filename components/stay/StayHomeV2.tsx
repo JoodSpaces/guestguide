@@ -60,7 +60,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
   ].filter((m) => m.show);
 
   const label = { color: "var(--jood-mid)", fontFamily: "var(--font-label)", fontSize: 11, fontWeight: 600, letterSpacing: isAr ? 0 : "0.1em", textTransform: "uppercase" as const };
-  const tile = { width: 38, height: 38, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,96,55,.1)", color: "var(--jood-accent)", flex: "none" } as const;
+  const tile = { width: 40, height: 40, borderRadius: 14, display: "grid", placeItems: "center", background: "#FFFFFF", color: "var(--jood-ink)", flex: "none" } as const;
 
   return (
     <main className="stay-root" style={{ minHeight: "100dvh", padding: "0 16px 120px", maxWidth: 480, margin: "0 auto" }}>
@@ -71,10 +71,9 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
       </header>
 
       {/* the welcome: one white card, the greeting, the house and the countdown */}
-      <section className={glass} style={{ borderRadius: 18, padding: "18px 18px 16px" }}>
-        <p style={label}>{t(KICKER(hour) as never)}</p>
-        <h1 style={{ margin: "6px 0 4px", color: "var(--jood-ink)" }}>{greeting} {guestName}</h1>
-        <p style={{ margin: "0 0 12px", color: "var(--jood-ink-muted)", fontSize: 14 }}>{propertyName}</p>
+      <section className="hero-card">
+        <p className="hero-label">{t(KICKER(hour) as never)} · {propertyName}</p>
+        <h1 style={{ margin: "6px 0 14px", color: "#FFFFFF" }}>{greeting} {guestName}</h1>
         <CountdownChip phase={payload.phase as never} checkIn={payload.checkIn} checkOut={payload.checkOut} />
       </section>
 

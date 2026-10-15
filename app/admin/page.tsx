@@ -140,33 +140,18 @@ export default async function AdminTodayPage() {
 
   return (
     <div>
-      {/* ── Daily brief ──────────────────────────────────────────────────── */}
-      <div style={{
-        marginBottom: "32px",
-        padding: "22px 24px",
-        backgroundColor: "var(--jood-surface)",
-        border: "1px solid var(--jood-line)",
-        borderRadius: "var(--radius-lg)",
-        display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
-      }}>
-        <div>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", marginBottom: "6px" }}>
+      {/* ── Daily brief: the dark hero ───────────────────────────────────── */}
+      <div className="hero-card" style={{ marginBottom: "28px", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <p className="hero-label">
             {today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}
           </p>
-          <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.7rem", fontWeight: 400, fontStyle: "italic", color: "var(--jood-ink)", marginBottom: "10px", lineHeight: 1 }}>
-            {greetWord}.
-          </h1>
-          <p style={{ fontFamily: "var(--font-body)", fontSize: "0.9375rem", color: "var(--jood-ink-muted)", lineHeight: 1.6, maxWidth: "480px" }}>
+          <h1 className="hero-num" style={{ color: "#FFFFFF", margin: "4px 0 10px" }}>{greetWord}.</h1>
+          <p style={{ fontSize: "0.9375rem", color: "rgba(255,255,255,.82)", lineHeight: 1.55, maxWidth: "480px" }}>
             {briefSentence}
           </p>
         </div>
-        <Link
-          href="/admin/bookings/new"
-          style={{
-            padding: "10px 20px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)",
-            borderRadius: "var(--radius-pill)", textDecoration: "none", fontSize: "0.875rem", flexShrink: 0, alignSelf: "flex-start",
-          }}
-        >
+        <Link href="/admin/bookings/new" className="btn btn-sm" style={{ flexShrink: 0, background: "#FFFFFF", color: "var(--jood-ink)" }}>
           + New booking
         </Link>
       </div>

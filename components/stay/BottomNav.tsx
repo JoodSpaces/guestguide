@@ -65,41 +65,18 @@ export function BottomNav({ token, active = "none" }: BottomNavProps) {
   const ui = useUiMode();
 
   if (ui === "next") {
-    // The workspace look: a flat white bar on a hairline, five equal tabs, the open one marked with an orange icon and a soft tile.
+    // The app look: a floating white pill; the open tab is an ink pill that shows its name.
     const by = Object.fromEntries(tabs.map((tb) => [tb.id, tb]));
     const seq = [by.home, by.discover, by.concierge, by.services, by.help];
     const bar = isRtl ? [...seq].reverse() : seq;
     return (
-      <nav
-        aria-label={isRtl ? "التنقل الرئيسي" : "Main navigation"}
-        className="stay-bar-nav"
-        style={{
-          position: "fixed", left: 0, right: 0, bottom: 0, zIndex: 50,
-          background: "#FFFFFF", borderTop: "1px solid var(--jood-line)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        }}
-      >
-        <div style={{ display: "flex", maxWidth: 480, margin: "0 auto", padding: "6px 8px" }}>
-          {bar.map((tab) => {
-            const isActive = tab.id === active;
-            return (
-              <Link
-                key={tab.id}
-                href={tab.href}
-                aria-label={tab.label}
-                aria-current={isActive ? "page" : undefined}
-                style={{
-                  flex: 1, display: "grid", placeItems: "center", gap: 2, padding: "6px 0", borderRadius: 12, textDecoration: "none",
-                  color: isActive ? "var(--jood-ink)" : "var(--jood-mid)", fontSize: 11, fontWeight: isActive ? 600 : 500,
-                  background: isActive ? "rgba(53,30,28,.06)" : "transparent", WebkitTapHighlightColor: "transparent",
-                }}
-              >
-                <span style={{ display: "flex", color: isActive ? "var(--jood-accent)" : "inherit" }}>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </Link>
-            );
-          })}
-        </div>
+      <nav aria-label={isRtl ? "التنقل الرئيسي" : "Main navigation"} className="app-pill-nav">
+        {bar.map((tab) => (
+          <Link key={tab.id} href={tab.href} aria-label={tab.label} aria-current={tab.id === active ? "page" : undefined}>
+            {tab.icon}
+            <span>{tab.label}</span>
+          </Link>
+        ))}
       </nav>
     );
   }
