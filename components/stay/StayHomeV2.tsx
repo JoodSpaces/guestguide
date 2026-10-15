@@ -80,7 +80,10 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
     const id = setInterval(() => setTick((n) => n + 1), 6000);
     return () => { window.removeEventListener("jood-live-answer", on); clearInterval(id); };
   }, [token]);
-  const ask = (q?: string) => { haptic(); setSeed(q); setSheet(true); };
+  const [mode, setMode] = useState<"type" | "talk">("type");
+  const [typed, setTyped] = useState("");
+  const [focused, setFocused] = useState(false);
+  const ask = (q?: string, m: "type" | "talk" = "type") => { haptic(); setSeed(q); setMode(m); setSheet(true); };
   const [wx, setWx] = useState<{ tempC: number; sunsetLocal: string; windKph: number; uvIndex: number; waveM: number | null } | null>(null);
   useEffect(() => { setNow(Date.now()); }, []);
   useEffect(() => {
@@ -140,6 +143,39 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
         </div>
         <LanguageToggle />
       </div>
+
+      {/* The way in to JOOD AI: a bar at the top. Type a question, or tap the mic to talk. */}
+      <form
+        className="ai-bar"
+        onSubmit={(e) => { e.preventDefault(); const q = typed.trim(); setTyped(""); ask(q || undefined, "type"); }}
+      >
+        <span className="ai-spark" aria-hidden>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.1 6.2L20.5 10l-6.4 1.8L12 18l-2.1-6.2L3.5 10l6.4-1.8L12 2z" /></svg>
+        </span>
+        <span className="ai-field">
+          <input
+            value={typed}
+            onChange={(e) => setTyped(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            aria-label={isAr ? "اسأل جود" : "Ask JOOD"}
+            enterKeyHint="send"
+            autoComplete="off"
+          />
+          {!typed && !focused && (
+            <span className="ai-ph" key={tick} aria-hidden>{aiEnabled || voiceOn ? sug : (isAr ? "راسل فريق جود" : "Message the JOOD team")}</span>
+          )}
+        </span>
+        {typed.trim() ? (
+          <button type="submit" className="ai-go" aria-label={isAr ? "إرسال" : "Send"}>{isAr ? "←" : "→"}</button>
+        ) : voiceOn ? (
+          <button type="button" className="ai-go" aria-label={isAr ? "تحدث" : "Talk"} onClick={() => ask(undefined, "talk")}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0014 0M12 18v3" /></svg>
+          </button>
+        ) : (
+          <button type="submit" className="ai-go" aria-label={isAr ? "افتح" : "Open"}>{isAr ? "←" : "→"}</button>
+        )}
+      </form>
 
       <InstallHint isAr={isAr} />
 
@@ -230,15 +266,6 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
         </a>
       )}
 
-      {/* The concierge, wide, like the average card */}
-      <button type="button" onClick={() => ask()} className="home-card wide" style={{ "--c1": "#FF9A8A", "--c2": "#FF4F9A", border: 0, width: "100%", textAlign: "start", cursor: "pointer", font: "inherit" } as React.CSSProperties}>
-        <span>
-          <small>{aiEnabled ? (isAr ? "المساعد" : "Concierge") : (isAr ? "الفريق" : "Team")}</small>
-          <b>{aiEnabled ? (isAr ? "اسأل عن أي شيء" : "Ask anything about your stay") : (isAr ? "راسل الفريق" : "Message the team")}</b>
-        </span>
-        <i aria-hidden>{isAr ? "←" : "→"}</i>
-      </button>
-
       {/* The four things guests open most */}
       <div className="home-grid">
         {tiles.map((e) => (
@@ -271,7 +298,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
       {sheet && (
         <ConciergeSheet
           token={token} isAr={isAr} phase={payload.phase as Phase} guestFirstName={guestName}
-          propertyName={propertyName} aiOn={aiEnabled} voiceOn={voiceOn} seed={seed}
+          propertyName={propertyName} aiOn={aiEnabled} voiceOn={voiceOn} seed={seed} startMode={mode}
           onClose={() => { setSheet(false); setSeed(undefined); }}
         />
       )}

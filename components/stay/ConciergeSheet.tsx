@@ -17,6 +17,7 @@ interface Props {
   aiOn: boolean;
   voiceOn: boolean;
   seed?: string;
+  startMode?: "type" | "talk";
   onClose: () => void;
 }
 
@@ -24,8 +25,8 @@ interface Props {
  * The concierge as a card that rises from the bottom of the home. Type or talk, whichever is switched on;
  * with neither, a way to message the team. Swipe it down (or tap outside) to close.
  */
-export function ConciergeSheet({ token, isAr, phase, guestFirstName, propertyName, aiOn, voiceOn, seed, onClose }: Props) {
-  const [mode, setMode] = useState<"type" | "talk">(aiOn ? "type" : "talk");
+export function ConciergeSheet({ token, isAr, phase, guestFirstName, propertyName, aiOn, voiceOn, seed, startMode, onClose }: Props) {
+  const [mode, setMode] = useState<"type" | "talk">(startMode === "talk" && voiceOn ? "talk" : aiOn ? "type" : "talk");
   const swipe = useSwipeDown(onClose);
 
   useEffect(() => {

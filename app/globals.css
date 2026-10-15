@@ -1607,3 +1607,16 @@ html:has(.stay-root) { background: #0B0807; overscroll-behavior-y: none; }
 .cs-mode button[aria-selected="true"] { background: #fff; color: #0E0908; }
 .cs-body { flex: 1; min-height: 0; border-radius: 24px; background: rgba(12,9,8,.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 12px; }
 .cs-sheet .svc-grab-zone { margin: 0 -16px; }
+
+/* ── The ask bar: how guests reach JOOD AI, at the top of the home ── */
+.ai-bar { display: flex; align-items: center; gap: 10px; margin: 0 0 16px; padding: 7px 7px 7px 14px; border-radius: 999px; border: 1.5px solid transparent;
+  background: linear-gradient(#171211, #171211) padding-box, linear-gradient(110deg, #FF9A8A, #FF4F9A, #5B7BFF, #16E0B0, #FF9A8A) border-box; background-size: 100% 100%, 300% 100%;
+  animation: aiSweep 9s linear infinite; box-shadow: 0 8px 28px rgba(255,79,154,.12); }
+@keyframes aiSweep { to { background-position: 0 0, 300% 0; } }
+@media (prefers-reduced-motion: reduce) { .ai-bar { animation: none; } }
+.ai-spark { flex: none; color: #FFB3C4; display: grid; place-items: center; }
+.ai-field { position: relative; flex: 1; min-width: 0; }
+.ai-field input { width: 100%; height: 40px; border: 0; outline: 0; background: transparent; color: #fff; font: inherit; font-size: 16px; }
+.ai-ph { position: absolute; inset: 0; display: flex; align-items: center; color: rgba(255,255,255,.62); font-size: .95rem; pointer-events: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; animation: liveIn .4s ease both; }
+.ai-go { flex: none; width: 42px; height: 42px; border-radius: 50%; border: 0; background: #fff; color: #0E0908; display: grid; place-items: center; font-size: 1.1rem; cursor: pointer; }
+.ai-go:active { transform: scale(.94); }
