@@ -1,48 +1,7 @@
 import { headers } from "next/headers";
-import Link from "next/link";
-import { SectionHead, State, toneOfColor } from "@/components/app/ui";
+import { OpsBoardClient, type OpsTask, type OpsTicket } from "@/components/admin/OpsBoardClient";
 import { createServiceClient } from "@/lib/supabase/server";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
-import { CreateTurnoverForm } from "@/components/admin/CreateTurnoverForm";
-import { User } from "lucide-react";
-
-const STATUS_COLOR: Record<string, string> = {
-  scheduled: "var(--jood-aqua)",
-  pending: "var(--jood-ink-muted)",
-  in_progress: "var(--jood-accent)",
-  ready: "var(--jood-success)",
-  approved: "var(--jood-aqua)",
-};
-
-const PRIORITY_COLOR: Record<string, string> = {
-  urgent: "var(--jood-danger)",
-  normal: "var(--jood-ink-muted)",
-  low: "var(--jood-ink-subtle)",
-};
-
-// Plain-language labels for staff
-const STATUS_LABEL: Record<string, string> = {
-  scheduled: "Upcoming",
-  pending: "Ready to start",
-  in_progress: "In progress",
-  ready: "Waiting for approval",
-  approved: "Done ✓",
-};
-
-function StatusChip({ value, colorMap }: { value: string; colorMap: Record<string, string> }) {
-  return <State tone={toneOfColor(colorMap[value])}>{STATUS_LABEL[value] ?? value.replace("_", " ")}</State>;
-}
-
-function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric", month: "short" });
-}
-
-const card: React.CSSProperties = {
-  backgroundColor: "var(--jood-surface)",
-  border: "none",
-  borderRadius: "var(--radius-lg)",
-  padding: "16px 20px",
-};
 
 export default async function OpsPage() {
   const h = await headers();
@@ -52,10 +11,10 @@ export default async function OpsPage() {
   const supabase = createServiceClient();
 
   const [
-    { data: turnovers },
-    { data: history },
-    { data: tickets },
-    { data: properties },
+    { data: turnovers, error: eT },
+    { data: history, error: eH },
+    { data: tickets, error: eK },
+    { data: properties, error: eP },
     { data: teamMembers },
   ] = await Promise.all([
     supabase
@@ -80,174 +39,30 @@ export default async function OpsPage() {
     supabase.from("team_members").select("id, name, role").eq("is_active", true).in("role", ["housekeeping", "ops"]).order("name"),
   ]);
 
-  type TurnoverRow = NonNullable<typeof turnovers>[number] & { approved_at?: string | null };
-
-  function TurnoverCard({ t, muted, highlight }: { t: TurnoverRow; muted?: boolean; highlight?: boolean }) {
-    const booking  = Array.isArray(t.bookings)    ? t.bookings[0]    : t.bookings;
-    const property = Array.isArray(t.properties)  ? t.properties[0]  : t.properties;
-    return (
-      <a href={`/admin/ops/turnover/${t.id}`} style={{
-        ...card,
-        textDecoration: "none", color: "inherit", display: "block",
-        opacity: muted ? 0.8 : 1,
-        boxShadow: highlight
-          ? "inset 4px 0 0 var(--jood-accent)"
-          : t.status === "scheduled"
-          ? "inset 3px 0 0 var(--jood-aqua)"
-          : "none",
-      }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <p style={{ fontWeight: 600, fontSize: "1rem", marginBottom: "3px" }}>{(property as { name: string })?.name}</p>
-            {booking && (
-              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>
-                {(booking as { guest_first_name: string }).guest_first_name} · checkout {fmt((booking as { check_out: string }).check_out)}
-              </p>
-            )}
-            {t.assigned_to && (
-              <p style={{ fontSize: "0.8125rem", color: highlight ? "var(--jood-accent)" : "var(--jood-ink-muted)", marginTop: "3px", fontWeight: highlight ? 600 : 400, display: "flex", alignItems: "center", gap: "4px" }}>
-                <User size={11} strokeWidth={1.75} /> {t.assigned_to}
-              </p>
-            )}
-            {!booking && (
-              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>Added by hand · {fmt(t.created_at)}</p>
-            )}
-            {t.status === "approved" && (t as TurnoverRow).approved_at && (
-              <p style={{ fontSize: "0.75rem", color: "var(--jood-ink-subtle)", marginTop: "2px" }}>
-                Approved {fmt((t as TurnoverRow).approved_at!)}
-              </p>
-            )}
-          </div>
-          <StatusChip value={t.status} colorMap={STATUS_COLOR} />
-        </div>
-      </a>
-    );
-  }
-
-  // Split: mine vs others
-  const myTurnovers    = turnovers?.filter((t) => t.assigned_to === myName) ?? [];
-  const otherTurnovers = turnovers?.filter((t) => t.assigned_to !== myName) ?? [];
-  const active         = otherTurnovers.filter((t) => t.status !== "scheduled");
-  const upcoming       = otherTurnovers.filter((t) => t.status === "scheduled");
+  const failed = [eT && "cleaning tasks", eH && "finished cleanings", eK && "maintenance tickets", eP && "houses"].filter(Boolean) as string[];
+  const one = <T,>(v: T | T[] | null | undefined): T | null => (Array.isArray(v) ? v[0] ?? null : v ?? null);
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const toTask = (t: any): OpsTask => {
+    const b = one(t.bookings) as { check_out: string; guest_first_name: string } | null;
+    const p = one(t.properties) as { name: string } | null;
+    return { id: t.id, status: t.status, assignedTo: t.assigned_to, createdAt: t.created_at, approvedAt: t.approved_at ?? null, house: p?.name ?? "House", guest: b?.guest_first_name ?? null, checkOut: b?.check_out ?? null };
+  };
+  const ticketRows: OpsTicket[] = (tickets ?? []).map((t: any) => ({ id: t.id, title: t.title, priority: t.priority, status: t.status, createdAt: t.created_at, house: (one(t.properties) as { name: string } | null)?.name ?? "House" }));
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   return (
-    <div>
+    <>
       <AutoRefresh interval={30_000} />
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "28px" }}>
-        <h1 className="font-display" style={{ fontSize: "1.8rem" }}>Operations</h1>
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-          {(role === "admin" || role === "ops") && (
-            <Link href="/admin/ops/maintenance/new" style={{ padding: "9px 18px", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem" }}>
-              + Ticket
-            </Link>
-          )}
-          {(role === "admin" || role === "ops") && (
-            <CreateTurnoverForm
-              properties={properties ?? []}
-              teamMembers={teamMembers ?? []}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* ── MY TASKS — always shown first ── */}
-      {myTurnovers.length > 0 && (
-        <section style={{ marginBottom: "36px" }}>
-          <SectionHead title="Your tasks" count={myTurnovers.length} />
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-            {myTurnovers.map((t) => (
-              <TurnoverCard key={t.id} t={t as TurnoverRow} highlight />
-            ))}
-          </div>
-        </section>
-      )}
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "24px" }}>
-        {/* Turnovers */}
-        <section>
-          <div style={{ marginBottom: "12px" }}>
-            <SectionHead title={myTurnovers.length > 0 ? "All other tasks" : "Cleaning tasks"} count={active.length + upcoming.length} />
-          </div>
-
-          {!active.length && !upcoming.length && !myTurnovers.length && (
-            <div style={{ ...card, textAlign: "center", padding: "32px 24px", marginBottom: "20px" }}>
-              <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>All clear</p>
-              <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-subtle)" }}>No cleaning tasks right now</p>
-            </div>
-          )}
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: upcoming.length ? "20px" : 0 }}>
-            {active.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} />)}
-          </div>
-
-          {upcoming.length > 0 && (
-            <>
-              <SectionHead title="Upcoming" count={upcoming.length} />
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: history?.length ? "20px" : 0 }}>
-                {upcoming.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} />)}
-              </div>
-            </>
-          )}
-
-          {(history?.length ?? 0) > 0 && (
-            <>
-              <SectionHead title="History" count={history!.length} />
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {history!.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} muted />)}
-              </div>
-            </>
-          )}
-        </section>
-
-        {/* Maintenance tickets — admin/ops/maintenance only */}
-        {(role === "admin" || role === "ops" || role === "maintenance") && (
-          <section>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-              <SectionHead title="Open tickets" count={tickets?.length ?? 0} />
-              <Link href="/admin/ops/maintenance" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "none" }}>View all →</Link>
-            </div>
-
-            {!tickets?.length && (
-              <div style={{ ...card, textAlign: "center", padding: "32px 24px" }}>
-                <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--jood-ink-muted)", marginBottom: "4px" }}>No open tickets</p>
-                <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-subtle)" }}>All maintenance issues are resolved</p>
-              </div>
-            )}
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-              {tickets?.map((ticket) => {
-                const property = Array.isArray(ticket.properties) ? ticket.properties[0] : ticket.properties;
-                return (
-                  <Link key={ticket.id} href={`/admin/ops/maintenance/${ticket.id}`} style={{ ...card, textDecoration: "none", color: "inherit", display: "block", boxShadow: ticket.priority === "urgent" ? "inset 3px 0 0 var(--jood-danger)" : "none" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <div>
-                        <p style={{ fontWeight: 500, fontSize: "0.9375rem", marginBottom: "3px" }}>{ticket.title}</p>
-                        <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)" }}>{(property as { name: string })?.name} · {fmt(ticket.created_at)}</p>
-                      </div>
-                      <StatusChip value={ticket.priority} colorMap={PRIORITY_COLOR} />
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          </section>
-        )}
-      </div>
-
-      {/* Inventory links */}
-      {(properties?.length ?? 0) > 0 && (
-        <section style={{ marginTop: "32px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "12px" }}>Inventory</p>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            {properties?.map((p) => (
-              <Link key={p.id} href={`/admin/ops/inventory/${p.id}`} style={{ ...card, textDecoration: "none", color: "var(--jood-ink)", fontSize: "0.875rem", padding: "10px 16px" }}>
-                {p.name} →
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-    </div>
+      <OpsBoardClient
+        tasks={(turnovers ?? []).map(toTask)}
+        done={(history ?? []).map(toTask)}
+        tickets={ticketRows}
+        properties={properties ?? []}
+        teamMembers={teamMembers ?? []}
+        role={role}
+        myName={myName}
+        failed={failed}
+      />
+    </>
   );
 }
-
