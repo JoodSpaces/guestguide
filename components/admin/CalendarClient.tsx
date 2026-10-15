@@ -31,7 +31,7 @@ export function CalendarClient({ month, today, events, stays, properties, failed
 
   const evs = useMemo(() => (house === "all" ? events : events.filter((e) => e.propertyId === house)), [events, house]);
   const sts = useMemo(() => (house === "all" ? stays : stays.filter((s) => s.propertyId === house)), [stays, house]);
-  const dates = useMemo(() => Array.from({ length: days }, (_, i) => `${month}-${String(i + 1).padStart(2, "0")}`), [month, days]);
+  const dates = Array.from({ length: days }, (_, i) => `${month}-${String(i + 1).padStart(2, "0")}`);
   const lead = dow(first);
   const headDate = open ?? (today.startsWith(month) ? today : first);
 

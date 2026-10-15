@@ -38,7 +38,6 @@ export default async function AdminCalendarPage({ searchParams }: { searchParams
 
   const events: CalEvent[] = [];
   const stays: CalStay[] = [];
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   for (const r of (b.data ?? []) as any[]) {
     const prop = one(r.properties) as { name: string } | null;
     const guest = `${r.guest_first_name} ${r.guest_last_name}`.trim();
@@ -81,7 +80,6 @@ export default async function AdminCalendarPage({ searchParams }: { searchParams
     const urgent = r.urgency === "urgent" && r.status !== "resolved";
     events.push({ id: r.id, date, kind: "request", title: String(r.body).slice(0, 80), sub: `${bk?.guest_first_name ?? ""}${prop?.name ? ` · ${prop.name}` : ""}`, propertyId: bk?.property_id ?? null, href: `/admin/requests/guest/${r.id}`, state: urgent ? "Urgent" : String(r.status).replace("_", " "), tone: urgent ? "danger" : "warn", urgent });
   }
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   return <CalendarClient month={month} today={today} events={events} stays={stays} properties={(p.data ?? []) as { id: string; name: string }[]} failed={failed} />;
 }

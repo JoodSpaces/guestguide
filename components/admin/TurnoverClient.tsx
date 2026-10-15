@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { Check, X, User, AlertTriangle, Camera, Loader, Sparkles, CheckCircle2, ChevronDown, BedDouble, Droplets, Utensils, Sofa, Leaf, CheckSquare, Home, type LucideIcon } from "lucide-react";
 import Link from "next/link";
-import { DetailHead } from "@/components/app/ui";
+import { DetailHead, IdRow, State, StepLine } from "@/components/app/ui";
 import { toast } from "@/components/admin/Toaster";
 import { ROOM_LABELS } from "@/lib/ops-checklist";
 import type { PhotoReview } from "@/lib/photo-review";
@@ -319,16 +319,23 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
       {/* Back */}
       <DetailHead back="/admin/ops" title="Cleaning" />
 
-      {/* Header */}
-      <div style={{ ...card, marginBottom: "16px", borderLeft: `4px solid ${statusColor}` }}>
+      {/* The record: house and state, then where the cleaning is on its way */}
+      <IdRow
+        label={task.bookings ? `After ${task.bookings.guest_first_name} · checkout ${fmtDate(task.bookings.check_out)}` : "Cleaning added by hand"}
+        id={task.properties.name}
+        state={<State tone={task.status === "approved" ? "ok" : task.status === "ready" ? "info" : task.status === "in_progress" ? "warn" : "neutral"}>{STATUS_LABEL[task.status]}</State>}
+      />
+      <div style={{ marginBottom: "16px" }}>
+        <StepLine
+          at={task.status === "approved" ? 3 : task.status === "ready" ? 2 : task.status === "in_progress" ? 1 : 0}
+          steps={[{ label: "Waiting" }, { label: "Cleaning" }, { label: "Done" }, { label: "Approved" }]}
+        />
+      </div>
+
+      {/* Who does it */}
+      <div style={{ ...card, marginBottom: "16px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "12px" }}>
           <div>
-            <p style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "4px" }}>{task.properties.name}</p>
-            {task.bookings && (
-              <p style={{ fontSize: "0.875rem", color: "var(--jood-ink-muted)", marginBottom: "4px" }}>
-                Guest: {task.bookings.guest_first_name} {task.bookings.guest_last_name} · checkout {fmtDate(task.bookings.check_out)}
-              </p>
-            )}
             {/* Assignment UI — manager sees dropdown, ops sees claim/status */}
             {myRole === "admin" ? (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "8px", flexWrap: "wrap" }}>
@@ -381,14 +388,6 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
                 <User size={13} strokeWidth={1.75} /> Assigned to {task.assigned_to}
               </p>
             )}
-          </div>
-          <div style={{ textAlign: "right", flexShrink: 0 }}>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", color: statusColor, marginBottom: "2px" }}>
-              Status
-            </p>
-            <p style={{ fontSize: "0.875rem", fontWeight: 600, color: statusColor }}>
-              {STATUS_LABEL[task.status]}
-            </p>
           </div>
         </div>
       </div>
