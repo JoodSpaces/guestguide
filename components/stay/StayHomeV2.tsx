@@ -80,10 +80,10 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
     const id = setInterval(() => setTick((n) => n + 1), 6000);
     return () => { window.removeEventListener("jood-live-answer", on); clearInterval(id); };
   }, [token]);
-  const [mode, setMode] = useState<"type" | "talk">("type");
+  const [mode, setMode] = useState<"type" | "talk" | "write">("type");
   const [typed, setTyped] = useState("");
   const [focused, setFocused] = useState(false);
-  const ask = (q?: string, m: "type" | "talk" = "type") => { haptic(); setSeed(q); setMode(m); setSheet(true); };
+  const ask = (q?: string, m: "type" | "talk" | "write" = aiEnabled ? "type" : "write") => { haptic(); setSeed(q); setMode(m); setSheet(true); };
   const [wx, setWx] = useState<{ tempC: number; sunsetLocal: string; windKph: number; uvIndex: number; waveM: number | null } | null>(null);
   useEffect(() => { setNow(Date.now()); }, []);
   useEffect(() => {
@@ -120,7 +120,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
     if (wx && wx.tempC >= 33) smart.push(isAr ? "أين أبرّد جسمي بالقرب؟" : "Where can I cool off nearby?");
     return [...smart, ...base];
   })();
-  const sug = suggestions[tick % suggestions.length];
+  const sug = aiEnabled ? suggestions[tick % suggestions.length] : "";
 
   const tiles: { href: string; title: string; sub: string; c1: string; c2: string; icon: string }[] = [
     { href: essentials[0].href, title: essentials[0].title, sub: essentials[0].sub, c1: "#16E0B0", c2: "#0A6E6A", icon: essentials[0].icon },
@@ -147,7 +147,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
       {/* The way in to JOOD AI: a bar at the top. Type a question, or tap the mic to talk. */}
       <form
         className="ai-bar"
-        onSubmit={(e) => { e.preventDefault(); const q = typed.trim(); setTyped(""); ask(q || undefined, "type"); }}
+        onSubmit={(e) => { e.preventDefault(); const q = typed.trim(); setTyped(""); ask(q || undefined); }}
       >
         <span className="ai-spark" aria-hidden>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.1 6.2L20.5 10l-6.4 1.8L12 18l-2.1-6.2L3.5 10l6.4-1.8L12 2z" /></svg>
@@ -163,7 +163,7 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
             autoComplete="off"
           />
           {!typed && !focused && (
-            <span className="ai-ph" key={tick} aria-hidden>{aiEnabled || voiceOn ? sug : (isAr ? "راسل فريق جود" : "Message the JOOD team")}</span>
+            <span className="ai-ph" key={tick} aria-hidden>{aiEnabled ? sug : (isAr ? "اكتب رسالة لفريق جود" : "Write to the JOOD team")}</span>
           )}
         </span>
         {typed.trim() ? (
@@ -209,7 +209,9 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
               ) : live ? (
                 <><small>{live.q ?? (isAr ? "المساعد" : "Concierge")}</small><b>{live.a}</b></>
               ) : (
-                <><small>{isAr ? "اسألني" : "Ask me"}</small><b key={tick}>{sug}</b></>
+                aiEnabled
+                  ? <><small>{isAr ? "اسألني" : "Ask me"}</small><b key={tick}>{sug}</b></>
+                  : <><small>{isAr ? "فريق جود" : "JOOD team"}</small><b>{voiceOn ? (isAr ? "تحدث إلينا بالصوت أو اكتب رسالة." : "Talk to us by voice, or write a message.") : (isAr ? "اكتب رسالة وسيردّ عليك شخص حقيقي." : "Write a message and a real person replies.")}</b></>
               )}
             </span>
             <span className="live-chev" aria-hidden>{open ? "−" : "+"}</span>
@@ -232,11 +234,18 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
                   <button type="button" className="live-link" onClick={() => ask()}>{isAr ? "تابع المحادثة" : "Continue the chat"} →</button>
                 </div>
               )}
-              <div className="live-chips">
-                {suggestions.slice(0, 4).map((q) => (
-                  <button key={q} type="button" onClick={() => ask(q)}>{q}</button>
-                ))}
-              </div>
+              {aiEnabled ? (
+                <div className="live-chips">
+                  {suggestions.slice(0, 4).map((q) => (
+                    <button key={q} type="button" onClick={() => ask(q)}>{q}</button>
+                  ))}
+                </div>
+              ) : (
+                <div className="live-chips">
+                  <button type="button" onClick={() => ask()}>{isAr ? "اكتب للفريق" : "Write to the team"}</button>
+                  <Link href={`/s/${token}/manual`} style={{ padding: "9px 14px", borderRadius: 999, background: "rgba(255,255,255,.12)", color: "#fff", textDecoration: "none", fontSize: ".82rem", fontWeight: 600 }}>{isAr ? "دليل البيت" : "House guide"}</Link>
+                </div>
+              )}
             </div>
           )}
         </div>

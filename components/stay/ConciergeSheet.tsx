@@ -6,6 +6,7 @@ import { ConciergeClient } from "@/components/stay/ConciergeClient";
 import { VoiceConcierge } from "@/components/stay/VoiceConcierge";
 import { useSwipeDown } from "@/lib/gestures";
 import { haptic } from "@/lib/haptics";
+import { detectEmergency } from "@/lib/emergency-rules";
 import type { Phase } from "@/lib/token";
 
 interface Props {
@@ -17,7 +18,7 @@ interface Props {
   aiOn: boolean;
   voiceOn: boolean;
   seed?: string;
-  startMode?: "type" | "talk";
+  startMode?: "type" | "talk" | "write";
   onClose: () => void;
 }
 
@@ -26,7 +27,9 @@ interface Props {
  * with neither, a way to message the team. Swipe it down (or tap outside) to close.
  */
 export function ConciergeSheet({ token, isAr, phase, guestFirstName, propertyName, aiOn, voiceOn, seed, startMode, onClose }: Props) {
-  const [mode, setMode] = useState<"type" | "talk">(startMode === "talk" && voiceOn ? "talk" : aiOn ? "type" : "talk");
+  // With text AI on: Type (and Talk if voice is on). Without it: Write to the team (and Talk if voice is on).
+  const first: "type" | "talk" | "write" = startMode === "talk" && voiceOn ? "talk" : aiOn ? "type" : startMode === "write" || !voiceOn ? "write" : "talk";
+  const [mode, setMode] = useState<"type" | "talk" | "write">(first);
   const swipe = useSwipeDown(onClose);
 
   useEffect(() => {
@@ -36,7 +39,6 @@ export function ConciergeSheet({ token, isAr, phase, guestFirstName, propertyNam
     return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", onKey); };
   }, [onClose]);
 
-  const neither = !aiOn && !voiceOn;
 
   return (
     <div className="cs-wrap" role="dialog" aria-modal="true" aria-label={isAr ? "المساعد" : "Concierge"}>
@@ -51,9 +53,9 @@ export function ConciergeSheet({ token, isAr, phase, guestFirstName, propertyNam
             <b>{isAr ? "كونسيرج جود" : "JOOD Concierge"}</b>
             <small>{propertyName}</small>
           </div>
-          {aiOn && voiceOn && (
+          {voiceOn && (
             <div className="cs-mode" role="tablist">
-              <button type="button" role="tab" aria-selected={mode === "type"} onClick={() => { haptic(); setMode("type"); }}>{isAr ? "اكتب" : "Type"}</button>
+              <button type="button" role="tab" aria-selected={mode !== "talk"} onClick={() => { haptic(); setMode(aiOn ? "type" : "write"); }}>{aiOn ? (isAr ? "اكتب" : "Type") : (isAr ? "اكتب للفريق" : "Write")}</button>
               <button type="button" role="tab" aria-selected={mode === "talk"} onClick={() => { haptic(); setMode("talk"); }}>{isAr ? "تحدث" : "Talk"}</button>
             </div>
           )}
@@ -61,16 +63,8 @@ export function ConciergeSheet({ token, isAr, phase, guestFirstName, propertyNam
         </header>
 
         <div className="cs-body">
-          {neither ? (
-            <div className="home-note" style={{ marginTop: 0, textAlign: "center" }}>
-              <p style={{ fontWeight: 650 }}>{isAr ? "نحن على بعد رسالة" : "We're one message away"}</p>
-              <p style={{ color: "var(--jood-ink-muted)", fontSize: ".9rem" }}>
-                {isAr ? "اكتب لفريق جود وسيرد عليك شخص حقيقي." : "Message the JOOD team and a person will reply."}
-              </p>
-              <Link href={`/s/${token}/requests`} className="vpill" style={{ marginTop: 14, textDecoration: "none", background: "#fff", color: "#0E0908", boxShadow: "none" }}>
-                <span>{isAr ? "راسل الفريق" : "Message the team"}</span><i aria-hidden style={{ background: "#0E0908", color: "#fff" }}>{isAr ? "←" : "→"}</i>
-              </Link>
-            </div>
+          {mode === "write" || (!aiOn && !voiceOn) ? (
+            <TeamComposer token={token} isAr={isAr} seed={seed} />
           ) : mode === "talk" && voiceOn ? (
             <div style={{ overflowY: "auto", height: "100%" }}>
               <VoiceConcierge token={token} isAr={isAr} guestFirstName={guestFirstName} />
@@ -80,6 +74,59 @@ export function ConciergeSheet({ token, isAr, phase, guestFirstName, propertyNam
           )}
         </div>
       </section>
+    </div>
+  );
+}
+
+/** Without text AI, a typed question becomes a message to the JOOD team: written here, sent on one tap. */
+function TeamComposer({ token, isAr, seed }: { token: string; isAr: boolean; seed?: string }) {
+  const [text, setText] = useState(seed ?? "");
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  async function send() {
+    const body = text.trim();
+    if (!body || state === "sending") return;
+    setState("sending");
+    const urgent = detectEmergency(body);
+    const res = await fetch("/api/guest/requests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, body, category: urgent ? "maintenance" : "other", urgency: urgent ? "urgent" : "normal" }),
+    }).catch(() => null);
+    if (res?.ok) { haptic("success"); setState("sent"); setText(""); } else setState("error");
+  }
+
+  if (state === "sent") {
+    return (
+      <div className="home-note" style={{ marginTop: 0, textAlign: "center" }}>
+        <p style={{ fontWeight: 650 }}>{isAr ? "أُرسلت إلى فريق جود" : "Sent to the JOOD team"}</p>
+        <p style={{ color: "var(--jood-ink-muted)", fontSize: ".9rem" }}>
+          {isAr ? "سيظهر ردّهم في أعلى الصفحة الرئيسية وفي شاشة الطلبات." : "Their reply will show at the top of your home and under Requests."}
+        </p>
+        <button type="button" className="live-link" onClick={() => setState("idle")}>{isAr ? "اكتب رسالة أخرى" : "Write another"}</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      <p style={{ margin: 0, fontSize: ".9rem", color: "var(--jood-ink-muted)", lineHeight: 1.5 }}>
+        {isAr ? "اكتب سؤالك أو طلبك وسيردّ عليك شخص من فريق جود." : "Write your question or request and a person from the JOOD team will reply."}
+      </p>
+      <textarea
+        className="svc-notes"
+        style={{ minHeight: 120, margin: 0 }}
+        value={text}
+        onChange={(e) => { setText(e.target.value); if (state === "error") setState("idle"); }}
+        placeholder={isAr ? "كيف يمكننا مساعدتك؟" : "How can we help you?"}
+        dir={isAr ? "rtl" : "ltr"}
+        autoFocus
+      />
+      {state === "error" && <p role="alert" style={{ margin: 0, color: "#FF9C9C", fontSize: 13 }}>{isAr ? "تعذّر الإرسال. حاول مرة أخرى." : "We couldn't send it. Please try again."}</p>}
+      <button type="button" className="vpill" onClick={send} disabled={!text.trim() || state === "sending"} style={{ background: "#fff", color: "#0E0908", boxShadow: "none", opacity: text.trim() ? 1 : 0.55 }}>
+        <span>{state === "sending" ? (isAr ? "جاري الإرسال…" : "Sending…") : (isAr ? "أرسل إلى الفريق" : "Send to the team")}</span>
+        <i aria-hidden style={{ background: "#0E0908", color: "#fff" }}>{isAr ? "←" : "→"}</i>
+      </button>
     </div>
   );
 }
