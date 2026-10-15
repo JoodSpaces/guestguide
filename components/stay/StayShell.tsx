@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { BottomNav } from "@/components/stay/BottomNav";
 import { PushPrompt } from "@/components/stay/PushPrompt";
 import type { ReactNode } from "react";
@@ -58,121 +57,41 @@ export function StayShell({ token, title, eyebrow, children, back, activeTab = "
     setSubscribing(false);
   }
 
+  // Every inner screen has its own glow, so a screen is recognisable by its colour.
+  const PALETTE: [string, string][] = [["#2FD6A0", "#0B5C57"], ["#6C7BFF", "#2A1B6B"], ["#FF9A3D", "#7A2E10"], ["#FF5FA8", "#5E1B45"], ["#A0C9CB", "#1E4B4F"]];
+  const byTab: Record<string, number> = { discover: 0, concierge: 1, help: 2, services: 3 };
+  const hash = Array.from(title ?? token).reduce((n, ch) => n + ch.charCodeAt(0), 0);
+  const [a1, a2] = PALETTE[byTab[activeTab] ?? hash % PALETTE.length];
+
   return (
-    <div className="stay-root" style={{ minHeight: "100dvh", backgroundColor: "var(--jood-ground)" }}>
+    <div className="stay-root aura" style={{ minHeight: "100dvh", position: "relative" }}>
+      <div className="aura-bg" aria-hidden />
 
-      {/* ── Sticky header — minimal ────────────────────────────────────────── */}
-      <header
-        className="jood-header-glass"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 22px",
-          height: "54px",
-          borderBottom: "1px solid var(--jood-line)",
-          position: "sticky",
-          top: 0,
-          zIndex: 40,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {back && (
-            <Link
-              href={`/s/${token}`}
-              aria-label={isRtl ? "رجوع" : "Back"}
-              style={{
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: "28px", height: "28px",
-                borderRadius: "50%",
-                border: "1px solid var(--jood-line)",
-                color: "var(--jood-ink)",
-                textDecoration: "none",
-                fontSize: "0.8125rem",
-                flexShrink: 0,
-                transform: isRtl ? "scaleX(-1)" : "none",
-              }}
-            >
-              ←
-            </Link>
-          )}
-          <img
-            src="/jood-logo-dark.png"
-            alt="JOOD"
-            className="jood-logo"
-            style={{ height: "22px", width: "auto", display: "block" }}
-          />
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+      {/* The header, only on inner screens: a round back button, the name in the middle, the small controls at the end */}
+      <header className="aura-head" style={{ direction: isRtl ? "rtl" : "ltr" }}>
+        {back ? (
+          <Link href={`/s/${token}`} aria-label={isRtl ? "رجوع" : "Back"} className="aura-round" style={{ transform: isRtl ? "scaleX(-1)" : "none" }}>←</Link>
+        ) : <span style={{ width: 42 }} />}
+        <p className="aura-head-title">{title ?? eyebrow}</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end", minWidth: 42 }}>
           {showBell && (
-            <button
-              onClick={handleBellSubscribe}
-              disabled={subscribing}
-              aria-label={isRtl ? "تفعيل الإشعارات" : "Enable notifications"}
-              style={{
-                position: "relative",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                width: "30px", height: "30px",
-                borderRadius: "50%",
-                border: "1px solid var(--jood-line)",
-                backgroundColor: "transparent",
-                cursor: "pointer",
-                fontSize: "0.875rem",
-                opacity: subscribing ? 0.5 : 1,
-              }}
-            >
+            <button onClick={handleBellSubscribe} disabled={subscribing} aria-label={isRtl ? "تفعيل الإشعارات" : "Enable notifications"} className="aura-round" style={{ opacity: subscribing ? 0.5 : 1, cursor: "pointer" }}>
               <AppIcon name="bell" size={16} />
-              <span aria-hidden style={{
-                position: "absolute", top: "4px", right: "4px",
-                width: "5px", height: "5px", borderRadius: "50%",
-                backgroundColor: "var(--jood-garnet)",
-              }} />
             </button>
           )}
-          <ThemeToggle />
           <LanguageToggle />
         </div>
       </header>
 
-      {/* ── Editorial page title ───────────────────────────────────────────── */}
-      {title && (
-        <div style={{
-          padding: "22px 22px 20px",
-          borderBottom: "1px solid var(--jood-line)",
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "space-between",
-        }}>
-          <div>
-            {eyebrow && (
-              <p style={{
-                fontFamily: "var(--font-label)",
-                fontSize: "11px",
-                letterSpacing: "0.2em",
-                textTransform: "uppercase",
-                color: "var(--jood-ink-subtle)",
-                marginBottom: "6px",
-              }}>
-                {eyebrow}
-              </p>
-            )}
-            <h1 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(2.4rem, 9vw, 3rem)",
-              fontWeight: 300,
-              fontStyle: "italic",
-              color: "var(--jood-ink)",
-              lineHeight: 1,
-            }}>
-              {title}
-            </h1>
-          </div>
-        </div>
+      {/* The page title on its own glowing sheet */}
+      {title && eyebrow && (
+        <section className="aura-tile aura-title-sheet" style={{ "--a1": a1, "--a2": a2 } as React.CSSProperties}>
+          <span className="aura-title-eyebrow">{eyebrow}</span>
+          <h1 style={{ position: "relative", margin: 0 }}>{title}</h1>
+        </section>
       )}
 
-      {/* ── Page content ──────────────────────────────────────────────────── */}
-      <div style={{ padding: "clamp(20px, 3vw, 32px) 22px 88px" }}>
+      <div style={{ padding: "16px 16px 130px", maxWidth: 560, margin: "0 auto", position: "relative" }}>
         {children}
       </div>
 

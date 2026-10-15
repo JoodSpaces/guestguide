@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ConversationProvider, useConversation } from "@elevenlabs/react";
 import { WEBSITE_URL } from "@/lib/site";
-import { Orb, type OrbState } from "@/components/ui/Orb";
+import { VoiceDial } from "@/components/stay/VoiceDial";
 import { RequestConfirm, type RequestDraft, type RequestCategory } from "@/components/stay/RequestConfirm";
 
 interface Props { token: string; isAr: boolean; guestFirstName: string }
@@ -252,38 +252,54 @@ function Inner({ token, isAr }: Props) {
     conv.startSession({ signedUrl: j.signedUrl, libsampleratePath: "/vendor/libsamplerate.worklet.js" });
   }
 
-  const state: OrbState = status === "connecting" || flash ? "thinking" : live ? (isSpeaking ? "speaking" : "listening") : "idle";
   const label = status === "connecting" ? c.connecting : live ? (isSpeaking ? c.speaking : c.listening) : c.start;
   const busy = status === "connecting";
 
+  const dialState = status === "connecting" || flash ? "connecting" : live ? (isSpeaking ? "speaking" : "listening") : "idle";
+
   return (
-    <div style={{ padding: "36px 24px 24px", textAlign: "center", maxWidth: 420, margin: "0 auto" }}>
+    <div style={{ maxWidth: 460, margin: "0 auto" }}>
       {ask && (
         <RequestConfirm
           isAr={isAr} draft={ask.draft} source="voice"
           onConfirm={(d) => ask.settle({ ok: true, draft: d })} onCancel={() => ask.settle({ ok: false, reason: "cancelled" })}
         />
       )}
-      <Orb size={200} state={state} amp={live ? amp : 0} label={label} onClick={live || busy ? undefined : start} />
-      <p aria-live="polite" style={{ marginTop: 22, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", color: "var(--jood-ink-subtle)" }}>{label}</p>
-      <p aria-live="polite" style={{ minHeight: 72, margin: "14px 0", fontSize: 16, lineHeight: 1.6, color: "var(--jood-ink)" }}>
-        {error ?? (caption || (live ? "" : c.hint))}
-      </p>
-      {error && detail && <p style={{ fontSize: 11, color: "var(--jood-ink-subtle)", marginTop: -8, wordBreak: "break-word" }}>{detail}</p>}
+
+      {/* A glowing sheet with the dial, one line of guidance, one pill */}
+      <section className="aura-tile" style={{ "--a1": "#2FD6A0", "--a2": "#0B5C57", padding: "22px 18px 18px", borderRadius: 34, textAlign: "center" } as React.CSSProperties}>
+        <p aria-live="polite" style={{ position: "relative", margin: "0 auto 14px", maxWidth: "28ch", minHeight: 52, fontSize: 16, fontWeight: 600, lineHeight: 1.45, color: "#fff" }}>
+          {error ?? (caption || (live ? label : c.hint.split(".")[0] + "."))}
+        </p>
+        <div style={{ position: "relative" }}>
+          <VoiceDial state={dialState} amp={live ? amp : 0} label={label} onClick={live || busy ? undefined : start} />
+        </div>
+        <p aria-live="polite" style={{ position: "relative", margin: "14px 0 16px", fontFamily: "var(--font-label)", fontSize: 12, fontWeight: 700, letterSpacing: isAr ? 0 : "0.12em", textTransform: "uppercase", color: "rgba(255,255,255,.7)" }}>{label}</p>
+
+        {!live ? (
+          <button type="button" className="vpill" onClick={busy ? undefined : start} disabled={busy}>
+            <span>{busy ? c.connecting : isAr ? "ابدأ المحادثة" : "Start talking"}</span><i aria-hidden>{isAr ? "←" : "→"}</i>
+          </button>
+        ) : (
+          <div style={{ position: "relative", display: "flex", gap: 10 }}>
+            <button type="button" className="vpill soft" onClick={() => conv.setMuted(!isMuted)} style={{ padding: "14px 18px", justifyContent: "center" }}>{isMuted ? c.unmute : c.mute}</button>
+            <button type="button" className="vpill" onClick={() => conv.endSession()} style={{ padding: "14px 18px", justifyContent: "center", background: "#fff", color: "#0E0908" }}>{c.end}</button>
+          </div>
+        )}
+      </section>
+
+      {error && detail && <p style={{ fontSize: 11, color: "var(--jood-ink-subtle)", marginTop: 10, wordBreak: "break-word", textAlign: "center" }}>{detail}</p>}
+      {!error && !caption && !live && <p style={{ margin: "14px 6px 0", fontSize: 13.5, lineHeight: 1.6, color: "var(--jood-ink-muted)", textAlign: "center" }}>{c.hint}</p>}
+
       {chips.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginBottom: 14 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 14 }}>
           {chips.map((k) => k.href
             ? <a key={k.href} href={k.href} target="_blank" rel="noopener noreferrer" style={chip(true)}>{k.label} →</a>
             : <span key={k.label} style={chip(false)}>✓ {k.label}</span>)}
         </div>
       )}
-      {live && (
-        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-          <button type="button" onClick={() => conv.setMuted(!isMuted)} style={btn(false)}>{isMuted ? c.unmute : c.mute}</button>
-          <button type="button" onClick={() => conv.endSession()} style={btn(true)}>{c.end}</button>
-        </div>
-      )}
-      <div style={{ marginTop: 28 }}>
+
+      <div style={{ marginTop: 22, textAlign: "center" }}>
         <a href={`/s/${token}/requests`} style={{ fontSize: 14, color: "var(--jood-ink-muted)", textDecoration: "underline" }}>{c.team}</a>
         <p style={{ marginTop: 14, fontSize: 12, lineHeight: 1.6, color: "var(--jood-ink-subtle)" }}>
           {c.privacy} <a href={`${WEBSITE_URL}/legal#privacy`} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>{isAr ? "الخصوصية" : "Privacy"}</a>

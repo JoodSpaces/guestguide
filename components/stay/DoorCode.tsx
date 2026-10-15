@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { DotNumber } from "@/components/stay/DotNumber";
 
 interface Props {
   token: string;
@@ -109,30 +110,24 @@ export function DoorCode({ token, requiresSecondFactor }: Props) {
 
   // ── Revealed ──────────────────────────────────────────────
   if (state.kind === "revealed") {
+    const digits = /^\d{1,8}$/.test(state.code);
     return (
-      <div style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 48px)" }}>
-        <p className="label-eyebrow" style={{ color: "rgba(245,244,237,0.66)", marginBottom: "16px" }}>
+      <div className="aura-tile" style={{ "--a1": "#2FD6A0", "--a2": "#0B5C57", borderRadius: 30, padding: "22px 20px 18px", color: "#fff" } as React.CSSProperties}>
+        <p className="label-eyebrow" style={{ position: "relative", color: "rgba(255,255,255,0.7)", marginBottom: "18px" }}>
           {t("door_code_label")}
         </p>
+        <div className="animate-reveal" style={{ position: "relative", minHeight: 63, direction: "ltr" }}>
+          {digits ? <DotNumber value={state.code} dot={state.code.length > 5 ? 9 : 12} gap={state.code.length > 5 ? 5 : 6} label={state.code} /> : (
+            <p className="code-display" style={{ color: "#fff", display: "block", margin: 0 }}>{state.code}</p>
+          )}
+        </div>
         <button
           onClick={() => copyCode(state.code)}
           aria-label={t("tap_to_copy")}
-          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, width: "100%", textAlign: "start" }}
+          className="vpill"
+          style={{ marginTop: 22 }}
         >
-          <p className="code-display animate-reveal" style={{ color: "#F5F4ED", display: "block" }}>
-            {state.code}
-          </p>
-          <p style={{
-            marginTop: "12px",
-            fontSize: "0.8125rem",
-            fontFamily: "var(--font-label)",
-            textTransform: "uppercase",
-            letterSpacing: "0.14em",
-            transition: "color 200ms var(--ease-standard)",
-            color: state.copied ? "var(--jood-accent)" : "rgba(245,244,237,.4)",
-          }}>
-            {state.copied ? <span className="copy-pop">{t("copied")} ✓</span> : t("tap_to_copy")}
-          </p>
+          <span>{state.copied ? `${t("copied")} ✓` : t("tap_to_copy")}</span><i aria-hidden>⧉</i>
         </button>
       </div>
     );
