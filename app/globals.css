@@ -994,9 +994,9 @@ body {
   --jood-info-surface:     rgba(160, 201, 203, 0.38);
   --jood-surface-glass:    rgba(255, 255, 255, 0.92);
   --stay-glass-bg:         rgba(53, 30, 28, 0.05);
-  --font-display: 'Geist';
-  --font-body:    'Geist';
-  --font-label:   'Geist';
+  --font-display: 'Geist', system-ui, sans-serif;
+  --font-body:    'Geist', system-ui, sans-serif;
+  --font-label:   'Geist', system-ui, sans-serif;
   --radius-md:    12px;
   --radius-lg:    16px;
   --shadow-card:  0 0 0 1px rgba(53, 30, 28, 0.08);
@@ -1004,7 +1004,7 @@ body {
   --shadow-raised: 0 6px 20px rgba(53, 30, 28, 0.08);
 }
 /* Geist has no Arabic: Arabic text keeps Almarai, everything else is Geist */
-:root[data-ui="next"][data-ui="next"][dir="rtl"] { --font-display: 'Almarai'; --font-body: 'Almarai'; --font-label: 'Almarai'; }
+:root[data-ui="next"][data-ui="next"][dir="rtl"] { --font-display: 'Almarai', system-ui, sans-serif; --font-body: 'Almarai', system-ui, sans-serif; --font-label: 'Almarai', system-ui, sans-serif; }
 
 html[data-ui="next"] body { background: var(--jood-ground); background-image: none; font-variant-numeric: tabular-nums; }
 html[data-ui="next"] .stay-root { background: transparent !important; }
