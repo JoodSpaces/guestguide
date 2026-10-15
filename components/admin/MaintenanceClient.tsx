@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { DetailHead } from "@/components/app/ui";
 import { TeamPicker } from "@/components/admin/TeamPicker";
 
 interface Property { id: string; name: string; }
@@ -80,9 +81,7 @@ export function MaintenanceClient({ properties, defaultPropertyId, team = [] }: 
 
   return (
     <form onSubmit={submit} style={{ maxWidth: "560px" }}>
-      <Link href="/admin/ops/maintenance" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
-        ← Maintenance
-      </Link>
+      <DetailHead back="/admin/ops/maintenance" title="New ticket" />
       <h1 className="font-display" style={{ fontSize: "1.8rem", marginBottom: "28px" }}>New ticket</h1>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

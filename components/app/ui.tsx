@@ -23,14 +23,20 @@ export function State({ tone = "neutral", children }: { tone?: Tone; children: R
   return <span className={`app-state ${tone}`}>{children}</span>;
 }
 
-/** The dark ink card at the top of a screen: a small label, one big number or line, and up to two pill buttons. */
-export function Hero({ label, value, note, actions }: {
-  label: string; value: ReactNode; note?: ReactNode; actions?: { href: string; label: string; icon?: ReactNode }[];
+/** The dark ink card at the top of a screen: a small label, one big number or line, a pill in the corner, and up to two pill buttons with icons. */
+export function Hero({ label, value, note, corner, actions }: {
+  label: string; value: ReactNode; note?: ReactNode; corner?: { href: string; label: string };
+  actions?: { href: string; label: string; icon?: ReactNode }[];
 }) {
   return (
     <section className="app-hero">
-      <p className="app-hero-label">{label}</p>
-      <p className="app-hero-value">{value}</p>
+      <div className="app-hero-top">
+        <div style={{ minWidth: 0 }}>
+          <p className="app-hero-label">{label}</p>
+          <p className="app-hero-value">{value}</p>
+        </div>
+        {corner && <Link href={corner.href} className="app-hero-corner">{corner.label}</Link>}
+      </div>
       {note && <p className="app-hero-note">{note}</p>}
       {actions && actions.length > 0 && (
         <div className="app-hero-actions">
@@ -123,5 +129,61 @@ export function Empty({ text, href, hrefLabel }: { text: string; href?: string; 
       <p>{text}</p>
       {href && <Link href={href}>{hrefLabel}</Link>}
     </div>
+  );
+}
+
+/** The head of a detail page, as in the reference: a round back button, the page word in the middle, an optional action at the end. */
+export function DetailHead({ back, title = "Details", right }: { back: string; title?: string; right?: ReactNode }) {
+  return (
+    <div className="app-dhead">
+      <Link href={back} aria-label="Back" className="app-roundbtn">←</Link>
+      <p>{title}</p>
+      <div>{right}</div>
+    </div>
+  );
+}
+
+/** A record's id line: an icon tile, a small label, the id in bold, and the state chip at the end. */
+export function IdRow({ label, id, state, icon }: { label: string; id: ReactNode; state?: ReactNode; icon?: ReactNode }) {
+  return (
+    <div className="app-idrow">
+      <span className="app-idicon" aria-hidden>{icon ?? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z" /><path d="m3 8 9 5 9-5M12 13v8" /></svg>}</span>
+      <div><small>{label}</small><b>{id}</b></div>
+      {state}
+    </div>
+  );
+}
+
+/** A person row: round photo or initials, name and role, and round action buttons (message, call). */
+export function ContactRow({ name, role, actions }: { name: string; role?: string; actions?: { href: string; label: string; icon: ReactNode; strong?: boolean }[] }) {
+  const initials = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  return (
+    <div className="app-contact">
+      <span className="app-avatar" aria-hidden>{initials}</span>
+      <div><b>{name}</b>{role && <small>{role}</small>}</div>
+      <div className="app-contact-actions">
+        {actions?.map((a) => (
+          <a key={a.label} href={a.href} aria-label={a.label} className={a.strong ? "strong" : ""}>{a.icon}</a>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** A history list: the time and date on the left, a check dot on a line, what happened on the right. Newest first. */
+export function Timeline({ items }: { items: { time: string; date?: string; text: ReactNode }[] }) {
+  return (
+    <section className="app-timeline">
+      <div className="app-grab" aria-hidden />
+      <ol>
+        {items.map((it, i) => (
+          <li key={i}>
+            <span className="app-tl-time"><b>{it.time}</b>{it.date && <small>{it.date}</small>}</span>
+            <i aria-hidden><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2l2.2 2.2L9.5 3.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg></i>
+            <span className="app-tl-text">{it.text}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

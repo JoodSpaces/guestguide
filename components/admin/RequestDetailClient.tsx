@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { DetailHead, DetailsPanel, IdRow, State, StepLine } from "@/components/app/ui";
 import { useRouter } from "next/navigation";
 import { guessTicketCategory, ticketTitle } from "@/lib/ticket-from-request";
 import { toast } from "@/components/admin/Toaster";
@@ -103,9 +104,7 @@ export function ServiceRequestDetail({ request: initial }: { request: ServiceReq
 
   return (
     <div style={{ maxWidth: "620px" }}>
-      <Link href="/admin/requests" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
-        ← Requests
-      </Link>
+      <DetailHead back="/admin/requests" title="Request" />
 
       <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
         <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Service request</span>
@@ -274,29 +273,39 @@ export function GuestRequestDetail({ request: initial }: { request: GuestRequest
 
   return (
     <div style={{ maxWidth: "620px" }}>
-      <Link href="/admin/requests" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
-        ← Requests
-      </Link>
+      <DetailHead back="/admin/requests" title="Request" />
 
-      <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{CAT_LABELS[req.category] ?? req.category}</span>
-        <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: STATUS_COLOR[req.status], border: `1px solid ${STATUS_COLOR[req.status]}`, borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>{req.status.replace("_", " ")}</span>
-        {req.urgency === "urgent" && <span style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--jood-danger)", border: "1px solid var(--jood-danger)", borderRadius: "var(--radius-pill)", padding: "3px 9px" }}>Urgent</span>}
-      </div>
+      <IdRow
+        label={`${CAT_LABELS[req.category] ?? req.category} · ${fmt(req.created_at)}`}
+        id={`${booking?.guest_first_name ?? ""} ${booking?.guest_last_name ?? ""}`.trim() || "Guest request"}
+        state={<span style={{ display: "inline-flex", gap: "6px" }}>
+          {req.urgency === "urgent" && <State tone="danger">Urgent</State>}
+          <State tone={req.status === "resolved" ? "ok" : req.status === "in_progress" ? "info" : "warn"}>{req.status.replace("_", " ")}</State>
+        </span>}
+      />
 
-      <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginBottom: "16px" }}>
-        {booking?.guest_first_name} {booking?.guest_last_name} · {property?.name} · {fmt(req.created_at)}
-      </p>
+      <StepLine
+        at={req.status === "resolved" ? 2 : req.status === "in_progress" ? 1 : 0}
+        steps={[{ label: "Received", sub: fmt(req.created_at) }, { label: "In progress" }, { label: "Resolved" }]}
+      />
 
-      <div style={{ ...card, backgroundColor: "var(--jood-surface-raised)" }}>
-        <p style={{ fontSize: "0.9375rem", lineHeight: 1.7, color: "var(--jood-ink)" }}>{req.body}</p>
+      <DetailsPanel
+        title="What the guest wrote"
+        rows={[
+          { label: "House", value: property?.name ?? "—" },
+          { label: "Category", value: CAT_LABELS[req.category] ?? req.category },
+          { label: "Urgency", value: req.urgency === "urgent" ? "Urgent" : "Normal" },
+        ]}
+      />
+      <div className="app-details" style={{ marginTop: "10px" }}>
+        <dl><div style={{ display: "block" }}><dd style={{ textAlign: "start", fontWeight: 500, lineHeight: 1.6, whiteSpace: "pre-line" }}>{req.body}</dd></div></dl>
       </div>
 
       <div style={card}>
         <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)", marginBottom: "10px" }}>Status</p>
         <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
           {(["received", "in_progress", "resolved"] as const).map((s) => (
-            <button key={s} disabled={saving} onClick={() => patch(s)} style={{ padding: "7px 14px", borderRadius: "var(--radius-pill)", border: `1px solid ${req.status === s ? STATUS_COLOR[s] : "var(--jood-line)"}`, backgroundColor: "transparent", color: req.status === s ? STATUS_COLOR[s] : "var(--jood-ink-muted)", fontSize: "0.8125rem", cursor: "pointer" }}>
+            <button key={s} disabled={saving} onClick={() => patch(s)} style={{ padding: "7px 14px", borderRadius: "var(--radius-pill)", border: "none", backgroundColor: req.status === s ? "var(--jood-ink)" : "#FFFFFF", color: req.status === s ? "#FFFFFF" : "var(--jood-ink-muted)", fontSize: "0.8125rem", fontWeight: 600, cursor: "pointer" }}>
               {s.replace("_", " ")}
             </button>
           ))}

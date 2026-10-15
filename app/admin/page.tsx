@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { createServiceClient } from "@/lib/supabase/server";
 import { ROLE_HOME } from "@/lib/admin-auth";
-import { Package, RefreshCcw, Wrench, AlertTriangle, Check, type LucideIcon } from "lucide-react";
+import { Package, RefreshCcw, Wrench, AlertTriangle, Check, MessageCircle, CalendarDays, type LucideIcon } from "lucide-react";
 import { cairoDay, cairoHour } from "@/lib/cairo-time";
 import { sortAlerts } from "@/lib/inventory";
 import { DismissAlertButton } from "@/components/admin/DismissAlertButton";
@@ -124,15 +124,16 @@ export default async function AdminTodayPage() {
     <div>
       {/* ── The hero: what needs you today ──────────────────────────────── */}
       <Hero
-        label={today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}
-        value={needsYou === 0 ? `${greetWord}. All clear` : `${needsYou} to look at`}
+        label={`${greetWord} · ${today.toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", weekday: "long", day: "numeric", month: "long" })}`}
+        value={needsYou === 0 ? "All clear" : `${needsYou} to look at`}
         note={briefSentence}
+        corner={{ href: "/admin/bookings/new", label: "New booking" }}
         actions={[
-          { href: "/admin/bookings/new", label: "New booking" },
-          { href: "/admin/requests", label: "Requests" },
+          { href: "/admin/requests", label: "Requests", icon: <MessageCircle size={18} strokeWidth={1.8} /> },
+          { href: "/admin/calendar", label: "Calendar", icon: <CalendarDays size={18} strokeWidth={1.8} /> },
         ]}
       />
-      <SearchPill action="/admin/bookings" placeholder="Search a guest or a house" />
+      <div style={{ marginBottom: "26px" }}><SearchPill action="/admin/bookings" placeholder="Search a guest or a house" /></div>
 
       {/* Property status rings */}
       {(properties?.length ?? 0) > 0 && (() => {
@@ -176,8 +177,6 @@ export default async function AdminTodayPage() {
           return parts.length > 0 ? parts.join(" · ") : "All clear";
         }
 
-        const STATUS_COLOR = { clear: "#4ade80", amber: "#f59e0b", red: "#f87171" };
-        const STATUS_BG = { clear: "rgba(74,222,128,0.08)", amber: "rgba(245,158,11,0.08)", red: "rgba(248,113,113,0.08)" };
         const STATUS_LABEL = { clear: "All clear", amber: "Needs attention", red: "Urgent" };
 
         function linkFor(pid: string, s: "clear" | "amber" | "red"): string {
@@ -193,62 +192,20 @@ export default async function AdminTodayPage() {
           return `/admin/ops/inventory/${pid}`;
         }
 
+        const TONE = { clear: "ok", amber: "warn", red: "danger" } as const;
         return (
-          <div style={{ marginBottom: "32px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "14px", flexWrap: "wrap" }}>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
-                Properties
-              </p>
-              <div style={{ display: "flex", gap: "10px" }}>
-                {(["clear", "amber", "red"] as const).map((s) => (
-                  <span key={s} style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.6875rem", color: "var(--jood-ink-subtle)", fontFamily: "var(--font-label)", letterSpacing: "0.08em" }}>
-                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: STATUS_COLOR[s], display: "inline-block" }} />
-                    {s === "clear" ? "All clear" : s === "amber" ? "Attention" : "Urgent"}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "flex-start" }}>
+          <div style={{ marginBottom: "8px" }}>
+            <SectionHead title="Houses" count={properties!.length} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(160px, 100%), 1fr))", gap: "10px" }}>
               {properties!.map((p) => {
-                const s = status(p.id);
-                const col = STATUS_COLOR[s];
-                const r = 18;
-                const circ = 2 * Math.PI * r;
-                const pct = 1;   // a full ring in the status colour; partial arcs read as progress, which they never were
+                const st = status(p.id);
                 return (
-                  <Link
-                    key={p.id}
-                    href={linkFor(p.id, s)}
-                    title={tooltip(p.id)}
-                    style={{ textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}
-                  >
-                    <div style={{ position: "relative", width: "52px", height: "52px" }}>
-                      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
-                        <circle cx="26" cy="26" r={r} stroke="var(--jood-line)" strokeWidth="2.5" fill={STATUS_BG[s]} />
-                        <circle
-                          cx="26" cy="26" r={r}
-                          stroke={col}
-                          strokeWidth="2.5"
-                          fill="none"
-                          strokeDasharray={`${circ * pct} ${circ * (1 - pct)}`}
-                          strokeLinecap="round"
-                          transform="rotate(-90 26 26)"
-                          style={{ transition: "stroke-dasharray 800ms ease" }}
-                        />
-                      </svg>
-                      <span style={{
-                        position: "absolute", inset: 0,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: "0.75rem",
-                      }}>
-                        {s === "clear" ? "✓" : "!"}
-                      </span>
-                    </div>
-                    <p style={{ fontSize: "0.6875rem", color: "var(--jood-ink-muted)", textAlign: "center", maxWidth: "88px", lineHeight: 1.3 }}>{p.name}</p>
+                  <Link key={p.id} href={linkFor(p.id, st)} title={tooltip(p.id)} className="app-rc" style={{ marginBottom: 0, padding: "14px" }}>
+                    <b style={{ display: "block", fontSize: "0.92rem", fontWeight: 650, marginBottom: "10px", overflowWrap: "anywhere" }}>{p.name}</b>
+                    <State tone={TONE[st]}>{STATUS_LABEL[st]}</State>
                   </Link>
                 );
               })}
-
             </div>
           </div>
         );

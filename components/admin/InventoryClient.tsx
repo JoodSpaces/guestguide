@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import { BedDouble, Droplets, Utensils, Leaf, Package, X, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { DetailHead } from "@/components/app/ui";
 import { toast } from "@/components/admin/Toaster";
 import { stockStatus, type StockStatus } from "@/lib/inventory";
 
@@ -151,9 +152,7 @@ export function InventoryClient({ propertyId, propertyName, initialItems }: Prop
 
   return (
     <div style={{ maxWidth: "700px" }}>
-      <Link href="/admin/ops" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
-        ← Ops
-      </Link>
+      <DetailHead back="/admin/ops" title="Inventory" />
 
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "28px", flexWrap: "wrap", gap: "12px" }}>

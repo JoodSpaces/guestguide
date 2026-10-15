@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { Check, X, User, AlertTriangle, Camera, Loader, Sparkles, CheckCircle2, ChevronDown, BedDouble, Droplets, Utensils, Sofa, Leaf, CheckSquare, Home, type LucideIcon } from "lucide-react";
 import Link from "next/link";
+import { DetailHead } from "@/components/app/ui";
 import { toast } from "@/components/admin/Toaster";
 import { ROOM_LABELS } from "@/lib/ops-checklist";
 import type { PhotoReview } from "@/lib/photo-review";
@@ -316,9 +317,7 @@ export function TurnoverClient({ task: initialTask, items: initialItems, teamMem
   return (
     <div style={{ maxWidth: "680px" }}>
       {/* Back */}
-      <Link href="/admin/ops" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.875rem", marginBottom: "20px" }}>
-        ← Back to Operations
-      </Link>
+      <DetailHead back="/admin/ops" title="Cleaning" />
 
       {/* Header */}
       <div style={{ ...card, marginBottom: "16px", borderLeft: `4px solid ${statusColor}` }}>

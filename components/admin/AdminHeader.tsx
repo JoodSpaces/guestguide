@@ -123,13 +123,19 @@ export function AdminHeader({ role, name }: Props) {
         zIndex: 40,
       }}
     >
-      {/* Logo — globals.css .jood-logo inverts to white in dark mode */}
-      <a href={ROLE_HOME[role] ?? "/admin"} style={{ display: "block", flexShrink: 0, lineHeight: 0 }}>
+      {/* Laptop: the logo. Phone: the greeting, as in the reference */}
+      <a className="admin-logo-desktop" href={ROLE_HOME[role] ?? "/admin"} style={{ flexShrink: 0, lineHeight: 0 }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="jood-logo" src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block" }} />
       </a>
-
-      <div style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)", flexShrink: 0, margin: "0 4px" }} />
+      <a className="app-greet admin-greet-mobile" href={ROLE_HOME[role] ?? "/admin"}>
+        <span className="app-avatar" aria-hidden>{initials}</span>
+        <span style={{ minWidth: 0 }}>
+          <b>Hello, {name || "team"}</b>
+          <small style={{ textTransform: "capitalize" }}>{role}</small>
+        </span>
+      </a>
+      <div className="admin-logo-desktop" style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)", flexShrink: 0, margin: "0 4px" }} />
 
       {/* Desktop nav — hidden on mobile via CSS */}
       <nav className="admin-nav-desktop" style={{ display: "flex", gap: "10px", alignItems: "center", flex: 1, minWidth: 0 }}>
@@ -316,12 +322,14 @@ export function AdminHeader({ role, name }: Props) {
       <style>{`
         @media (min-width: 640px) {
           .app-pill-nav               { display: none !important; }
+          .admin-greet-mobile         { display: none !important; }
           .admin-nav-desktop          { display: flex !important; }
           .admin-nav-mobile-spacer    { display: none !important; }
           .admin-hamburger            { display: none !important; }
           .admin-profile-desktop      { display: block !important; }
         }
         @media (max-width: 639px) {
+          .admin-logo-desktop         { display: none !important; }
           .admin-nav-desktop          { display: none !important; }
           .admin-nav-mobile-spacer    { display: block !important; }
           .admin-hamburger            { display: block !important; }

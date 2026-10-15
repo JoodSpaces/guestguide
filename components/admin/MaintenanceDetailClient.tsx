@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { DetailHead } from "@/components/app/ui";
 import { toast } from "@/components/admin/Toaster";
 import { TeamPicker } from "@/components/admin/TeamPicker";
 
@@ -103,9 +104,7 @@ export function MaintenanceDetailClient({ ticket: initial, team = [] }: Props) {
 
   return (
     <div style={{ maxWidth: "640px" }}>
-      <Link href="/admin/ops/maintenance" style={{ display: "inline-flex", alignItems: "center", gap: "6px", color: "var(--jood-ink-muted)", textDecoration: "none", fontSize: "0.8125rem", marginBottom: "20px" }}>
-        ← Maintenance
-      </Link>
+      <DetailHead back="/admin/ops/maintenance" title="Ticket" />
 
       {/* Header */}
       <div style={{ marginBottom: "24px" }}>

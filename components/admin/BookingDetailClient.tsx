@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { State, StepLine } from "@/components/app/ui";
+import { Mail, Phone } from "lucide-react";
+import { ContactRow, DetailHead, DetailsPanel, IdRow, State, StepLine } from "@/components/app/ui";
 import { useState } from "react";
 import { AppIcon } from "@/components/ui/AppIcon";
 
@@ -194,42 +195,50 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
 
   return (
     <div>
-      {/* Back, then the head of the record: who, which house, the state, and where the stay is on its way */}
-      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "18px" }}>
-        <Link href="/admin/bookings" aria-label="Back to bookings" className="app-roundbtn">←</Link>
-        <p style={{ margin: 0, fontWeight: 600, fontSize: "0.95rem" }}>Booking</p>
-      </div>
+      {/* The reference's detail page: head, id row with its state, the steps, one big action, the details panel, the contact row */}
+      <DetailHead back="/admin/calendar" title="Booking" />
 
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "12px", marginBottom: "18px" }}>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: "0.78rem", color: "var(--jood-mid)" }}>{property?.name} · {fmt(booking.checkIn)} → {fmt(booking.checkOut)}</p>
-          <h1 style={{ margin: "2px 0 0" }}>{booking.guestFirstName} {booking.guestLastName}</h1>
-        </div>
-        <State tone={status === "confirmed" ? "warn" : status === "cancelled" ? "danger" : status === "completed" ? "ok" : "neutral"}>{status}</State>
-      </div>
+      <IdRow
+        label={`${property?.name ?? "House"} · ${booking.source}`}
+        id={`${booking.guestFirstName} ${booking.guestLastName}`}
+        state={<State tone={status === "confirmed" ? "warn" : status === "cancelled" ? "danger" : status === "completed" ? "ok" : "neutral"}>{status}</State>}
+      />
 
       {status !== "cancelled" && (() => {
         const t = new Date().toISOString().slice(0, 10);
         const at = status === "completed" || t > booking.checkOut.slice(0, 10) ? 2 : t >= booking.checkIn.slice(0, 10) ? 1 : 0;
         return (
-          <div style={{ marginBottom: "20px" }}>
+          <div style={{ marginBottom: "6px" }}>
             <StepLine at={at} steps={[{ label: "Booked" }, { label: "Checked in", sub: fmt(booking.checkIn) }, { label: "Checked out", sub: fmt(booking.checkOut) }]} />
           </div>
         );
       })()}
 
-      {/* Guest info */}
-      <div style={card}>
-        <p style={eyebrow}>Guest</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 150px), 1fr))", gap: "16px" }}>
-          <InfoRow label="Email" value={booking.guestEmail ?? "—"} />
-          <InfoRow label="Phone" value={booking.guestPhone ?? "—"} />
-          <InfoRow label="Language" value={booking.guestLang === "ar" ? "Arabic" : "English"} />
-          <InfoRow label="Guests" value={String(booking.guestCount)} />
-          <InfoRow label="Source" value={booking.source} />
-          {booking.externalRef && <InfoRow label="Ref" value={booking.externalRef} />}
-        </div>
-      </div>
+      {activeToken && (
+        <a className="app-bigbtn" href="#guest-link">Guest link and door code</a>
+      )}
+
+      <DetailsPanel
+        title="Stay details"
+        rows={[
+          { label: "House", value: property?.name ?? "—" },
+          { label: "Dates", value: `${fmt(booking.checkIn)} → ${fmt(booking.checkOut)}` },
+          { label: "Guests", value: String(booking.guestCount) },
+          { label: "Language", value: booking.guestLang === "ar" ? "Arabic" : "English" },
+          ...(booking.externalRef ? [{ label: "Reference", value: booking.externalRef }] : []),
+          { label: "Door code", value: doorCode || "Not set" },
+        ]}
+      />
+
+      <ContactRow
+        name={`${booking.guestFirstName} ${booking.guestLastName}`}
+        role={booking.guestEmail ?? booking.guestPhone ?? "Guest"}
+        actions={[
+          ...(booking.guestEmail ? [{ href: `mailto:${booking.guestEmail}`, label: "Email the guest", icon: <Mail size={18} strokeWidth={1.8} /> }] : []),
+          ...(booking.guestPhone ? [{ href: `tel:${booking.guestPhone}`, label: "Call the guest", icon: <Phone size={18} strokeWidth={1.8} />, strong: true }] : []),
+        ]}
+      />
+      <div style={{ height: "14px" }} />
 
       {/* Guest rating */}
       {rating && (
@@ -424,7 +433,7 @@ export function BookingDetailClient({ booking, property, tokens, rating, arrival
       </div>
 
       {/* Guest link */}
-      <div style={card}>
+      <div id="guest-link" style={card}>
         <p style={eyebrow}>Guest link</p>
         {activeToken ? (
           <p style={{ fontSize: "0.8125rem", color: "var(--jood-ink-muted)", marginBottom: "14px" }}>
