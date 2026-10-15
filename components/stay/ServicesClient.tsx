@@ -96,6 +96,7 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
   const [showNotes, setShowNotes] = useState<string | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
   const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [filter, setFilter] = useState<string>("all");
 
   async function requestService(serviceId: string) {
     if (inFlight.current) return;
@@ -164,7 +165,6 @@ export function ServicesClient({ token, services: initialServices, myRequests: i
     const [c1, c2] = PALETTE[Math.max(0, categories.indexOf(cat)) % PALETTE.length];
     return { "--c1": c1, "--c2": c2 } as React.CSSProperties;
   };
-  const [filter, setFilter] = useState<string>("all");
   const shown = filter === "all" ? initialServices : initialServices.filter((s) => s.category === filter);
   const active = initialServices.find((s) => s.id === showNotes) ?? null;
   const price = (svc: Service) => (svc.price_egp === 0 ? (isAr ? "مجاني" : "Free") : `${svc.price_egp.toLocaleString()} ${isAr ? "ج.م" : "EGP"}`);
