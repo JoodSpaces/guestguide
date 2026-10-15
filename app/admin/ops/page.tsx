@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import Link from "next/link";
-import { State, toneOfColor } from "@/components/app/ui";
+import { SectionHead, State, toneOfColor } from "@/components/app/ui";
 import { createServiceClient } from "@/lib/supabase/server";
 import { AutoRefresh } from "@/components/admin/AutoRefresh";
 import { CreateTurnoverForm } from "@/components/admin/CreateTurnoverForm";
@@ -153,9 +153,7 @@ export default async function OpsPage() {
       {/* ── MY TASKS — always shown first ── */}
       {myTurnovers.length > 0 && (
         <section style={{ marginBottom: "36px" }}>
-          <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-accent)", marginBottom: "10px" }}>
-            Your tasks · {myTurnovers.length}
-          </p>
+          <SectionHead title="Your tasks" count={myTurnovers.length} />
           <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
             {myTurnovers.map((t) => (
               <TurnoverCard key={t.id} t={t as TurnoverRow} highlight />
@@ -168,9 +166,7 @@ export default async function OpsPage() {
         {/* Turnovers */}
         <section>
           <div style={{ marginBottom: "12px" }}>
-            <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
-              {myTurnovers.length > 0 ? "All other tasks" : "Cleaning tasks"} · {active.length + upcoming.length}
-            </p>
+            <SectionHead title={myTurnovers.length > 0 ? "All other tasks" : "Cleaning tasks"} count={active.length + upcoming.length} />
           </div>
 
           {!active.length && !upcoming.length && !myTurnovers.length && (
@@ -186,9 +182,7 @@ export default async function OpsPage() {
 
           {upcoming.length > 0 && (
             <>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-aqua)", marginBottom: "10px", marginTop: "4px" }}>
-                Upcoming · {upcoming.length}
-              </p>
+              <SectionHead title="Upcoming" count={upcoming.length} />
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: history?.length ? "20px" : 0 }}>
                 {upcoming.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} />)}
               </div>
@@ -197,9 +191,7 @@ export default async function OpsPage() {
 
           {(history?.length ?? 0) > 0 && (
             <>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-subtle)", marginBottom: "10px", marginTop: "20px" }}>
-                History · {history!.length}
-              </p>
+              <SectionHead title="History" count={history!.length} />
               <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {history!.map((t) => <TurnoverCard key={t.id} t={t as TurnoverRow} muted />)}
               </div>
@@ -211,9 +203,7 @@ export default async function OpsPage() {
         {(role === "admin" || role === "ops" || role === "maintenance") && (
           <section>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
-              <p style={{ fontFamily: "var(--font-label)", fontSize: "11px", letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--jood-ink-muted)" }}>
-                Open tickets · {tickets?.length ?? 0}
-              </p>
+              <SectionHead title="Open tickets" count={tickets?.length ?? 0} />
               <Link href="/admin/ops/maintenance" style={{ fontSize: "0.75rem", color: "var(--jood-ink-muted)", textDecoration: "none" }}>View all →</Link>
             </div>
 
