@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { AppIcon } from "@/components/ui/AppIcon";
+import { Sun, Sunset, Thermometer, Waves, Wind } from "lucide-react";
 import { DotNumber } from "@/components/stay/DotNumber";
 import { cairoHour } from "@/lib/cairo-time";
 import { WEBSITE_URL } from "@/lib/site";
@@ -57,11 +58,11 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
 
   // Read the clock after mount, so the server and the phone never disagree about "today".
   const [now, setNow] = useState<number | null>(null);
-  const [wx, setWx] = useState<{ tempC: number; sunsetLocal: string } | null>(null);
+  const [wx, setWx] = useState<{ tempC: number; sunsetLocal: string; windKph: number; uvIndex: number; waveM: number | null } | null>(null);
   useEffect(() => { setNow(Date.now()); }, []);
   useEffect(() => {
     let off = false;
-    fetch(`/api/stay/weather?token=${token}`).then((r) => (r.ok ? r.json() : null)).then((d) => { if (!off && d) setWx({ tempC: d.tempC, sunsetLocal: d.sunsetLocal }); }).catch(() => {});
+    fetch(`/api/stay/weather?token=${token}`).then((r) => (r.ok ? r.json() : null)).then((d) => { if (!off && d) setWx({ tempC: d.tempC, sunsetLocal: d.sunsetLocal, windKph: d.windKph, uvIndex: d.uvIndex, waveM: d.waveM ?? null }); }).catch(() => {});
     return () => { off = true; };
   }, [token]);
 
@@ -84,20 +85,25 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
   const dayNum = (ms: number) => new Date(ms).toLocaleDateString("en-GB", { timeZone: "Africa/Cairo", day: "numeric" });
 
   const tiles: { href: string; title: string; sub: string; c1: string; c2: string; icon: string }[] = [
-    { href: essentials[0].href, title: essentials[0].title, sub: essentials[0].sub, c1: "#3FA58F", c2: "#123A35", icon: essentials[0].icon },
-    { href: essentials[1].href, title: essentials[1].title, sub: essentials[1].sub, c1: "#5B73E0", c2: "#1A2260", icon: essentials[1].icon },
-    { href: essentials[2].href, title: essentials[2].title, sub: essentials[2].sub, c1: "#E2884A", c2: "#6B2E12", icon: essentials[2].icon },
-    { href: essentials[3].href, title: essentials[3].title, sub: essentials[3].sub, c1: "#C4558F", c2: "#561A40", icon: essentials[3].icon },
+    { href: essentials[0].href, title: essentials[0].title, sub: essentials[0].sub, c1: "#16E0B0", c2: "#0A6E6A", icon: essentials[0].icon },
+    { href: essentials[1].href, title: essentials[1].title, sub: essentials[1].sub, c1: "#5B7BFF", c2: "#2B2FB0", icon: essentials[1].icon },
+    { href: essentials[2].href, title: essentials[2].title, sub: essentials[2].sub, c1: "#FF8A2A", c2: "#B8321A", icon: essentials[2].icon },
+    { href: essentials[3].href, title: essentials[3].title, sub: essentials[3].sub, c1: "#FF3FA4", c2: "#7A1FA8", icon: essentials[3].icon },
   ];
 
   return (
     <main className="stay-root home" style={{ minHeight: "100dvh", padding: "0 16px 48px", maxWidth: 480, margin: "0 auto" }} dir={isAr ? "rtl" : "ltr"}>
-      {/* Top: the brand and the language, nothing else */}
-      <header className="home-top">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/jood-logo-dark.png" alt="JOOD" style={{ height: 20, width: "auto", filter: "brightness(0) invert(1)" }} />
+      {/* Top: the weather, then the language. No bar. */}
+      <div className="home-wx" aria-label={isAr ? "الطقس" : "Weather"}>
+        <div className="home-wx-row">
+          <span><Thermometer size={15} strokeWidth={1.8} /><b>{wx ? `${Math.round(wx.tempC)}°` : "–"}</b></span>
+          <span><Wind size={15} strokeWidth={1.8} /><b>{wx ? Math.round(wx.windKph) : "–"}</b><small>km/h</small></span>
+          <span><Sun size={15} strokeWidth={1.8} /><b>{wx ? Math.round(wx.uvIndex) : "–"}</b><small>UV</small></span>
+          <span><Sunset size={15} strokeWidth={1.8} /><b>{wx ? wx.sunsetLocal : "–"}</b></span>
+          {wx && wx.waveM !== null && <span><Waves size={15} strokeWidth={1.8} /><b>{wx.waveM.toFixed(1)}</b><small>m</small></span>}
+        </div>
         <LanguageToggle />
-      </header>
+      </div>
 
       {/* The week, with today lit */}
       <div className="home-days" role="list" aria-label={isAr ? "أيام الإقامة" : "Days of your stay"}>
@@ -124,20 +130,18 @@ export function StayHomeV2({ payload, token, requestSummary = null, tonightNote 
           <div><dt>{isAr ? "الوصول" : "Arrive"}</dt><dd><bdi>{fmtDay(inMs)}</bdi></dd></div>
           <div><dt>{isAr ? "المغادرة" : "Leave"}</dt><dd><bdi>{fmtDay(outMs)}</bdi> <bdi>{fmtTime(outMs)}</bdi></dd></div>
           <div><dt>{isAr ? "المدة" : "Nights"}</dt><dd>{nights}</dd></div>
-          {wx && <div><dt>{isAr ? "الآن" : "Outside"}</dt><dd>{Math.round(wx.tempC)}°C</dd></div>}
-          {wx && <div><dt>{isAr ? "الغروب" : "Sunset"}</dt><dd>{wx.sunsetLocal}</dd></div>}
         </dl>
       </section>
 
       {requestSummary?.payNow && (
-        <a href={requestSummary.payNow.url} className="home-card wide" style={{ "--c1": "#E2884A", "--c2": "#6B2E12", textDecoration: "none" } as React.CSSProperties}>
+        <a href={requestSummary.payNow.url} className="home-card wide" style={{ "--c1": "#FF8A2A", "--c2": "#B8321A", textDecoration: "none" } as React.CSSProperties}>
           <span><small>{isAr ? "بانتظار الدفع" : "Ready to pay"}</small><b>{requestSummary.payNow.serviceName}</b></span>
           <i aria-hidden>{isAr ? "←" : "→"}</i>
         </a>
       )}
 
       {/* The concierge, wide, like the average card */}
-      <Link href={`/s/${token}/concierge`} className="home-card wide" style={{ "--c1": "#F0A08A", "--c2": "#9C4766" } as React.CSSProperties}>
+      <Link href={`/s/${token}/concierge`} className="home-card wide" style={{ "--c1": "#FF9A8A", "--c2": "#FF4F9A" } as React.CSSProperties}>
         <span>
           <small>{aiEnabled ? (isAr ? "المساعد" : "Concierge") : (isAr ? "الفريق" : "Team")}</small>
           <b>{aiEnabled ? (isAr ? "اسأل عن أي شيء" : "Ask anything about your stay") : (isAr ? "راسل الفريق" : "Message the team")}</b>

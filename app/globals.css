@@ -1432,7 +1432,12 @@ a.aura-tile:active { transform: scale(.985); }
 /* ── Guest home: plain dark ground, the week, one number, compact tinted cards ── */
 html[data-ui="next"]:has(.stay-root.home) body { background: #0B0807; }
 .stay-root.home { background: #0B0807; }
-.home-top { display: flex; align-items: center; justify-content: space-between; padding: calc(16px + env(safe-area-inset-top, 0px)) 2px 14px; }
+.home-wx { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: calc(14px + env(safe-area-inset-top, 0px)) 0 14px; }
+.home-wx-row { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; flex: 1; direction: ltr; }
+.home-wx-row::-webkit-scrollbar { display: none; }
+.home-wx-row span { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 8px 11px; border-radius: 999px; background: rgba(255,255,255,.07); color: rgba(255,255,255,.62); }
+.home-wx-row b { font-size: .84rem; font-weight: 650; color: #fff; font-variant-numeric: tabular-nums; }
+.home-wx-row small { font-size: .66rem; font-weight: 600; color: rgba(255,255,255,.5); }
 .home-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 26px; direction: ltr; }
 .home-day { display: grid; justify-items: center; gap: 6px; }
 .home-day small { font-size: .66rem; font-weight: 600; color: rgba(255,255,255,.45); text-transform: uppercase; letter-spacing: .06em; }
@@ -1450,11 +1455,15 @@ html[data-ui="next"]:has(.stay-root.home) body { background: #0B0807; }
 .home-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 14px; margin: 24px 0 0; text-align: start; padding-top: 18px; border-top: 1px solid rgba(255,255,255,.1); }
 .home-facts dt { font-size: .68rem; color: rgba(255,255,255,.5); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
 .home-facts dd { margin: 3px 0 0; font-size: .86rem; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; }
-.home-card { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; border-radius: 24px; padding: 14px; color: #fff; text-decoration: none; min-height: 120px;
-  background: radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--c1) 70%, transparent), transparent 75%), linear-gradient(165deg, color-mix(in srgb, var(--c2) 90%, #000), color-mix(in srgb, var(--c2) 55%, #000)); }
+.home-card { position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 18px; border-radius: 24px; padding: 14px; color: #fff; text-decoration: none; min-height: 124px;
+  background: #0C0908; overflow: hidden; isolation: isolate; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); }
+.home-card::before { content: ""; position: absolute; inset: -20%; z-index: -2; filter: blur(16px);
+  background: radial-gradient(78% 82% at 16% 96%, var(--c1) 0%, color-mix(in srgb, var(--c1) 55%, transparent) 38%, transparent 74%), radial-gradient(60% 66% at 96% 4%, var(--c2) 0%, transparent 72%); }
+.home-card::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,0) 38%); }
+.home-card b, .home-card small { text-shadow: 0 1px 10px rgba(0,0,0,.35); }
 .home-card:active { transform: scale(.985); }
-.home-card.wide { flex-direction: row; align-items: center; justify-content: space-between; min-height: 0; padding: 16px 16px 16px 18px; margin-bottom: 10px;
-  background: linear-gradient(120deg, color-mix(in srgb, var(--c1) 80%, #000), color-mix(in srgb, var(--c2) 85%, #000)); }
+.home-card.wide { flex-direction: row; align-items: center; justify-content: space-between; min-height: 0; padding: 16px 16px 16px 18px; margin-bottom: 10px; }
+.home-card.wide::before { inset: -60% -10%; background: radial-gradient(42% 90% at 12% 50%, var(--c1), transparent 72%), radial-gradient(40% 90% at 92% 50%, var(--c2), transparent 74%); }
 .home-card.wide span { display: grid; gap: 3px; }
 .home-card small { display: block; font-size: .74rem; font-weight: 500; opacity: .78; line-height: 1.35; }
 .home-card b { display: block; font-size: 1rem; font-weight: 650; line-height: 1.25; }
