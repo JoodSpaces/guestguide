@@ -1262,3 +1262,7 @@ a.app-rc:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(53,30,
 .app-hero-corner { flex: none; padding: 9px 16px; border-radius: 999px; background: #fff; color: var(--jood-ink); font-size: 0.82rem; font-weight: 650; text-decoration: none; }
 .app-hero-btn svg { flex: none; }
 .app-rc-cols b { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; font-weight: 600; }
+/* the admin top bar is part of the page, not a floating web header: flat white, no hairline, no blur
+   (a blur would also trap the menu sheet, which is fixed to the screen) */
+html[data-ui="next"] header.admin-bar { background: #FFFFFF !important; border-bottom: 0 !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+@media (min-width: 640px) { html[data-ui="next"] header.admin-bar { border-bottom: 1px solid var(--jood-line) !important; } }

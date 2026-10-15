@@ -108,19 +108,16 @@ export function AdminHeader({ role, name }: Props) {
   return (
     <>
     <header
-      className="jood-header-glass"
+      className="jood-header-glass admin-bar"
       style={{
-        padding: "0 12px",
-        height: "56px",
+        padding: "0 16px",
+        height: "64px",
         display: "flex",
         alignItems: "center",
         gap: "6px",
-        borderBottom: "1px solid var(--jood-line)",
         position: "sticky",
         top: 0,
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        zIndex: 40,
+        zIndex: menuOpen ? 70 : 40,
       }}
     >
       {/* Laptop: the logo. Phone: the greeting, as in the reference */}
@@ -128,13 +125,14 @@ export function AdminHeader({ role, name }: Props) {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="jood-logo" src="/jood-logo-dark.png" alt="JOOD" style={{ height: "22px", width: "auto", display: "block" }} />
       </a>
-      <a className="app-greet admin-greet-mobile" href={ROLE_HOME[role] ?? "/admin"}>
+      <button type="button" className="app-greet admin-greet-mobile" onClick={() => setMenuOpen((o) => !o)} aria-haspopup="dialog" aria-expanded={menuOpen}
+        style={{ background: "none", border: 0, padding: 0, cursor: "pointer", textAlign: "start", font: "inherit" }}>
         <span className="app-avatar" aria-hidden>{initials}</span>
         <span style={{ minWidth: 0 }}>
           <b>Hello, {name || "team"}</b>
           <small style={{ textTransform: "capitalize" }}>{role}</small>
         </span>
-      </a>
+      </button>
       <div className="admin-logo-desktop" style={{ width: "1px", height: "20px", backgroundColor: "var(--jood-line)", flexShrink: 0, margin: "0 4px" }} />
 
       {/* Desktop nav — hidden on mobile via CSS */}
@@ -234,23 +232,29 @@ export function AdminHeader({ role, name }: Props) {
           <button
             onClick={() => setMenuOpen((o) => !o)}
             aria-label="Menu"
+            className="admin-menu-btn"
             style={{
+              display: "none",
               width: "36px", height: "36px",
               background: "none", border: "1px solid var(--jood-line)",
               borderRadius: "var(--radius-md)", cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              alignItems: "center", justifyContent: "center",
               color: "var(--jood-ink)",
             }}
           >
             <Menu size={16} strokeWidth={1.75} />
           </button>
           {menuOpen && (
-            <div style={{
-              position: "absolute", top: "calc(100% + 8px)", right: 0,
-              backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)",
-              borderRadius: "var(--radius-lg)", boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-              minWidth: "200px", zIndex: 60, overflow: "hidden",
+            <>
+            <button type="button" aria-label="Close menu" onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(42,23,21,.45)", border: 0, zIndex: 59, cursor: "default" }} />
+            <div role="dialog" aria-label="Menu" className="admin-sheet" style={{
+              position: "fixed", left: 0, right: 0, bottom: 0,
+              backgroundColor: "#FFFFFF", borderRadius: "28px 28px 0 0",
+              boxShadow: "0 -10px 40px rgba(53,30,28,0.18)",
+              maxWidth: "560px", margin: "0 auto", zIndex: 60, overflow: "hidden",
+              padding: "10px 6px calc(16px + env(safe-area-inset-bottom, 0px))",
             }}>
+              <div aria-hidden style={{ width: 40, height: 4, borderRadius: 2, background: "rgba(53,30,28,.18)", margin: "0 auto 8px" }} />
               {allNav.map((item) => (
                 <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} style={{
                   display: "block", padding: "13px 18px", textDecoration: "none",
@@ -276,6 +280,7 @@ export function AdminHeader({ role, name }: Props) {
                 Sign out
               </button>
             </div>
+            </>
           )}
         </div>
 
@@ -330,6 +335,7 @@ export function AdminHeader({ role, name }: Props) {
         }
         @media (max-width: 639px) {
           .admin-logo-desktop         { display: none !important; }
+          .admin-bar                  { padding-top: env(safe-area-inset-top, 0px); }
           .admin-nav-desktop          { display: none !important; }
           .admin-nav-mobile-spacer    { display: block !important; }
           .admin-hamburger            { display: block !important; }
