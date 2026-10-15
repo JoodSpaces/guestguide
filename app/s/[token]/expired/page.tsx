@@ -28,7 +28,7 @@ export default async function ExpiredPage({ params }: Props) {
 
   return (
     <main
-      className="min-h-dvh flex flex-col items-center justify-center px-6 text-center"
+      className="stay-root min-h-dvh flex flex-col items-center justify-center px-6 text-center"
       style={{ backgroundColor: "var(--jood-ground)", color: "var(--jood-ink)" }}
     >
       <h1
@@ -56,9 +56,10 @@ export default async function ExpiredPage({ params }: Props) {
           style={{
             display: "block",
             padding: "14px 24px",
-            backgroundColor: "var(--jood-ink)",
-            borderRadius: "var(--radius-pill)",
-            color: "var(--jood-ground)",
+            backgroundColor: "#fff",
+            borderRadius: "999px",
+            color: "#0E0908",
+            fontWeight: 600,
             textDecoration: "none",
             fontSize: "0.9375rem",
           }}

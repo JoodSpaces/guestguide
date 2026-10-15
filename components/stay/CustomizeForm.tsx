@@ -59,11 +59,12 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
     flexShrink: 0,
     padding: "10px 16px",
     borderRadius: "99px",
-    border: "1px solid var(--jood-line)",
-    background: "none",
+    border: "none",
+    background: "rgba(255,255,255,.08)",
     fontFamily: "var(--font-body)",
     fontSize: "13.5px",
-    color: "var(--jood-ink-muted)",
+    fontWeight: 600,
+    color: "rgba(255,255,255,.75)",
     cursor: "pointer",
     transition: "border-color 150ms, background 150ms, color 150ms",
     display: "flex",
@@ -74,9 +75,9 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
 
   const pillActive: React.CSSProperties = {
     ...pill,
-    border: "1px solid var(--jood-ink)",
-    background: "var(--jood-ink)",
-    color: "var(--jood-ground)",
+    border: "none",
+    background: "#fff",
+    color: "#0E0908",
   };
 
   return (
@@ -85,9 +86,9 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
       <div style={{ marginBottom: "32px" }}>
         <p style={{
           fontFamily: "var(--font-display)",
-          fontSize: "clamp(1.8rem, 6vw, 2.4rem)",
-          fontWeight: 300,
-          fontStyle: "italic",
+          fontSize: "clamp(1.7rem, 6vw, 2.2rem)",
+          fontWeight: 650,
+          fontStyle: "normal",
           color: "var(--jood-ink)",
           lineHeight: 1.1,
           marginBottom: "8px",
@@ -106,7 +107,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
         <p style={{
           fontFamily: "var(--font-label)", fontSize: "11px",
           letterSpacing: "0.2em", textTransform: "uppercase",
-          color: "var(--jood-garnet)", marginBottom: "14px",
+          color: "rgba(255,255,255,.55)", marginBottom: "14px",
         }}>
           {isAr ? "مناسبة الإقامة" : "Occasion"}
         </p>
@@ -129,7 +130,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
         <p style={{
           fontFamily: "var(--font-label)", fontSize: "11px",
           letterSpacing: "0.2em", textTransform: "uppercase",
-          color: "var(--jood-garnet)", marginBottom: "14px",
+          color: "rgba(255,255,255,.55)", marginBottom: "14px",
         }}>
           {isAr ? "درجة حرارة الغرفة" : "Room temperature"}
         </p>
@@ -152,7 +153,7 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
         <p style={{
           fontFamily: "var(--font-label)", fontSize: "11px",
           letterSpacing: "0.2em", textTransform: "uppercase",
-          color: "var(--jood-garnet)", marginBottom: "14px",
+          color: "rgba(255,255,255,.55)", marginBottom: "14px",
         }}>
           {isAr ? "أي شيء آخر؟" : "Anything else?"}
         </p>
@@ -168,21 +169,14 @@ export function CustomizeForm({ token, locale, initialPrefs }: Props) {
       </div>
 
       {/* Submit */}
-      <button
-        onClick={submit}
-        disabled={saving || saved}
-        className="btn btn-primary"
-        style={{
-          width: "100%",
-          opacity: saving ? 0.6 : 1,
-          transition: "opacity 150ms",
-        }}
-      >
-        {saved
+      <button type="button" onClick={submit} disabled={saving || saved} className="vpill"
+        style={{ background: "#fff", color: "#0E0908", boxShadow: "none", opacity: saving ? 0.6 : 1 }}>
+        <span>{saved
           ? (isAr ? "✓ تم الحفظ — شكراً لك!" : "✓ Saved — thank you!")
           : saving
             ? (isAr ? "جاري الحفظ…" : "Saving…")
-            : (isAr ? "أرسل تفضيلاتك" : "Send your preferences")}
+            : (isAr ? "أرسل تفضيلاتك" : "Send your preferences")}</span>
+        <i aria-hidden style={{ background: "#0E0908", color: "#fff" }}>{isAr ? "←" : "→"}</i>
       </button>
 
       {saved && !saving && (

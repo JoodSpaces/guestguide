@@ -128,11 +128,7 @@ export default async function ArrivalPage({ params }: Props) {
             requiresSecondFactor={property?.requires_code_second_factor ?? false}
           />
         ) : (
-          <div style={{
-            background: "linear-gradient(135deg, #351E1C 0%, #4a2220 100%)",
-            borderRadius: "var(--radius-lg)",
-            padding: "clamp(24px, 4vw, 40px)",
-          }}>
+          <div className="home-card" style={{ "--c1": "#FF8A2A", "--c2": "#B8321A", minHeight: 150, padding: 20, gap: 14 } as React.CSSProperties}>
             <p style={{
               fontFamily: "var(--font-mono)",
               fontSize: "11px",

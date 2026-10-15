@@ -130,294 +130,88 @@ export function DiscoverScreen({ token, recs: initialPlaces }: DiscoverScreenPro
   const featured = filtered[0];
   const rest = filtered.slice(1);
 
+  const GLOW: Record<string, [string, string]> = {
+    eat: ["#FF8A2A", "#B8321A"], coffee: ["#FFD35B", "#B8721A"], beach: ["#16E0B0", "#0A6E6A"], activities: ["#5B7BFF", "#2B2FB0"],
+    wifi: ["#9BD6E0", "#2B6C86"], checkout: ["#FF3FA4", "#7A1FA8"], emergency: ["#FF5252", "#8A1414"],
+  };
+  const glow = (cat: string) => {
+    const [c1, c2] = GLOW[cat] ?? ["#9BD6E0", "#2B6C86"];
+    return { "--c1": c1, "--c2": c2 } as React.CSSProperties;
+  };
+
   return (
-    <div>
-      {/* ── Rotating hint strip ───────────────────────────────────────── */}
-      <div style={{
-        padding: "12px 0 18px",
-        borderBottom: "1px solid var(--jood-line)",
-        marginBottom: "20px",
-      }}>
-        <p style={{
-          fontSize: "13px",
-          color: "var(--jood-mid)",
-          lineHeight: 1.5,
-          fontStyle: "italic",
-          transition: "opacity 400ms",
-        }}>
-          <AppIcon name="ai" size={13} style={{ marginInlineEnd: "6px", verticalAlign: "-2px" }} />{hint}
-        </p>
+    <div dir={isAr ? "rtl" : "ltr"}>
+      <div className="home-note" style={{ marginTop: 0, marginBottom: 14 }}>
+        <small>{isAr ? "اليوم" : "Today"}</small>
+        <p style={{ fontSize: ".92rem" }}>{hint}</p>
       </div>
 
-      {/* ── Category filter pills ─────────────────────────────────────── */}
-      <div style={{
-        display: "flex",
-        gap: "8px",
-        overflowX: "auto",
-        paddingBottom: "4px",
-        marginBottom: "24px",
-        scrollbarWidth: "none",
-        WebkitOverflowScrolling: "touch",
-      } as React.CSSProperties}>
-        {CATEGORIES.map((cat) => {
-          const isActive = cat === activeCategory;
-          return (
-            <button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              style={{
-                flexShrink: 0,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                fontFamily: "var(--font-label)",
-                fontSize: "11px",
-                letterSpacing: "0.14em",
-                textTransform: "uppercase",
-                padding: "6px 12px",
-                borderRadius: "99px",
-                border: isActive ? "1px solid var(--jood-garnet)" : "1px solid var(--jood-line)",
-                backgroundColor: isActive ? "var(--jood-garnet)" : "transparent",
-                color: isActive ? "#F5F4ED" : "var(--jood-mid)",
-                cursor: "pointer",
-                transition: "background-color 200ms, border-color 200ms, color 200ms",
-              }}
-            >
-              <AppIcon name={CAT_ICON[cat]} size={14} />
-              <span>{isAr ? CAT_AR[cat] : CAT_EN[cat]}</span>
-            </button>
-          );
-        })}
+      <div className="svc-pills" role="tablist" aria-label={isAr ? "الفئة" : "Category"}>
+        {CATEGORIES.map((cat) => (
+          <button key={cat} type="button" role="tab" aria-selected={cat === activeCategory} onClick={() => setActiveCategory(cat)} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <AppIcon name={CAT_ICON[cat]} size={14} />
+            <span>{isAr ? CAT_AR[cat] : CAT_EN[cat]}</span>
+          </button>
+        ))}
       </div>
 
       {filtered.length === 0 && (
-        <div style={{ textAlign: "center", padding: "48px 0", color: "var(--jood-ink-subtle)" }}>
-          <p style={{ marginBottom: "8px", color: "var(--jood-ink-subtle)", display: "flex", justifyContent: "center" }}><AppIcon name="ai" size={28} /></p>
-          <p style={{ fontSize: "14px" }}>{isAr ? "لا توجد نتائج" : "Nothing here yet"}</p>
+        <div className="home-note" style={{ textAlign: "center" }}>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: 14 }}>{isAr ? "لا توجد نتائج" : "Nothing here yet"}</p>
         </div>
       )}
 
-      {/* ── Featured editorial tile ───────────────────────────────────── */}
+      {/* The first place, big */}
       {featured && (
-        <div style={{
-          borderRadius: "20px",
-          overflow: "hidden",
-          marginBottom: "16px",
-          background: "linear-gradient(145deg, #263028 0%, #351E1C 55%, #4A2E1E 100%)",
-          position: "relative",
-        }}>
-          <div style={{ padding: "28px 24px 24px" }}>
-            {/* Category eyebrow */}
-            <p style={{
-              fontFamily: "var(--font-label)",
-              fontSize: "11px",
-              letterSpacing: "0.22em",
-              textTransform: "uppercase",
-              color: "rgba(200,165,135,0.7)",
-              marginBottom: "10px",
-            }}>
-              {isAr ? CAT_AR[featured.category] : CAT_EN[featured.category]}
-            </p>
-
-            <h2 style={{
-              fontFamily: "var(--font-display)",
-              fontSize: "clamp(1.75rem, 7vw, 2.5rem)",
-              fontWeight: 400,
-              fontStyle: "italic",
-              color: "#F5F4ED",
-              lineHeight: 1.05,
-              marginBottom: "10px",
-            }}>
-              {placeName(featured)}
-            </h2>
-
-            {placeDesc(featured) && (
-              <p style={{
-                fontSize: "13.5px",
-                color: "rgba(220,210,200,0.75)",
-                lineHeight: 1.5,
-                marginBottom: "16px",
-                maxWidth: "320px",
-              }}>
-                {placeDesc(featured)}
-              </p>
-            )}
-
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
-              {placeDist(featured) && (
-                <span style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  color: "rgba(200,165,135,0.8)",
-                }}>
-                  {placeDist(featured)}
-                </span>
-              )}
-              {featured.rating && (
-                <span style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  color: "rgba(200,165,135,0.8)",
-                }}>
-                  ★ {featured.rating}
-                </span>
-              )}
-              {placeHours(featured) && (
-                <span style={{ fontSize: "12px", color: "rgba(200,165,135,0.65)" }}>
-                  {placeHours(featured)}
-                </span>
-              )}
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "18px" }}>
-              {featured.mapsUrl && (
-                <a
-                  href={featured.mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    fontFamily: "var(--font-label)",
-                    fontSize: "11px",
-                    letterSpacing: "0.16em",
-                    textTransform: "uppercase",
-                    color: "#F5F4ED",
-                    background: "rgba(255,255,255,0.12)",
-                    border: "1px solid rgba(255,255,255,0.2)",
-                    borderRadius: "99px",
-                    padding: "7px 14px",
-                    textDecoration: "none",
-                  }}
-                >
-                  {isAr ? "الخريطة ↗" : "Map ↗"}
-                </a>
-              )}
-              <button
-                onClick={() => toggleSaved(`${featured.name}-${featured.category}`)}
-                style={{
-                  fontFamily: "var(--font-label)",
-                  fontSize: "11px",
-                  letterSpacing: "0.16em",
-                  textTransform: "uppercase",
-                  color: savedIds.has(`${featured.name}-${featured.category}`) ? "#C49A82" : "rgba(200,165,135,0.6)",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: "0",
-                }}
-              >
-                {savedIds.has(`${featured.name}-${featured.category}`)
-                  ? (<><AppIcon name="save" size={13} filled style={{ marginInlineEnd: "5px", verticalAlign: "-2px" }} />{isAr ? "محفوظ" : "Saved"}</>)
-                  : (isAr ? "حفظ" : "Save")}
-              </button>
-            </div>
-          </div>
+        <div className="home-card" style={{ ...glow(featured.category), minHeight: 230, marginBottom: 10, gap: 22 }}>
+          <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span className="home-ic"><AppIcon name={CAT_ICON[featured.category] ?? "discover"} size={18} /></span>
+            <button
+              type="button"
+              onClick={() => toggleSaved(`${featured.name}-${featured.category}`)}
+              aria-label={savedIds.has(`${featured.name}-${featured.category}`) ? "Unsave" : "Save"}
+              className="home-ic" style={{ border: 0, cursor: "pointer", color: "#fff" }}
+            >
+              <AppIcon name="save" size={16} filled={savedIds.has(`${featured.name}-${featured.category}`)} />
+            </button>
+          </span>
+          <span style={{ display: "grid", gap: 10 }}>
+            <small style={{ textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700 }}>{isAr ? CAT_AR[featured.category] : CAT_EN[featured.category]}</small>
+            <b style={{ fontSize: "1.6rem", lineHeight: 1.15 }}>{placeName(featured)}</b>
+            {placeDesc(featured) && <small style={{ fontSize: ".9rem", opacity: .88 }}>{placeDesc(featured)}</small>}
+            <span style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+              {placeDist(featured) && <span className="dsc-chip">{placeDist(featured)}</span>}
+              {featured.rating && <span className="dsc-chip">★ {featured.rating}</span>}
+              {placeHours(featured) && <span className="dsc-chip">{placeHours(featured)}</span>}
+              {featured.mapsUrl && <a href={featured.mapsUrl} target="_blank" rel="noopener noreferrer" className="dsc-chip strong">{isAr ? "الخريطة ↗" : "Map ↗"}</a>}
+            </span>
+          </span>
         </div>
       )}
 
-      {/* ── Staggered 2-col grid ──────────────────────────────────────── */}
+      {/* The rest: compact glowing tiles */}
       {rest.length > 0 && (
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          gap: "10px",
-        }}>
-          {rest.map((place, idx) => {
+        <div className="home-grid">
+          {rest.map((place) => {
             const key = `${place.name}-${place.category}`;
             const isSaved = savedIds.has(key);
-            const isTall = idx % 3 === 0;
-
             return (
-              <div
-                key={key}
-                style={{
-                  borderRadius: "16px",
-                  border: "1px solid var(--jood-line)",
-                  backgroundColor: "var(--jood-surface)",
-                  padding: "18px 16px",
-                  gridRow: isTall ? "span 1" : undefined,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "6px",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "6px" }}>
-                  <p style={{
-                    fontFamily: "var(--font-display)",
-                    fontSize: "17px",
-                    fontWeight: 400,
-                    color: "var(--jood-ink)",
-                    lineHeight: 1.15,
-                    flex: 1,
-                  }}>
-                    {placeName(place)}
-                  </p>
-                  <button
-                    onClick={() => toggleSaved(key)}
-                    style={{
-                      flexShrink: 0,
-                      fontSize: "12px",
-                      color: isSaved ? "var(--jood-garnet)" : "var(--jood-ink-subtle)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: "0",
-                      lineHeight: 1,
-                    }}
-                    aria-label={isSaved ? "Unsave" : "Save"}
-                  >
-                    <AppIcon name="save" size={16} filled={isSaved} />
+              <div key={key} className="home-card" style={{ ...glow(place.category), minHeight: 160 }}>
+                <span style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <span className="home-ic"><AppIcon name={CAT_ICON[place.category] ?? "discover"} size={16} /></span>
+                  <button type="button" onClick={() => toggleSaved(key)} aria-label={isSaved ? "Unsave" : "Save"} style={{ border: 0, background: "rgba(255,255,255,.14)", width: 32, height: 32, borderRadius: 11, display: "grid", placeItems: "center", color: "#fff", cursor: "pointer" }}>
+                    <AppIcon name="save" size={15} filled={isSaved} />
                   </button>
-                </div>
-
-                {placeDesc(place) && (
-                  <p style={{
-                    fontSize: "12px",
-                    color: "var(--jood-mid)",
-                    lineHeight: 1.5,
-                  }}>
-                    {placeDesc(place)}
-                  </p>
-                )}
-
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "auto" }}>
-                  {placeDist(place) && (
-                    <span style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--jood-ink-subtle)",
-                    }}>
-                      {placeDist(place)}
-                    </span>
-                  )}
-                  {place.rating && (
-                    <span style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      color: "var(--jood-ink-subtle)",
-                    }}>
-                      ★ {place.rating}
-                    </span>
-                  )}
-                </div>
-
-                {place.mapsUrl && (
-                  <a
-                    href={place.mapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      fontFamily: "var(--font-label)",
-                      fontSize: "11px",
-                      letterSpacing: "0.12em",
-                      textTransform: "uppercase",
-                      color: "var(--jood-garnet)",
-                      textDecoration: "none",
-                      marginTop: "4px",
-                    }}
-                  >
-                    {isAr ? "خريطة ↗" : "Map ↗"}
-                  </a>
-                )}
+                </span>
+                <span style={{ display: "grid", gap: 6 }}>
+                  <b>{placeName(place)}</b>
+                  {placeDesc(place) && <small style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{placeDesc(place)}</small>}
+                  <span style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    {placeDist(place) && <span className="dsc-chip">{placeDist(place)}</span>}
+                    {place.rating && <span className="dsc-chip">★ {place.rating}</span>}
+                    {place.mapsUrl && <a href={place.mapsUrl} target="_blank" rel="noopener noreferrer" className="dsc-chip strong">{isAr ? "خريطة ↗" : "Map ↗"}</a>}
+                  </span>
+                </span>
               </div>
             );
           })}

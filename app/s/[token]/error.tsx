@@ -15,6 +15,7 @@ export default function GuestError({
 
   return (
     <div
+      className="stay-root"
       style={{
         minHeight: "100dvh",
         backgroundColor: "var(--jood-ground)",

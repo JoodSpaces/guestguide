@@ -1542,3 +1542,7 @@ html[data-ui="next"]:has(.stay-root.home) body { background: #0B0807; }
 .svc-notes::placeholder { color: rgba(255,255,255,.5); }
 .svc-done { margin: 0; padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,.1); font-size: .92rem; line-height: 1.5; }
 .svc-mood { width: 38px; height: 38px; border-radius: 50%; border: 0; background: rgba(255,255,255,.1); font-size: 18px; cursor: pointer; }
+
+/* ── Discover ── */
+.dsc-chip { display: inline-flex; align-items: center; padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.35); color: #fff; font-size: .72rem; font-weight: 600; text-decoration: none; text-shadow: none; }
+.dsc-chip.strong { background: #fff; color: #0E0908; }

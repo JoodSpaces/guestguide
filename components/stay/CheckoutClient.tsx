@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { AppIcon } from "@/components/ui/AppIcon";
+import { DotNumber } from "@/components/stay/DotNumber";
 
 interface Props {
   bookingId: string;
@@ -54,56 +54,25 @@ function ScrapbookCard({ propertyName, checkInDate, checkoutDate, nightsCount, c
   const nightsLabel = nightsCount === 1 ? t("nights_one") : t("nights_other", { count: nightsCount });
 
   return (
-    <div className="animate-reveal" style={{ backgroundColor: "#351E1C", borderRadius: "var(--radius-lg)", padding: "clamp(28px, 5vw, 44px)", position: "relative", overflow: "hidden" }}>
-      <div aria-hidden style={{ position: "absolute", insetInlineEnd: "-12px", top: "-16px", fontFamily: "var(--font-display)", fontSize: "clamp(7rem, 22vw, 11rem)", color: "rgba(245,244,237,0.66)", lineHeight: 1, userSelect: "none", pointerEvents: "none" }}>
-        {nightsCount}
-      </div>
-      <p style={{ fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(245,244,237,0.66)", marginBottom: "20px" }}>
-        {t("stay_at")}
-      </p>
-      <p className="font-display" style={{ fontSize: "clamp(1.6rem, 5vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1, marginBottom: "28px" }}>
-        {propertyName}
-      </p>
-      <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginBottom: "24px" }}>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "rgba(245,244,237,0.66)" }}>{checkInDate}</p>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0" }}>
-          <div style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: "var(--jood-accent)", flexShrink: 0 }} />
-          <div style={{ flex: 1, height: "1px", backgroundColor: "rgba(245,244,237,0.15)", position: "relative" }}>
-            <span style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", backgroundColor: "#351E1C", padding: "0 8px", fontFamily: "var(--font-mono)", fontSize: "11px", letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(245,244,237,0.66)", whiteSpace: "nowrap" }}>
-              {nightsLabel}
-            </span>
-          </div>
-          <div style={{ width: "6px", height: "6px", borderRadius: "50%", border: "1px solid rgba(245,244,237,0.3)", flexShrink: 0 }} />
-        </div>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", color: "rgba(245,244,237,0.66)" }}>{checkoutDate}</p>
-      </div>
-      <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.66)", lineHeight: 1.5, borderTop: "1px solid rgba(245,244,237,0.08)", paddingTop: "16px" }}>
-        &ldquo;{isAr ? quote.ar : quote.en}&rdquo;
-      </p>
+    <div className="home-card animate-reveal" style={{ "--c1": "#FF3FA4", "--c2": "#5B7BFF", gap: 22, padding: 20 } as React.CSSProperties}>
+      <span><small style={{ textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700 }}>{t("stay_at")}</small><b style={{ fontSize: "1.5rem", marginTop: 4 }}>{propertyName}</b></span>
+      <span style={{ direction: "ltr", display: "block" }}><DotNumber value={nightsCount} dot={11} gap={5} label={nightsLabel} /></span>
+      <span style={{ display: "grid", gap: 4 }}>
+        <small style={{ fontWeight: 700 }}>{nightsLabel}</small>
+        <small>{checkInDate} → {checkoutDate}</small>
+        <small style={{ marginTop: 8, fontStyle: "italic" }}>&ldquo;{isAr ? quote.ar : quote.en}&rdquo;</small>
+      </span>
     </div>
   );
 }
 
 function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  const [hover, setHover] = useState(0);
   return (
-    <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
+    <div style={{ display: "flex", gap: 8, justifyContent: "center" }} role="radiogroup" aria-label="Rating">
       {[1, 2, 3, 4, 5].map((star) => (
-        <button
-          key={star}
-          type="button"
-          onClick={() => onChange(star)}
-          onMouseEnter={() => setHover(star)}
-          onMouseLeave={() => setHover(0)}
-          style={{
-            background: "none", border: "none", cursor: "pointer", padding: "4px",
-            fontSize: "clamp(1.8rem, 8vw, 2.4rem)",
-            lineHeight: 1,
-            filter: (hover || value) >= star ? "none" : "grayscale(1) opacity(0.3)",
-            transform: (hover || value) >= star ? "scale(1.08)" : "scale(1)",
-            transition: "transform 150ms, filter 150ms",
-          }}
-        >
+        <button key={star} type="button" role="radio" aria-checked={value === star} aria-label={`${star}`} onClick={() => onChange(star)}
+          style={{ width: 54, height: 54, borderRadius: "50%", border: 0, cursor: "pointer", fontSize: 24, lineHeight: 1,
+            background: value >= star ? "#fff" : "rgba(255,255,255,.1)", color: value >= star ? "#0E0908" : "rgba(255,255,255,.6)", transition: "background .15s, transform .15s", transform: value >= star ? "scale(1.05)" : "none" }}>
           ★
         </button>
       ))}
@@ -113,17 +82,19 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 
 function StepDots({ step, total }: { step: number; total: number }) {
   return (
-    <div style={{ display: "flex", gap: "6px", justifyContent: "center", marginBottom: "24px" }}>
-      {Array.from({ length: total }, (_, i) => (
-        <div key={i} style={{
-          width: i + 1 === step ? "20px" : "6px",
-          height: "6px",
-          borderRadius: "3px",
-          backgroundColor: i + 1 <= step ? "var(--jood-ink)" : "var(--jood-line)",
-          transition: "width 300ms var(--ease-spring), background-color 300ms",
-        }} />
-      ))}
+    <div className="req-dots" style={{ margin: "0 0 4px" }} aria-label={`${step} / ${total}`}>
+      {Array.from({ length: total }, (_, i) => <i key={i} className={i + 1 <= step ? "on" : ""} />)}
     </div>
+  );
+}
+
+function Pill({ children, onClick, disabled, soft }: { children: React.ReactNode; onClick: () => void; disabled?: boolean; soft?: boolean }) {
+  return (
+    <button type="button" className="vpill" onClick={onClick} disabled={disabled}
+      style={soft ? { background: "rgba(255,255,255,.1)" } : { background: "#fff", color: "#0E0908", boxShadow: "none", opacity: disabled ? 0.6 : 1 }}>
+      <span>{children}</span>
+      <i aria-hidden style={soft ? { background: "rgba(255,255,255,.18)", color: "#fff" } : { background: "#0E0908", color: "#fff" }}>→</i>
+    </button>
   );
 }
 
@@ -179,205 +150,89 @@ export function CheckoutClient({ bookingId, token, checkInDate, checkInMonth, ch
     const whatsappUrl = onCallPhone
       ? `https://wa.me/${onCallPhone.replace(/\D/g, "")}?text=${encodeURIComponent(isAr ? "أريد الحجز مجدداً مع JOOD" : "I'd love to book with JOOD again")}`
       : null;
-
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px", paddingTop: "12px" }}>
-        <div style={{
-          backgroundColor: "#351E1C",
-          borderRadius: "var(--radius-lg)",
-          padding: "clamp(36px, 6vw, 56px) clamp(28px, 5vw, 44px)",
-          textAlign: "center",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "16px",
-        }}>
-          <AppIcon name="ai" size={52} strokeWidth={1.25} />
-          <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.8rem, 6vw, 2.6rem)", fontWeight: 600, color: "#F5F4ED", lineHeight: 1.1 }}>
-            {t("farewell")}
-          </p>
-          <p style={{ fontFamily: "var(--font-body)", fontSize: "clamp(0.9rem, 2.5vw, 1.05rem)", color: "rgba(245,244,237,0.66)", lineHeight: 1.6, maxWidth: "28ch" }}>
-            {t("thank_you")}
-          </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingTop: 4 }}>
+        <div className="home-card" style={{ "--c1": "#16E0B0", "--c2": "#5B7BFF", minHeight: 240, justifyContent: "flex-end", padding: 22 } as React.CSSProperties}>
+          <span style={{ display: "grid", gap: 8 }}>
+            <b style={{ fontSize: "1.8rem", lineHeight: 1.1 }}>{t("farewell")}</b>
+            <small style={{ fontSize: ".95rem", opacity: .9, maxWidth: "30ch" }}>{t("thank_you")}</small>
+          </span>
         </div>
-
         {whatsappUrl && (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "flex", alignItems: "center", gap: "14px",
-              padding: "16px 20px",
-              backgroundColor: "var(--jood-surface)",
-              border: "1px solid var(--jood-line)",
-              borderRadius: "var(--radius-lg)",
-              textDecoration: "none",
-            }}
-          >
-            <div style={{ width: "38px", height: "38px", borderRadius: "50%", background: "rgba(37,211,102,0.12)", border: "1px solid rgba(37,211,102,0.25)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(37,211,102,0.9)">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-              </svg>
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ color: "var(--jood-ink)", fontSize: "14px", margin: "0 0 2px" }}>
-                {t("rebook")}
-              </p>
-              <p style={{ color: "var(--jood-ink-muted)", fontSize: "12px", margin: 0 }}>
-                {t("whatsapp")}
-              </p>
-            </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--jood-ink-faint)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="home-note" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 0 }}>
+            <span style={{ flex: 1 }}><b style={{ display: "block", fontSize: ".95rem" }}>{t("rebook")}</b><small style={{ textTransform: "none", letterSpacing: 0, fontWeight: 500 }}>{t("whatsapp")}</small></span>
+            <span aria-hidden>→</span>
           </a>
         )}
       </div>
     );
   }
 
-  /* ── Step 1: Stay postcard ─────────────────────────────────── */
+  /* ── Step 1: the stay, as a card ───────────────────────────── */
   if (step === 1) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <StepDots step={1} total={3} />
         <ScrapbookCard propertyName={propertyName} checkInDate={checkInDate} checkoutDate={checkoutDate} nightsCount={nightsCount} checkInMonth={checkInMonth} isAr={isAr} />
-        <div style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "20px 24px" }}>
-          <p className="label-eyebrow" style={{ color: "var(--jood-ink-muted)", marginBottom: "8px" }}>{t("time")}</p>
-          <p className="font-display" style={{ fontSize: "clamp(1.4rem, 4vw, 2rem)", color: "var(--jood-ink)" }}>{checkoutTime}</p>
-          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.875rem", marginTop: "4px" }}>{checkoutDate}</p>
+        <div className="home-note" style={{ marginTop: 0 }}>
+          <small>{t("time")}</small>
+          <p style={{ fontSize: "1.5rem", fontWeight: 650, marginTop: 2 }}>{checkoutTime}</p>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: ".85rem" }}>{checkoutDate}</p>
         </div>
-        <button
-          onClick={() => setStep(2)}
-          style={{ width: "100%", padding: "16px", backgroundColor: "var(--jood-ink)", color: "var(--jood-ground)", border: "none", borderRadius: "var(--radius-pill)", fontSize: "0.9375rem", cursor: "pointer" }}
-        >
-          {tCommon("continue")} →
-        </button>
+        <Pill onClick={() => setStep(2)}>{tCommon("continue")}</Pill>
       </div>
     );
   }
 
-  /* ── Step 2: Rate your stay ────────────────────────────────── */
+  /* ── Step 2: rate your stay ────────────────────────────────── */
   if (step === 2) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <StepDots step={2} total={3} />
-        <div style={{ textAlign: "center", paddingTop: "12px" }}>
-          <p style={{ fontFamily: "var(--font-display)", fontSize: "clamp(1.5rem, 5vw, 2rem)", fontWeight: 600, color: "var(--jood-ink)", marginBottom: "8px" }}>
-            {t("rating_title")}
-          </p>
-          <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.9rem" }}>
-            {t("rating_body")}
-          </p>
+        <div style={{ textAlign: "center", paddingTop: 8 }}>
+          <p style={{ fontSize: "1.5rem", fontWeight: 650, margin: "0 0 6px" }}>{t("rating_title")}</p>
+          <p style={{ color: "var(--jood-ink-muted)", fontSize: ".92rem", margin: 0 }}>{t("rating_body")}</p>
         </div>
-
         <StarRating value={stars} onChange={setStars} />
-
         {stars > 0 && (
-          <div style={{ animation: "fade-in 200ms ease" }}>
-            <textarea
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder={t("comment_placeholder")}
-              rows={3}
-              style={{
-                width: "100%",
-                padding: "12px 16px",
-                border: "1px solid var(--jood-line)",
-                borderRadius: "var(--radius-lg)",
-                backgroundColor: "var(--jood-surface)",
-                color: "var(--jood-ink)",
-                fontSize: "0.9375rem",
-                fontFamily: "inherit",
-                resize: "none",
-                direction: isAr ? "rtl" : "ltr",
-                lineHeight: 1.5,
-                boxSizing: "border-box",
-              }}
-            />
-          </div>
+          <textarea
+            className="svc-notes"
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder={t("comment_placeholder")}
+            rows={3}
+            dir={isAr ? "rtl" : "ltr"}
+            style={{ margin: 0 }}
+          />
         )}
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <button
-            onClick={submitRating}
-            style={{ width: "100%", padding: "16px", backgroundColor: stars > 0 ? "var(--jood-ink)" : "var(--jood-surface)", color: stars > 0 ? "var(--jood-ground)" : "var(--jood-ink-muted)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-pill)", fontSize: "0.9375rem", cursor: "pointer", transition: "all 200ms" }}
-          >
-            {stars > 0 ? t("submit_rating") : tCommon("skip")}
-          </button>
-          <button onClick={() => setStep(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--jood-ink-muted)", fontSize: "0.875rem", fontFamily: "inherit" }}>
-            ← {tCommon("back")}
-          </button>
-        </div>
+        <Pill onClick={submitRating} soft={stars === 0}>{stars > 0 ? t("submit_rating") : tCommon("skip")}</Pill>
+        <button type="button" onClick={() => setStep(1)} style={{ background: "none", border: 0, cursor: "pointer", color: "var(--jood-ink-muted)", fontSize: ".88rem", font: "inherit" }}>← {tCommon("back")}</button>
       </div>
     );
   }
 
-  /* ── Step 3: Checklist + depart ────────────────────────────── */
+  /* ── Step 3: the checklist, then leave ─────────────────────── */
+  const all = checkedItems.size === items.length;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
       <StepDots step={3} total={3} />
-      <div style={{ backgroundColor: "var(--jood-surface)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)", padding: "20px 24px" }}>
-        <p className="label-eyebrow" style={{ color: "var(--jood-ink-muted)", marginBottom: "14px" }}>
-          {t("checklist_label")}
-        </p>
-        <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0" }}>
+      <div className="home-note" style={{ marginTop: 0, padding: "6px 16px" }}>
+        <small style={{ display: "block", padding: "12px 0 4px" }}>{t("checklist_label")}</small>
+        <ol style={{ listStyle: "none", padding: 0, margin: 0 }}>
           {items.map((item, i) => (
-            <li
-              key={i}
-              onClick={() => toggleItem(i)}
-              style={{
-                display: "flex", gap: "14px", alignItems: "flex-start",
-                padding: "14px 0",
-                borderBottom: i < items.length - 1 ? "1px solid var(--jood-line)" : "none",
-                cursor: "pointer",
-                transition: "opacity 200ms",
-                opacity: checkedItems.has(i) ? 0.5 : 1,
-              }}
-            >
-              <div style={{
-                width: "22px", height: "22px", borderRadius: "50%", flexShrink: 0, marginTop: "1px",
-                border: checkedItems.has(i) ? "none" : "1px solid var(--jood-line)",
-                backgroundColor: checkedItems.has(i) ? "var(--jood-ink)" : "transparent",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "background-color 200ms, border-color 200ms",
-              }}>
-                {checkedItems.has(i) && (
-                  <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="var(--jood-ground)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M2 6l3 3 5-5" />
-                  </svg>
-                )}
-              </div>
-              <span style={{ color: "var(--jood-ink)", fontSize: "0.9375rem", lineHeight: 1.55, textDecoration: checkedItems.has(i) ? "line-through" : "none" }}>
-                {item}
+            <li key={i} onClick={() => toggleItem(i)}
+              style={{ display: "flex", gap: 14, alignItems: "center", padding: "14px 0", borderTop: i ? "1px solid rgba(255,255,255,.08)" : "none", cursor: "pointer", opacity: checkedItems.has(i) ? 0.55 : 1 }}>
+              <span style={{ width: 26, height: 26, borderRadius: "50%", flexShrink: 0, display: "grid", placeItems: "center",
+                background: checkedItems.has(i) ? "#fff" : "transparent", boxShadow: checkedItems.has(i) ? "none" : "inset 0 0 0 1.5px rgba(255,255,255,.3)", color: "#0E0908" }}>
+                {checkedItems.has(i) && <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 6l3 3 5-5" /></svg>}
               </span>
+              <span style={{ fontSize: ".95rem", lineHeight: 1.5, textDecoration: checkedItems.has(i) ? "line-through" : "none" }}>{item}</span>
             </li>
           ))}
         </ol>
       </div>
-
-      <button
-        onClick={handleDeparted}
-        disabled={loading}
-        style={{
-          width: "100%", padding: "16px",
-          backgroundColor: checkedItems.size === items.length ? "var(--jood-ink)" : "var(--jood-surface)",
-          color: checkedItems.size === items.length ? "var(--jood-ground)" : "var(--jood-ink-muted)",
-          border: "1px solid var(--jood-line)",
-          borderRadius: "var(--radius-pill)", fontSize: "0.9375rem",
-          cursor: loading ? "wait" : "pointer",
-          opacity: loading ? 0.7 : 1,
-          transition: "all 300ms",
-        }}
-      >
-        {loading ? tCommon("sending") : t("departed_cta")}
-      </button>
-      {checkedItems.size < items.length && (
-        <p style={{ color: "var(--jood-ink-muted)", fontSize: "0.8125rem", textAlign: "center", lineHeight: 1.5 }}>
-          {t("departed_confirm")}
-        </p>
-      )}
+      <Pill onClick={handleDeparted} disabled={loading} soft={!all}>{loading ? tCommon("sending") : t("departed_cta")}</Pill>
+      {!all && <p style={{ color: "var(--jood-ink-muted)", fontSize: ".82rem", textAlign: "center", lineHeight: 1.5, margin: 0 }}>{t("departed_confirm")}</p>}
     </div>
   );
 }

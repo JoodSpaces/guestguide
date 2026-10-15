@@ -1,7 +1,7 @@
 /* Shared skeleton wrapper — matches StayShell chrome */
 export function SkeletonShell({ children }: { children: React.ReactNode }) {
   return (
-    <main className="min-h-dvh" style={{ backgroundColor: "var(--jood-ground)" }}>
+    <main className="min-h-dvh stay-root" style={{ backgroundColor: "var(--jood-ground)" }}>
       {/* Page frame */}
       <div className="fixed pointer-events-none z-50" style={{ inset: "var(--frame-inset)", border: "1px solid var(--jood-line)", borderRadius: "var(--radius-lg)" }} />
 

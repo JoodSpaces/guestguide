@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { DotNumber } from "@/components/stay/DotNumber";
 
 const TAGLINES: Record<string, { en: string; ar: string }> = {
   departure:  { en: "Every great stay deserves to be remembered.", ar: "كل إقامة رائعة تستحق أن تُتذكر." },
@@ -44,162 +45,33 @@ export function MemoryCard({ guestFirstName, propertyName, checkIn, checkOut, ni
   const nightLabel = isAr ? `${nights} ليلة` : `${nights} night${nights !== 1 ? "s" : ""}`;
 
   return (
-    <div style={{ padding: "0 0 40px" }}>
-      {/* The card itself */}
-      <div style={{
-        position: "relative",
-        borderRadius: "24px",
-        overflow: "hidden",
-        background: "linear-gradient(160deg, #1C1410 0%, #2A1A14 40%, #1C1C2E 100%)",
-        padding: "48px 36px 40px",
-        marginBottom: "24px",
-        minHeight: "480px",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-      }}>
-        {/* Ambient glow top-right */}
-        <div style={{
-          position: "absolute", top: "-30px", right: "-30px",
-          width: "160px", height: "160px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(196,154,130,0.18) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
-        {/* Ambient glow bottom-left */}
-        <div style={{
-          position: "absolute", bottom: "-40px", left: "-40px",
-          width: "200px", height: "200px", borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(115,54,53,0.15) 0%, transparent 70%)",
-          pointerEvents: "none",
-        }} />
+    <div style={{ paddingBottom: 24 }} dir={isAr ? "rtl" : "ltr"}>
+      <div className="home-card" style={{ "--c1": "#FF3FA4", "--c2": "#5B7BFF", minHeight: 520, padding: 22, marginBottom: 12, gap: 28 } as React.CSSProperties}>
+        <span style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <small style={{ textTransform: "uppercase", letterSpacing: ".1em", fontWeight: 700 }}>JOOD · {isAr ? "إقامة" : "Stay"}</small>
+          <small>{nightLabel}</small>
+        </span>
 
-        {/* Top: JOOD wordmark + date */}
-        <div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "48px" }}>
-            <p style={{
-              fontFamily: "var(--font-label)",
-              fontSize: "11px",
-              letterSpacing: "0.28em",
-              textTransform: "uppercase",
-              color: "rgba(245,244,237,0.66)",
-            }}>
-              JOOD · {isAr ? "إقامة" : "Stay"}
-            </p>
-            <p style={{
-              fontFamily: "var(--font-mono)",
-              fontSize: "11px",
-              color: "rgba(245,244,237,0.66)",
-              letterSpacing: "0.04em",
-            }}>
-              {nightLabel}
-            </p>
-          </div>
+        <span style={{ display: "grid", gap: 6 }}>
+          <small style={{ textTransform: "uppercase", letterSpacing: ".08em", fontWeight: 700 }}>{isAr ? "أقام هنا" : "Stayed here"}</small>
+          <b style={{ fontSize: "clamp(2.4rem, 11vw, 3.4rem)", lineHeight: 1, letterSpacing: "-0.02em" }}>{guestFirstName}</b>
+        </span>
 
-          {/* Guest name */}
-          <p style={{
-            fontFamily: "var(--font-label)",
-            fontSize: "11px",
-            letterSpacing: "0.18em",
-            textTransform: "uppercase",
-            color: "#C49A82",
-            marginBottom: "10px",
-          }}>
-            {isAr ? "أقام هنا" : "Stayed here"}
-          </p>
-          <p style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(2.8rem, 10vw, 4rem)",
-            fontWeight: 300,
-            fontStyle: "italic",
-            color: "#F5F4ED",
-            lineHeight: 0.95,
-            letterSpacing: "-0.01em",
-            marginBottom: "6px",
-          }}>
-            {guestFirstName}
-          </p>
-        </div>
+        <span style={{ direction: "ltr", display: "block" }}><DotNumber value={nights} dot={12} gap={6} label={nightLabel} /></span>
 
-        {/* Middle: property + dates */}
-        <div>
-          <div style={{
-            width: "40px", height: "1px",
-            background: "rgba(245,244,237,0.15)",
-            marginBottom: "20px",
-          }} />
-          <p style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "clamp(1.4rem, 5vw, 1.8rem)",
-            fontWeight: 300,
-            fontStyle: "italic",
-            color: "rgba(245,244,237,0.7)",
-            lineHeight: 1.15,
-            marginBottom: "16px",
-          }}>
-            {propertyName}
-          </p>
-          <p style={{
-            fontFamily: "var(--font-mono)",
-            fontSize: "11px",
-            color: "rgba(245,244,237,0.66)",
-            letterSpacing: "0.06em",
-          }}>
-            {checkIn} — {checkOut}
-          </p>
-        </div>
-
-        {/* Bottom: tagline */}
-        <div>
-          <div style={{
-            width: "40px", height: "1px",
-            background: "rgba(245,244,237,0.1)",
-            marginBottom: "20px",
-          }} />
-          <p style={{
-            fontFamily: "var(--font-display)",
-            fontSize: "14px",
-            fontWeight: 300,
-            fontStyle: "italic",
-            color: "rgba(245,244,237,0.66)",
-            lineHeight: 1.5,
-            maxWidth: "260px",
-          }}>
-            {tagline}
-          </p>
-        </div>
+        <span style={{ display: "grid", gap: 6 }}>
+          <b style={{ fontSize: "1.25rem" }}>{propertyName}</b>
+          <small>{checkIn} — {checkOut}</small>
+          <small style={{ marginTop: 10, fontSize: ".9rem", fontStyle: "italic", maxWidth: "30ch" }}>{tagline}</small>
+        </span>
       </div>
 
-      {/* Share / copy button */}
-      <button
-        onClick={share}
-        style={{
-          width: "100%",
-          padding: "16px",
-          background: "none",
-          border: "1px solid var(--jood-line)",
-          borderRadius: "var(--radius-lg)",
-          fontFamily: "var(--font-label)",
-          fontSize: "11px",
-          letterSpacing: "0.16em",
-          textTransform: "uppercase",
-          color: copied ? "var(--jood-success)" : "var(--jood-ink-muted)",
-          cursor: "pointer",
-          transition: "color 200ms",
-        }}
-      >
-        {copied
-          ? (isAr ? "تم النسخ ✓" : "Link copied ✓")
-          : (isAr ? "شارك هذه الذكرى" : "Share this memory")}
+      <button type="button" className="vpill" onClick={share} style={{ background: "#fff", color: "#0E0908", boxShadow: "none" }}>
+        <span>{copied ? (isAr ? "تم النسخ ✓" : "Link copied ✓") : (isAr ? "شارك هذه الذكرى" : "Share this memory")}</span>
+        <i aria-hidden style={{ background: "#0E0908", color: "#fff" }}>↗</i>
       </button>
 
-      <p style={{
-        marginTop: "16px",
-        textAlign: "center",
-        fontSize: "11px",
-        color: "var(--jood-ink-subtle)",
-        fontFamily: "var(--font-label)",
-        letterSpacing: "0.08em",
-      }}>
+      <p style={{ marginTop: 16, textAlign: "center", fontSize: ".74rem", color: "var(--jood-ink-subtle)" }}>
         {isAr ? "شكراً لإقامتك معنا" : "Thank you for staying with us"}
       </p>
     </div>
